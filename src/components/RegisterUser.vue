@@ -5,6 +5,11 @@
         <p class="centered-text">Creating User please wait...</p>
       </div>
     </div>
+    <div class="split-screen">
+    <!-- Left side for the Unsplash image -->
+    <div class="image-container">
+      <img src="https://images.unsplash.com/photo-1573425873096-b034f660a85c?q=80&w=2130&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"/>
+    </div>
     <div class="registration-form">
       <h2>Create a New Account</h2>
       
@@ -41,6 +46,7 @@
   
         <button type="submit">Register</button>
       </form>
+    </div>
     </div>
   </template>
   
@@ -91,12 +97,33 @@
   </script>
   
   <style scoped>
+/* Split screen layout */
+.split-screen {
+  display: flex;
+  height: 100vh; /* Full screen height */
+}
+  /* Left side - Image */
+.image-container {
+  flex: 1; /* Takes up half the screen */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f0f0; /* Light background if image fails */
+}
+
+.image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Ensures image covers the container without distortion */
+}
   .registration-form {
-    max-width: 400px;
-    margin: 50px auto;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 10px;
+  flex: 1; /* Takes up half the screen */
+  max-width: 500px;
+  margin: auto; /* Center the form vertically */
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  border-radius: 8px;
   }
   
   .form-group {
