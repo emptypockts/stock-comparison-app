@@ -50,6 +50,7 @@ export default {
     const handleLogin = async () => {
             // Start loading
             loading.value = true;
+            console.log(import.meta.env.VITE_APP_API_URL)
       try {
         const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/login`, {
           username: username.value,
