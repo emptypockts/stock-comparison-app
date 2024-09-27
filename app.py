@@ -132,7 +132,7 @@ def analyze_intrinsic_value():
 
 
 # API route for login
-@app.route('/login', methods=['POST'])
+@app.route('/api/auth/login', methods=['POST'])
 def login():
     data = request.json
     username = data.get('username')
