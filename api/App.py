@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import pandas as pd
-import secDBFetch  # Assuming secDBFetch.py is refactored as a module
+import secDBFetch # Assuming secDBFetch.py is refactored as a module
 import rittenhouse  # Assuming rittenhouse.py is refactored as a module
 import fetch5yData
 import stockPlotData
@@ -13,8 +13,8 @@ import os
 import bcrypt
 import jwt
 import datetime
-from api.authLogin import loginStep
-from api.authRegister import registerStep
+from authLogin import loginStep
+from authRegister import registerStep
 from datetime import timedelta
 load_dotenv()
 app = Flask(__name__)
