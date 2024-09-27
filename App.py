@@ -132,7 +132,7 @@ def analyze_intrinsic_value():
 
 
 # API route for login
-@app.route('/login', methods=['POST'])
+@app.route('/api/login', methods=['POST'])
 def login():
     data = request.json
     username = data.get('username')
@@ -158,7 +158,7 @@ def login():
         return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
 
 # # API route for registration
-@app.route('/register', methods=['POST'])
+@app.route('/api/register', methods=['POST'])
 def register():
     data = request.json
     username = data.get('username')
@@ -173,7 +173,7 @@ def register():
         return jsonify(result), 400
 
 # # Middleware to verify JWT token
-@app.route('/verify', methods=['POST'])
+@app.route('/api/verify', methods=['POST'])
 def verify_token():
     token = request.headers.get('authorization')
     

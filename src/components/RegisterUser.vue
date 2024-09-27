@@ -65,7 +65,7 @@
       async registerUser() {
         this.loading=true;
         try {
-          const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/register`, {
+          const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/register`, {
             name: this.name,
             username: this.username,
             email: this.email,

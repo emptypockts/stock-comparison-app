@@ -52,7 +52,7 @@ export default {
             loading.value = true;
             console.log(import.meta.env.VITE_APP_API_URL)
       try {
-        const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/login`, {
+        const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/login`, {
           username: username.value,
           password: password.value,
         },

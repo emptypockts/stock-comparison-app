@@ -4,7 +4,7 @@
       <router-view></router-view>
       <!-- Conditionally show the Register button only on the login page -->
       <div v-if="currentRouteName === 'Auth'" class="reg-container">
-        <button goToRegister>Create Account</button>
+        <button @click="goToRegister">Create Account</button>
       </div>
     </div>
     <div v-else>
@@ -80,6 +80,7 @@ export default {
 
     const goToRegister = () => {
       // Redirect to the registration page
+      console.log("button pushed")
       router.push('/register');
     };
 
