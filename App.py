@@ -13,8 +13,8 @@ import os
 import bcrypt
 import jwt
 import datetime
-from authLogin import loginStep
-from authRegister import registerStep
+from api.authLogin import loginStep
+from api.authRegister import registerStep
 from datetime import timedelta
 load_dotenv()
 app = Flask(__name__)
