@@ -9,7 +9,7 @@ const routes = [
     component: AuthPage,
   },
   {
-    path: '/app',// This should match your BASE_URL
+    path: '/app',
     name: 'App',
     component: () => import('../App.vue'),
   },
