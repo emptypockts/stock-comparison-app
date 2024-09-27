@@ -1,5 +1,5 @@
 {
     "rewrites": [
-      { "source": "https://stock-comparison-app.vercel.app", "destination": "/App.py" }
+      { "source": "/api/(.*)", "destination": "/App.py" }
     ]
   }
