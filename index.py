@@ -13,8 +13,8 @@ import os
 import bcrypt
 import jwt
 import datetime
-from server.api.auth.authLogin import loginStep
-from server.api.auth.authRegister import registerStep
+from api.authLogin import loginStep
+from api.authRegister import registerStep
 from datetime import timedelta
 load_dotenv()
 app = Flask(__name__)
@@ -132,7 +132,7 @@ def analyze_intrinsic_value():
 
 
 # API route for login
-@app.route('/api/auth/login', methods=['POST'])
+@app.route('/login', methods=['POST'])
 def login():
     data = request.json
     username = data.get('username')
@@ -158,7 +158,7 @@ def login():
         return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
 
 # # API route for registration
-@app.route('/api/auth/register', methods=['POST'])
+@app.route('/register', methods=['POST'])
 def register():
     data = request.json
     username = data.get('username')
@@ -173,7 +173,7 @@ def register():
         return jsonify(result), 400
 
 # # Middleware to verify JWT token
-@app.route('/api/auth/verify', methods=['POST'])
+@app.route('/verify', methods=['POST'])
 def verify_token():
     token = request.headers.get('authorization')
     
