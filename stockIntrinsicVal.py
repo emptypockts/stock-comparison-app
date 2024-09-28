@@ -1,5 +1,4 @@
 import yfinance as yf
-import numpy as np
 import pandas as pd
 from dotenv import load_dotenv
 import os
