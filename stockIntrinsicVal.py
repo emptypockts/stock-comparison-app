@@ -207,7 +207,7 @@ def getAllIntrinsicValues(ticker, growth_rate=5.0, discount_rate=10.0, terminal_
         # safety_margin_price_asset = asset_value.iloc[-1] * 0.7 if isinstance(asset_value, pd.Series) else asset_value * 0.7
 
         # Set the locale to US English
-        locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+        # locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
         intrinsic_values.append({
             'Ticker': ticker,
