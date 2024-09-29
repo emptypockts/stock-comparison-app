@@ -74,6 +74,7 @@ def calculate_intrinsic_value(ticker, growth_rate, discount_rate, terminal_growt
 
 
 def calculate_grahams_formula_2(ticker, growth_rate=5.0):
+    print(f"calculating grahams value 2nd method for  {ticker, growth_rate}")
     growth_rate /= 100.0
     stock = yf.Ticker(ticker)
     eps = stock.info['trailingEps']
@@ -86,6 +87,7 @@ def calculate_grahams_formula_2(ticker, growth_rate=5.0):
     return graham_value
 
 def calculate_grahams_formula(ticker,growth_rate=5.0):
+    print(f"calculating grahams value for  {ticker, growth_rate}")
     stock = yf.Ticker(ticker)
     eps = stock.info['trailingEps']
     
