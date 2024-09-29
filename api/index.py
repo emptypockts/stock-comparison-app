@@ -20,7 +20,6 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 DOWNLOAD_DIR = 'sec_filings'
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 
 #fetch company names, price and earnings day
 @app.route('/api/company_name', methods=['GET'])
@@ -142,11 +141,13 @@ def login():
     # Validate the password entered by the user with the stored hash
     if bcrypt.checkpw(password.encode('utf-8'), stored_hashed_password):
         # If valid, create and return JWT token
+        expiration_time =datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes= 30)
+        print(expiration_time)
         token = jwt.encode({
             'user_id': str(user['_id']),
-            'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours= 1)
+            'exp': expiration_time
         }, os.getenv('JWT_SECRET'), algorithm='HS256')
-        return jsonify({'success': True, 'token': token}), 200
+        return jsonify({'success': True, 'token': token,'expiresAt': int(expiration_time.timestamp())}), 200
     else:
         return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
 # # API route for registration
@@ -166,14 +167,14 @@ def register():
 # # Middleware to verify JWT token
 @app.route('/api/verify', methods=['POST'])
 def verify_token():
-    token = request.headers.get('authorization')
     
+    token = request.headers.get('token')
     if not token:
         return jsonify({'success': False, 'message': 'Token is missing'}), 401
 
     try:
         decoded = jwt.decode(token, os.getenv('JWT_SECRET'), algorithms=['HS256'])
-        return jsonify({'success': True, 'user_id': decoded['user_id']}), 200
+        return jsonify({'success': True, 'user_id': decoded['user_id'],"expire":datetime.datetime.fromtimestamp(decoded['exp'],tz=datetime.timezone.utc).strftime('%a, %d %b %Y %H:%M:%S UTC')}), 200
     except jwt.ExpiredSignatureError:
         return jsonify({'success': False, 'message': 'Token has expired'}), 401
     except jwt.InvalidTokenError:

@@ -1,148 +1,168 @@
 <template>
-    <div v-if="loading" class="loading-overlay">
-      <div class="loading-throbber">
-        <div class="spinner"></div>
-        <p class="centered-text">Creating User please wait...</p>
-      </div>
+  <div v-if="loading" class="loading-overlay">
+    <div class="loading-throbber">
+      <div class="spinner"></div>
+      <p class="centered-text">Creating User please wait...</p>
     </div>
-    <div class="split-screen">
+  </div>
+  <div class="split-screen">
     <!-- Left side for the Unsplash image -->
     <div class="image-container">
-      <img src="https://images.unsplash.com/photo-1573425873096-b034f660a85c?q=80&w=2130&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"/>
+      <img
+        src="https://images.unsplash.com/photo-1573425873096-b034f660a85c?q=80&w=2130&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" />
     </div>
     <div class="registration-form">
       <h2>Create a New Account</h2>
-      
+
       <!-- Display error message if any -->
       <div v-if="errorMessage" class="error-message">
         <p>{{ errorMessage }}</p>
       </div>
-  
-      <!-- Display success message if any -->
-      <div v-if="successMessage" class="success-message">
-        <p>{{ successMessage }}</p>
-      </div>
-  
       <form @submit.prevent="registerUser">
         <div class="form-group">
           <label for="name">Name</label>
-          <input v-model="name" type="text" id="name" required />
+          <input v-model="name" type="text" id="name" required autocomplete="name"/>
         </div>
-  
+
         <div class="form-group">
           <label for="username">Username</label>
-          <input v-model="username" type="text" id="username" required />
+          <input v-model="username" type="text" id="username" required autocomplete="username"/>
         </div>
-  
+
         <div class="form-group">
           <label for="email">Email</label>
-          <input v-model="email" type="email" id="email" required />
+          <input v-model="email" type="email" id="email" required autocomplete="email"/>
         </div>
-  
+
         <div class="form-group">
           <label for="password">Password</label>
           <input v-model="password" type="password" id="password" required />
         </div>
-  
+        <div v-if="!showSuccessModal" class="modal-overlay">
         <button type="submit">Register</button>
+        </div>
       </form>
+      <div>
+      <!-- Success Modal -->
+      <div v-if="showSuccessModal" class="modal-overlay">
+        <div class="modal">
+          <p>{{ successMessage }}</p>
+          <button @click="redirectToLogin">OK</button>
+        </div>
+      </div>
     </div>
-    </div>
-  </template>
-  
-  <script>
-  import axios from 'axios';
-  import { useRouter } from 'vue-router'; // Import useRouter for navigation
-  
-  export default {
-    data() {
-      return {
-        name: '',
-        username: '',
-        email: '',
-        password: '',
-        errorMessage: '',
-        successMessage: '',
-        loading: false,
-        router : useRouter(), // Use Vue Router for navigation
-      };
-    },
-    methods: {
-      async registerUser() {
-        this.loading=true;
-        try {
-          const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/register`, {
-            name: this.name,
-            username: this.username,
-            email: this.email,
-            password: this.password
-          });
-  
-          if (response.data.success) {
-            this.successMessage = response.data.message;
-            this.errorMessage = '';
-            this.router.push('/');
-          } else {
-            this.errorMessage = response.data.message;
-            this.successMessage = '';
-          }
-        } catch (error) {
-          this.errorMessage = error.response ? error.response.data.message : 'An error occurred.';
+  </div>
+  </div>
+</template>
+
+<script>
+import axios from 'axios';
+import { useRouter } from 'vue-router'; // Import useRouter for navigation
+
+export default {
+  data() {
+    return {
+      name: '',
+      username: '',
+      email: '',
+      password: '',
+      errorMessage: '',
+      successMessage: '',
+      loading: false,
+      router: useRouter(), // Use Vue Router for navigation
+      showSuccessModal: false, // Control the visibility of the success modal
+    };
+  },
+  methods: {
+    async registerUser() {
+      this.loading = true;
+      try {
+        const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/register`, {
+          name: this.name,
+          username: this.username,
+          email: this.email,
+          password: this.password
+        });
+
+        if (response.data.success) {
+          console.log("register success ",response.data.message)
+          this.successMessage = 'User created successfully! You will be redirected to the login page.';
+          this.errorMessage = '';
+          this.loading = false;
+          this.showSuccessModal = true; // Show the modal
+        } else {
+          this.errorMessage = response.data.message;
           this.successMessage = '';
-          this.loading=false;
         }
+      } catch (error) {
+        this.errorMessage = error.response ? error.response.data.message : 'An error occurred.';
+        this.successMessage = '';
+        this.loading = false;
       }
+    },
+    redirectToLogin() {
+      this.showSuccessModal = false; // Hide the modal
+      this.router.push('/'); // Redirect to the login page
     }
-  };
-  </script>
-  
-  <style scoped>
+  }
+};
+</script>
+
+<style scoped>
 /* Split screen layout */
 .split-screen {
   display: flex;
-  height: 100vh; /* Full screen height */
+  height: 100vh;
+  /* Full screen height */
 }
-  /* Left side - Image */
+
+/* Left side - Image */
 .image-container {
-  flex: 1; /* Takes up half the screen */
+  flex: 1;
+  /* Takes up half the screen */
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #f0f0f0; /* Light background if image fails */
+  background-color: #f0f0f0;
+  /* Light background if image fails */
 }
 
 .image-container img {
   width: 100%;
   height: 100%;
-  object-fit: cover; /* Ensures image covers the container without distortion */
+  object-fit: cover;
+  /* Ensures image covers the container without distortion */
 }
-  .registration-form {
-  flex: 1; /* Takes up half the screen */
+
+.registration-form {
+  flex: 1;
+  /* Takes up half the screen */
   max-width: 500px;
-  margin: auto; /* Center the form vertically */
+  margin: auto;
+  /* Center the form vertically */
   padding: 20px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   background-color: white;
   border-radius: 8px;
-  }
-  
-  .form-group {
-    margin-bottom: 20px;
-  }
-  
-  label {
-    display: block;
-    margin-bottom: 5px;
-  }
-  
-  input {
-    width: 100%;
-    padding: 8px;
-    box-sizing: border-box;
-  }
-  
-  button {
-    display: block;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+input {
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+button {
+  display: block;
   width: auto;
   justify-content: center;
   padding: 10px;
@@ -152,22 +172,23 @@
   border-radius: 4px;
   cursor: pointer;
   margin: 0 auto;
-  }
-  
-  button:hover {
-    background-color: #0056b3;
-  }
-  
-  .error-message {
-    color: red;
-    margin-bottom: 20px;
-  }
-  
-  .success-message {
-    color: green;
-    margin-bottom: 20px;
-  }
-  /* Loading overlay styles */
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+.error-message {
+  color: red;
+  margin-bottom: 20px;
+}
+
+.success-message {
+  color: green;
+  margin-bottom: 20px;
+}
+
+/* Loading overlay styles */
 .loading-overlay {
   position: fixed;
   top: 0;
@@ -180,6 +201,7 @@
   justify-content: center;
   z-index: 9999;
 }
+
 .loading-throbber {
   text-align: center;
   color: white;
@@ -200,8 +222,8 @@
     transform: rotate(360deg);
   }
 }
+
 .centered-text {
   text-align: center;
 }
-  </style>
-  
+</style>
