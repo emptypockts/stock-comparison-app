@@ -5,9 +5,9 @@ from bs4 import BeautifulSoup
 # Base directory where all SEC filings will be stored
 BASE_DIR = 'sec_filings'
 
-# Ensure the base directory exists
-if not os.path.exists(BASE_DIR):
-    os.makedirs(BASE_DIR)
+# # Ensure the base directory exists
+# if not os.path.exists(BASE_DIR):
+#     os.makedirs(BASE_DIR)
 
 # Function to fetch SEC filings and save them in the appropriate directory structure
 def get_sec_filings(ticker, form_types):
@@ -21,9 +21,9 @@ def get_sec_filings(ticker, form_types):
     # Directory for this ticker's filings
     ticker_dir = os.path.join(BASE_DIR, ticker.capitalize())
 
-    # Ensure the ticker directory exists
-    if not os.path.exists(ticker_dir):
-        os.makedirs(ticker_dir)
+    # # Ensure the ticker directory exists
+    # if not os.path.exists(ticker_dir):
+    #     os.makedirs(ticker_dir)
 
     filings = {}
 
