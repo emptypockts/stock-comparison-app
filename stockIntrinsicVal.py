@@ -214,17 +214,17 @@ def getAllIntrinsicValues(ticker, growth_rate=5.0, discount_rate=10.0, terminal_
             'Ticker': ticker,
             'Company Name': company_name,
             'Estimaded earnings +1y %':round(suggestedGrowthRate,2),
-            'Intrinsic Value (DCF)': locale.currency(round(intrinsic_value_dcf, 2), grouping=True),
-            'Graham Value': locale.currency(round(graham_value, 2), grouping=True),
+            'Intrinsic Value (DCF)': "${:,.2f}".format(intrinsic_value_dcf),
+            'Graham Value': "${:,.2f}".format(graham_value),
             # 'DDM Value': locale.currency(round(ddm_value, 2), grouping=True) if ddm_value is not None else None,
             # 'RIM Value': locale.currency(round(rim_value, 2), grouping=True),
             # 'APV Value': locale.currency(round(apv_value, 2), grouping=True),
             # 'EPV Value': locale.currency(round(epv_value, 2), grouping=True),
             # 'Asset-Based Value': locale.currency(round(asset_value.iloc[-1], 2), grouping=True) if isinstance(asset_value, pd.Series) else locale.currency(round(asset_value, 2), grouping=True),
-            'Current Price': locale.currency(round(current_price, 2), grouping=True),
-            'Price - 30% Safety Margin (DCF)': locale.currency(round(safety_margin_price_dcf, 2), grouping=True),
+            'Current Price': "${:,.2f}".format(current_price),
+            'Price - 30% Safety Margin (DCF)': "${:,.2f}".format(safety_margin_price_dcf),
             'Below 30% Safety Margin (DCF)': bool(current_price < safety_margin_price_dcf),
-            'Price - 30% Safety Margin (Graham)': locale.currency(round(safety_margin_price_graham, 2), grouping=True),
+            'Price - 30% Safety Margin (Graham)': "${:,.2f}".format(safety_margin_price_graham),
             'Below 30% Safety Margin (Graham)': bool(current_price < safety_margin_price_graham),
             # 'Price - 30% Safety Margin (DDM)': locale.currency(round(safety_margin_price_ddm, 2), grouping=True) if safety_margin_price_ddm is not None else None,
             # 'Below 30% Safety Margin (DDM)': bool(current_price < safety_margin_price_ddm) if safety_margin_price_ddm is not None else None,
@@ -247,7 +247,7 @@ def getAllIntrinsicValues(ticker, growth_rate=5.0, discount_rate=10.0, terminal_
 # Example usage
 if __name__ == "__main__":
 
-    ticker_symbols = ['amzn']
+    ticker_symbols = ['met']
     data=[]
     for ticker in ticker_symbols:
         result = getAllIntrinsicValues(ticker,growth_rate=5.0, discount_rate=10.0, terminal_growth_rate=2.0, projection_years=5)

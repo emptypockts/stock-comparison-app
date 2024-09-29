@@ -9,7 +9,7 @@
     </div>
     <div v-else>
       <button class="logout-container" @click="logout">Logout</button>
-      <h1>Honcho me</h1>
+      <h1>Honcho for Honchos</h1>
       <div id="app">
         <!-- Main content on the left side -->
         <div class="main-layout">
