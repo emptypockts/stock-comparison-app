@@ -21,9 +21,6 @@ app = Flask(__name__)
 CORS(app)
 DOWNLOAD_DIR = 'sec_filings'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
-# Ensure the download directory exists
-
-
 
 #fetch company names, price and earnings day
 @app.route('/api/company_name', methods=['GET'])
@@ -49,7 +46,6 @@ def fetch_financial_data():
         return jsonify({'error': 'No tickers provided'}), 400    
     data = {ticker: stockPlotData.fetch_financials(ticker) for ticker in tickers} 
     return jsonify({"financial_data": data}),200
-
 # New API for value stock analysis
 @app.route('/api/5y_data', methods=['GET'])
 def fetch_5y_financial_data():
@@ -128,9 +124,6 @@ def analyze_intrinsic_value():
         return jsonify(intrinsic_values), 200
     else:
         return jsonify({'error': 'No valid data to display.'}), 400
-
-
-
 # API route for login
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -156,7 +149,6 @@ def login():
         return jsonify({'success': True, 'token': token}), 200
     else:
         return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
-
 # # API route for registration
 @app.route('/api/register', methods=['POST'])
 def register():
@@ -171,7 +163,6 @@ def register():
         return jsonify(result), 201
     else:
         return jsonify(result), 400
-
 # # Middleware to verify JWT token
 @app.route('/api/verify', methods=['POST'])
 def verify_token():
@@ -187,7 +178,6 @@ def verify_token():
         return jsonify({'success': False, 'message': 'Token has expired'}), 401
     except jwt.InvalidTokenError:
         return jsonify({'success': False, 'message': 'Invalid token'}), 401
-
 
 if __name__ == '__main__':
     app.run(debug=True)
