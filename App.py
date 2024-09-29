@@ -189,5 +189,5 @@ def verify_token():
         return jsonify({'success': False, 'message': 'Invalid token'}), 401
 
 
-# if __name__ == '__main__':
-#     app.run(debug=True)
+if __name__ == '__main__':
+    app.run(debug=True)
