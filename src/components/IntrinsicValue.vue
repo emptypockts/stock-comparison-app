@@ -1,7 +1,10 @@
 <template>
-  <div>
+  <div class="title-container">
     <h1>Intrinsic Value Analysis</h1>
-
+    <button class="button-calculate" @click="calculateIntrinsicValue">Calculate Intrinsic Value</button>
+  </div>
+    
+    <div>
     <!-- Input fields for each ticker -->
     <div v-for="(ticker, index) in tickers" :key="index" class="input-container">
       <h3>{{ ticker }}</h3>
@@ -24,10 +27,12 @@
         <label for="projectionYears">Projection Years default 5y</label>
         <input v-model.number="intrinsicParams[ticker].projectionYears" id="projectionYears" type="number" step="1" min="1" />
         <span v-if="!intrinsicParams[ticker].projectionYears">Empty</span>
+        
       </div>
+      
     </div>
 
-    <button @click="calculateIntrinsicValue">Calculate Intrinsic Value</button>
+    
 
     <!-- Loading Throbber -->
     <div v-if="loading" class="loading-overlay">
@@ -44,7 +49,7 @@
 
     <div v-if="intrinsicData.length" class="table-container">
       <h2>Intrinsic Value Data for {{ tickers.join(', ') }}</h2>
-      <button @click="toggleCollapse">Click to expand</button>
+      <button @click="toggleCollapse">Click to expand or collapse</button>
       <div class="table-scroll">
         <table>
           <thead>
@@ -189,56 +194,35 @@ export default {
 
 <style scoped>
 /* Same styles with an added error message style */
+
 .input-container {
-  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /* Add space between inputs and button */
 }
 
-.input-group {
-  margin-bottom: 10px;
-}
-
-.input-group label {
-  margin-right: 10px;
-}
-
-.input-group input {
-  padding: 5px;
-  width: 100px;
-}
-
-.input-group span {
-  color: red; /* Highlight the 'Empty' label */
-  margin-left: 10px;
-}
-
-.table-container {
-  margin-top: 20px;
-}
-
-.table-scroll {
-  max-width: 100%;
-  overflow-x: auto; /* Adds a horizontal scrollbar to the table */
-}
-
-table {
+input {
   width: auto;
-  border-collapse: collapse;
+  padding: 8px;
+  margin-top: 5px;
+  border-radius: 8px;
+  border: 1px solid #f1f0f0;
+}
+.button-calculate {
+  display: block;
+  width: auto;
+  justify-content: auto;
+  padding: 8px;
+  color: white;
+  border: 1px;
+  border-radius: 8px;
+  cursor: pointer;
+
 }
 
-th, td {
-  padding: 4px; /* Reduced padding for more compact columns */
-  border: 1px solid #ddd;
-  text-align: left;
-  font-size: 12px; /* Smaller font size for more compact text */
-}
-
-th {
-  background-color: #f4f4f4;
-  white-space: nowrap; /* Prevent header text from wrapping */
-}
-
-td {
-  white-space: nowrap; /* Prevent cell text from wrapping */
+.button-calculate:hover {
+  background-color: #8bb4e0;
 }
 
 .loading-overlay {
@@ -285,5 +269,58 @@ td {
     padding: 3px;
     font-size: 10px;
   }
+}
+
+h1 {
+  font-size: 2.5em;
+  margin-bottom: 20px;
+  color: #333;
+  text-align: left;
+  font-weight: bold;
+}
+
+.table-container {
+  margin-top: 20px;
+}
+
+.table-scroll {
+  max-width: auto;
+  overflow-x: auto; /* Adds a horizontal scrollbar to the table */
+}
+
+table {
+  width: auto;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 4px; /* Reduced padding for more compact columns */
+  border: 1px solid #ddd;
+  text-align: left;
+  font-size: 12px; /* Smaller font size for more compact text */
+}
+
+th {
+  background-color: #f4f4f4;
+  white-space: nowrap; /* Prevent header text from wrapping */
+}
+
+td {
+  white-space: nowrap; /* Prevent cell text from wrapping */
+}
+
+.title-container {
+  display: flex;
+  justify-content: auto; /* Adjusts space between the title and the button */
+  align-items: center; /* Vertically aligns the button and title */
+}
+
+.title-container h1 {
+  margin-right: 10px; /* Optional: adds some space between the title and button */
+}
+
+.title-container button {
+  margin-left: 10px; /* Optional: adds some space between the button and title */
+  margin-top: 5px;
 }
 </style>

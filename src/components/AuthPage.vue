@@ -153,8 +153,8 @@ input {
   width: 100%;
   padding: 8px;
   margin-top: 5px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
+  border-radius: 8px;
+  border: 0px solid #ccc;
 }
 
 button {
@@ -162,16 +162,15 @@ button {
   width: auto;
   justify-content: center;
   padding: 10px;
-  background-color: #007bff;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   margin: 0 auto;
 }
 
 button:hover {
-  background-color: #0056b3;
+  background-color: #8bb4e0;
 }
 
 .error-message {

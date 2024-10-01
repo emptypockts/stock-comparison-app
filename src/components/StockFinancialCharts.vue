@@ -1,4 +1,5 @@
 <template>
+  <h1>Charts</h1>
   <div>
     <!-- Display the company names based on the tickers -->
       <div v-if="tickers.length" class="chart-container">
@@ -74,7 +75,7 @@
         </div>
       </div>
       <div v-else>
-      <p>No financial data available for {{ tickers }}. Please fetch data first.</p>
+      <p class="error-message"> {{ errorMessage }}</p>
     </div>
   </div>
 </template>
@@ -100,6 +101,7 @@ export default {
       chartOptions: null,
       percentageChartOptions: null,
       netIncomeEPSChartOptions:null,
+      errorMessage: ''
     };
   },
   created(){
@@ -147,8 +149,6 @@ export default {
         width: '2',
       },
     };
-  // Rest of the script remains the same
-
 
     this.chartOptions = {
     chart: {
@@ -230,8 +230,8 @@ export default {
     async fetchCompanyData(tickers) {
       try {
         if (!tickers.length) {
-          alert('Please enter at least one stock ticker.');
-          return;
+          errorMessage.value = 'Please enter at least one stock ticker.';
+          return errorMessage;
         }
 
         const financialResponse = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/financial_data`, {
@@ -412,8 +412,11 @@ export default {
 };
 </script>
 <style scoped>
+.error-message {
+  color: red;
+  margin-top: 10px;
+}
 .stock-financial-charts {
-  font-family: 'Roboto', sans-serif;
   padding: 20px;
   background-color: #f8f9fa;
   color: #333;
@@ -425,7 +428,7 @@ h1 {
   font-size: 2.5em;
   margin-bottom: 20px;
   color: #333;
-  text-align: center;
+  text-align: left;
   font-weight: bold;
 }
 

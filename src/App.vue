@@ -8,7 +8,9 @@
       </div>
     </div>
     <div v-else>
-      <button class="logout-container" @click="logout">Logout</button>
+      <div class="logout-container">
+      <button @click="logout">Logout</button>
+    </div>
       <h1>Honcho for Honchos</h1>
       <div id="app">
         <!-- Main content on the left side -->
@@ -99,100 +101,48 @@ export default {
 </script>
 
 <style scoped>
-/* Position the logout button in the top-right corner */
-.logout-container {
+.reg-container button{
+  width: auto;
   position: absolute;
   top: 20px;
   right: 20px;
-}
-
-.logout-container button {
-  width: 100%;
-  padding: 10px;
-  background-color: #007BFF;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.logout-container button:hover {
-  background-color: #ff0000;
-}
-
-/* Style for the Register button */
-.reg-container {
-  position:absolute;
-  top: 10px;
-  right: 10px;
-  text-align: right;
-}
-
-.reg-container button {
   display: block;
   width: auto;
   justify-content: center;
   padding: 10px;
-  background-color: #29ac94;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   margin: 0 auto;
 }
-
-.auth-container button:hover {
-  background-color: #0056b3;
+.reg-container button:hover {
+  background-color: #8bb4e0;
 }
 
-/* Main layout styling */
-.main-layout {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 20px;
-  max-width: 1200px;
+.logout-container button{
+  width: auto;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: block;
+  width: auto;
+  justify-content: center;
+  padding: 10px;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
   margin: 0 auto;
 }
-
-.left-content {
-  flex: 2;
+.logout-container button:hover {
+  background-color: #8bb4e0;
 }
-
-.right-content {
-  flex: 1;
-}
-
-/* Full-width content (Rittenhouse Analysis) */
-.full-width-content {
-  padding: 20px;
-  background-color: #f8f9fa;
-  margin-top: 20px;
-}
-
-/* General styling */
-#app {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #333;
-  background-color: #ffffff;
-  line-height: 1.6;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  color: #007bff;
+h1 {
+  font-size: 2.5em;
   margin-bottom: 20px;
-}
-
-p {
-  color: #666;
-}
-
-a {
-  color: #007bff;
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
+  color: #333;
+  text-align: left;
+  font-weight: bold;
 }
 </style>

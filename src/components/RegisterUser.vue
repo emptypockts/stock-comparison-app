@@ -26,7 +26,7 @@
 
         <div class="form-group">
           <label for="username">Username</label>
-          <input v-model="username" type="text" id="username" required autocomplete="username"/>
+          <input v-model="username" type="text" id="regUsername" required autocomplete="regUsername"/>
         </div>
 
         <div class="form-group">
@@ -36,7 +36,7 @@
 
         <div class="form-group">
           <label for="password">Password</label>
-          <input v-model="password" type="password" id="password" required />
+          <input v-model="password" type="password" id="regPassword" required />
         </div>
         <div v-if="!showSuccessModal" class="modal-overlay">
         <button type="submit">Register</button>
@@ -158,7 +158,9 @@ label {
 input {
   width: 100%;
   padding: 8px;
-  box-sizing: border-box;
+  margin-top: 5px;
+  border-radius: 8px;
+  border: 0px solid #ccc;
 }
 
 button {
@@ -166,7 +168,6 @@ button {
   width: auto;
   justify-content: center;
   padding: 10px;
-  background-color: #007BFF;
   color: white;
   border: none;
   border-radius: 4px;
@@ -175,7 +176,7 @@ button {
 }
 
 button:hover {
-  background-color: #0056b3;
+  background-color: #8bb4e0;
 }
 
 .error-message {

@@ -10,7 +10,6 @@
         <p>{{ errorMessage }}</p>
       </div>
       <div v-if="financialData.length" class="table-container">
-        <h2>Financial Data for {{ tickers.join(', ') }}</h2>
         <button @click="toggleCollapse">Click to expand or collapse</button>
         <div class="table-scroll">
           <table>
@@ -75,9 +74,9 @@
           </table>
         </div>
       </div>
-      <div v-else>
+      <!-- <div v-else>
         <p>No financial data available. Please try fetching data for different tickers.</p>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
@@ -102,7 +101,7 @@ export default {
     const financialData = ref([]); // This will hold the data fetched from the backend
     const collapsed = ref(true); // Controls the visibility of extra columns
     const errorMessage = ref(''); // Variable to store error messages
-
+    const firstLogin = ref(true); // Flag to prevent error message on first load
     const toggleCollapse = () => {
       collapsed.value = !collapsed.value;
     };
@@ -110,7 +109,9 @@ export default {
     const fetch5YearData = async (tickers) => {
             // Check if the tickers array is empty
             if (!tickers || tickers.length === 0) {
+              if (!firstLogin.value) {
         errorMessage.value = 'No tickers provided. Please enter valid tickers.';
+              }
         return;
       }
             // Reset error message and loading state
@@ -145,6 +146,7 @@ export default {
 
     onMounted(() => {
       fetch5YearData(props.tickers);
+      firstLogin.value = false; // Mark as no longer the first login after mounted
     });
 
     return {
@@ -188,14 +190,10 @@ td {
   white-space: nowrap; /* Prevent cell text from wrapping */
 }
 
-table {
-  font-size: 12px;
-}
 
 @media screen and (max-width: 768px) {
   th, td {
     padding: 3px;
-    font-size: 10px;
   }
 }
 /* Same loading screen styles */
@@ -213,4 +211,13 @@ table {
   font-size: 1.5em;
   z-index: 1000;
 }
+
+h1 {
+  font-size: 2.5em;
+  margin-bottom: 20px;
+  color: #333;
+  text-align: left;
+  font-weight: bold;
+}
+
 </style>
