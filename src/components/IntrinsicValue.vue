@@ -83,9 +83,9 @@
         </table>
       </div>
     </div>
-    <div v-else>
+    <!-- <div v-else>
       <p>No intrinsic value data available. Please try fetching data for different tickers.</p>
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -106,7 +106,7 @@ export default {
     const loading = ref(false);
     const intrinsicParams = reactive({});
     const errorMessage = ref(''); // Variable to store error messages
-
+    const firstLogin = ref(true);
     // Initialize intrinsicParams based on the provided tickers
     const initializeParams = (tickers) => {
       tickers.forEach((ticker) => {
@@ -139,8 +139,10 @@ export default {
     const fetchIntrinsicValues = async (tickers) => {
       // Check if tickers array is empty
       if (!tickers || tickers.length === 0) {
+        if (!firstLogin.value) {
         errorMessage.value = 'No tickers provided. Please enter valid tickers.';
-        return;
+              }
+        return ;
       }
 
       loading.value = true; // Start loading
@@ -177,6 +179,7 @@ export default {
 
     onMounted(() => {
       fetchIntrinsicValues(props.tickers);
+      firstLogin.value = false; // Mark as no longer the first login after mounted
     });
 
     return {

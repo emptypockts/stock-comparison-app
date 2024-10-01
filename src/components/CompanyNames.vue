@@ -113,7 +113,7 @@ export default {
       const isTokenValid = await verifyToken();
       if (isTokenValid) {
         fetchCompanyNames();
-      }
+      }else router.push('/');
     };
     return {
       ticker1,
