@@ -1,13 +1,13 @@
 <template>
-  <div class="title-container">
+
     <h1>Intrinsic Value Analysis</h1>
-    <button class="button-calculate" @click="calculateIntrinsicValue">Calculate Intrinsic Value</button>
-  </div>
+    <button class="button-calculate" @click="calculateIntrinsicValue">Calculate new value</button>
+
     
     <div>
     <!-- Input fields for each ticker -->
     <div v-for="(ticker, index) in tickers" :key="index" class="input-container">
-      <h3>{{ ticker }}</h3>
+      <h3>Ticker: {{ ticker }}</h3>
       <div class="input-group">
         <label for="growthRate">Growth Rate (%) default 5%</label>
         <input v-model.number="intrinsicParams[ticker].growthRate" id="growthRate" type="number" step="0.1" />
@@ -48,7 +48,6 @@
     </div>
 
     <div v-if="intrinsicData.length" class="table-container">
-      <h2>Intrinsic Value Data for {{ tickers.join(', ') }}</h2>
       <button @click="toggleCollapse">Click to expand or collapse</button>
       <div class="table-scroll">
         <table>
@@ -202,6 +201,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 10px;
+
   /* Add space between inputs and button */
 }
 
@@ -210,14 +210,18 @@ input {
   padding: 8px;
   margin-top: 5px;
   border-radius: 8px;
-  border: 1px solid #f1f0f0;
+  border: 1px solid #f1f0f000;
+  background-color: #adadad1c;
+
+  
+  
 }
 .button-calculate {
   display: block;
   width: auto;
   justify-content: auto;
   padding: 8px;
-  color: white;
+  color: rgb(136, 136, 136);
   border: 1px;
   border-radius: 8px;
   cursor: pointer;
@@ -271,11 +275,12 @@ input {
   th, td {
     padding: 3px;
     font-size: 10px;
+    background-color: transparent;
   }
 }
 
 h1 {
-  font-size: 2.5em;
+  font-size: auto;
   margin-bottom: 20px;
   color: #333;
   text-align: left;
@@ -284,27 +289,31 @@ h1 {
 
 .table-container {
   margin-top: 20px;
+  background-color: transparent;
 }
 
 .table-scroll {
   max-width: auto;
   overflow-x: auto; /* Adds a horizontal scrollbar to the table */
+  background-color: transparent;
 }
 
 table {
   width: auto;
   border-collapse: collapse;
+  background-color: transparent;
 }
 
 th, td {
   padding: 4px; /* Reduced padding for more compact columns */
-  border: 1px solid #ddd;
+  border: 0px solid #ddd;
   text-align: left;
-  font-size: 12px; /* Smaller font size for more compact text */
+  font-size: auto; /* Smaller font size for more compact text */
+  background-color: transparent;
 }
 
 th {
-  background-color: #f4f4f4;
+  background-color: transparent;
   white-space: nowrap; /* Prevent header text from wrapping */
 }
 

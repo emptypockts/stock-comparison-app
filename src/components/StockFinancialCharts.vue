@@ -412,20 +412,21 @@ export default {
 };
 </script>
 <style scoped>
+char
 .error-message {
   color: red;
   margin-top: 10px;
 }
 .stock-financial-charts {
   padding: 20px;
-  background-color: #f8f9fa;
+  background-color: transparent;
   color: #333;
   max-width: 1200px;
   margin: 0 auto;
 }
 
 h1 {
-  font-size: 2.5em;
+  font-size: auto;
   margin-bottom: 20px;
   color: #333;
   text-align: left;
@@ -448,13 +449,14 @@ p {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: 20px;
+  background-color: transparent;
 }
 
 .chart-box {
-  background-color: #fff;
+  background-color: transparent;
   padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgb(111, 80, 80);
   transition: transform 0.3s ease;
 }
 
@@ -465,6 +467,7 @@ p {
 apexcharts {
   max-width: 100%;
   margin: 0 auto;
+  background-color: transparent;
 }
 
 @media (max-width: 768px) {

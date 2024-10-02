@@ -1,28 +1,20 @@
 <template>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <div v-if="loading" class="loading-overlay">
     <div class="loading-throbber">
       <div class="spinner"></div>
       <p>Authenticating... Please wait.</p>
     </div>
   </div>
-
-  <div class="split-screen">
-    <!-- Left side for the Unsplash image -->
-    <div class="image-container">
-      <img
-        src="https://images.unsplash.com/photo-1573425873096-b034f660a85c?q=80&w=2130&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" />
-    </div>
-
-    <!-- Right side for the login form -->
+  <h1>Honcho for Honchos</h1>
     <div class="auth-container">
-      <h2 class="centered-text">Login to Honcho</h2>
       <form @submit.prevent="handleLogin">
         <div class="input-group">
-          <label for="username" >Username</label>
-          <input v-model="username" id="username" label="Username" placeholder="@username" required autocomplete="name"/>
+          <label for="username">Username</label>
+          <input v-model="username" id="username" placeholder="@username" required autocomplete="name" />
         </div>
         <div class="input-group">
-          <label for="password" >Password</label>
+          <label for="password">Password</label>
           <input type="password" id="password" v-model="password" required />
         </div>
         <div class="input-group">
@@ -33,8 +25,8 @@
         </div>
       </form>
     </div>
-  </div>
 </template>
+
 
 
 <script>
@@ -107,69 +99,64 @@ export default {
 </script>
 
 <style scoped>
-/* Split screen layout */
-.split-screen {
-  display: flex;
-  height: 100vh;
-  /* Full screen height */
+h1{
+  position:absolute;
+  width: auto;
+  padding-left: 10%;
+  align-items: center;
+  justify-content: center;
+  color: #767676c4;
 }
 
-/* Left side - Image */
-.image-container {
-  flex: 1;
-  /* Takes up half the screen */
-  display: flex;
+input::placeholder{
+  color: white;
+  border:0px;
+}
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Prevents scrollbars from appearing */
+  width: 100vw;
+}
+
+
+.auth-container {
+  position: absolute;
+  width: 100vw;
+  height:92.5vh;
+  background-color: rgba(110, 110, 110, 0.249); /* Semi-transparent background */
+  padding: 30px;
+
+  text-align: center;
+  color:#ffffff;
+  width: 20%;
   justify-content: center;
   align-items: center;
-  background-color: #f0f0f0;
-  /* Light background if image fails */
+  display: flex;
 }
 
-.image-container img {
+
+.input-group input {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  /* Ensures image covers the container without distortion */
-}
-
-/* Right side - Login form */
-.auth-container {
-  flex: 1;
-  /* Takes up half the screen */
-  max-width: 500px;
-  margin: auto;
-  /* Center the form vertically */
-  padding: 20px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  background-color: white;
+  padding: 10px;
+  border: 0px;
   border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.187);
+  color: white
 }
 
-.input-group {
-  margin-bottom: 15px;
-}
-
-input {
-  width: 100%;
-  padding: 8px;
-  margin-top: 5px;
-  border-radius: 8px;
-  border: 0px solid #ccc;
-}
-
-button {
-  display: block;
+input[type="submit"], button[type="submit"] {
   width: auto;
-  justify-content: center;
   padding: 10px;
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  margin: 0 auto;
+  background-color: #dcdada34;
+  margin-top: 10px;
 }
 
-button:hover {
+input[type="submit"]:hover, button[type="submit"]:hover {
   background-color: #8bb4e0;
 }
 
@@ -178,61 +165,39 @@ button:hover {
   margin-top: 10px;
 }
 
-/* Loading overlay styles */
 .loading-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  width: 100%;
+  height: 100%;
+  background-color: rgba(77, 76, 76, 0.66);
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   z-index: 9999;
 }
 
 .loading-throbber {
   text-align: center;
-  color: white;
+  color: rgb(255, 255, 255);
+  font-size: 20px;
+  margin-top: 220px;
 }
 
 .spinner {
-  border: 4px solid rgba(255, 255, 255, 0.3);
+  border: 4px solid rgba(165, 155, 155, 0.269);
+  border-top: 4px solid #74bc2c1d;
   border-radius: 50%;
-  border-top-color: white;
-  width: 50px;
-  height: 50px;
-  animation: spin 1s ease-in-out infinite;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
   margin: 0 auto;
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-.centered-text {
-  text-align: center;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal {
-  background-color: white;
-  padding: 20px;
-  border-radius: 8px;
-  text-align: center;
-}
 </style>

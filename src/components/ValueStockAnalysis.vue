@@ -162,27 +162,33 @@ export default {
 <style scoped>
 .table-container {
   margin-top: 20px;
+  background-color: #ffffff00;
+  padding: 20px;
+  border-radius: 10px;
 }
 
 .table-scroll {
   max-width: auto;
   overflow-x: auto; /* Adds a horizontal scrollbar to the table */
+  scrollbar-darkshadow-color: #333;
 }
 
 table {
   width: auto;
   border-collapse: collapse;
+  background-color: transparent;
 }
 
 th, td {
   padding: 4px; /* Reduced padding for more compact columns */
   border: 1px solid #ddd;
   text-align: left;
-  font-size: 12px; /* Smaller font size for more compact text */
+  font-size: auto; /* Smaller font size for more compact text */
+  background-color: transparent;
 }
 
 th {
-  background-color: #f4f4f4;
+  background-color: transparent;
   white-space: nowrap; /* Prevent header text from wrapping */
 }
 
@@ -193,7 +199,7 @@ td {
 
 @media screen and (max-width: 768px) {
   th, td {
-    padding: 3px;
+    padding: 0px;
   }
 }
 /* Same loading screen styles */
@@ -213,7 +219,7 @@ td {
 }
 
 h1 {
-  font-size: 2.5em;
+  font-size: auto;
   margin-bottom: 20px;
   color: #333;
   text-align: left;

@@ -5,17 +5,19 @@
     <input v-model="ticker2" placeholder="Enter Stock Ticker 2 (Optional)" id="ticker 2" />
     <input v-model="ticker3" placeholder="Enter Stock Ticker 3 (Optional)" id="ticker 3" />
     <button @click="verifyAndFetchCompanyNames">Analyse Stock</button>
+  </div>
+  
     <!-- Error message display -->
     <div v-if="errorMessage" class="error-message">
       <p>{{ errorMessage }}</p>
-    </div>
+    
   </div>
   <h1>Highlights</h1>
   <div >
     <div  v-if="companyNames">
-      <ul>
+      <ul class="list-container">
         <li v-for="(name, ticker) in companyNames" :key="ticker">
-        <strong>Company:</strong> {{ ticker }}: {{ name[0] }}.  <strong>Current price:</strong> ${{ name[1] }} <strong> Next Earnings:</strong> {{ name[2] }}
+        <strong>Company:</strong> {{ ticker }}: {{ name[0] }}.  <strong>Current price:</strong> ${{ name[1] }} <strong> Next Earnings:</strong> {{ name[2] }}<br><br>
         </li>
       </ul>
     </div>
@@ -113,7 +115,7 @@ export default {
       const isTokenValid = await verifyToken();
       if (isTokenValid) {
         fetchCompanyNames();
-      }else router.push('/');
+      }
     };
     return {
       ticker1,
@@ -146,11 +148,11 @@ export default {
 
 }
 
-.input-container {
-  display: flex;
+.input-container{
+  display:flex;
   align-items: center;
   gap: 10px;
-  /* Add space between inputs and button */
+
 }
 
 input {
@@ -159,14 +161,17 @@ input {
   margin-top: 5px;
   border-radius: 8px;
   border: 1px solid #f1f0f0;
+  background-color: #adadad1c;
+  
 }
+
 
 button {
   display: block;
   width: auto;
   justify-content: left;
   padding: 8px;
-  color: white;
+  color: rgb(136, 136, 136);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -185,6 +190,7 @@ button:hover {
   border-radius: 8px;
   z-index: 1000;
   padding: 10px; /* Optional: adds padding to make it look better */
+  
 }
 .right-layout h1{
   text-align: auto;
@@ -192,17 +198,26 @@ button:hover {
 ul {
   list-style-position: inside; /* Moves the bullet inside the content box */
   padding-left: 0; /* Removes additional padding */
+
+}
+.list-container{
+  border-radius: 8px;
+  width:90%;
 }
 
 li {
+
   margin-left: 0; /* Ensure no left margin */
   padding-left: 0; /* Remove any extra padding on the left */
+
+
 }
 h1 {
-  font-size: 2.5em;
+  font-size: auto;
   margin-bottom: 20px;
   color: #333;
   text-align: left;
   font-weight: bold;
+  
 }
 </style>
