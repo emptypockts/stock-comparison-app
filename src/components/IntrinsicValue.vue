@@ -198,7 +198,6 @@ export default {
 /* Same styles with an added error message style */
 
 .input-container {
-  display: flex;
   align-items: center;
   gap: 10px;
 
@@ -206,14 +205,16 @@ export default {
 }
 
 input {
-  width: auto;
+  width: 50px;
   padding: 8px;
   margin-top: 5px;
   border-radius: 8px;
-  border: 1px solid #f1f0f000;
+  border: 1px solid #f1f0f0;
   background-color: #adadad1c;
 
-  
+  input::placeholder{
+  background-color: transparent;
+}
   
 }
 .button-calculate {
@@ -242,7 +243,6 @@ input {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999; /* High z-index to ensure it overlays all content */
 }
 
 .loading-throbber {
@@ -322,7 +322,6 @@ td {
 }
 
 .title-container {
-  display: flex;
   justify-content: auto; /* Adjusts space between the title and the button */
   align-items: center; /* Vertically aligns the button and title */
 }

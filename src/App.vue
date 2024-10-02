@@ -20,7 +20,7 @@
         investment or financial decisions.</tr>
       <div id="app">
         <!-- Main content on the left side -->
-        <div class="main-layout">
+        <div >
           <CompanyNames @tickers-updated="updateTickers" />
         </div>
         <!-- Value Analysis -->
@@ -118,10 +118,8 @@ body {
 .app-container {
   position: relative;
   width: 100vw;
-  background: url('https://images.unsplash.com/photo-1634117622592-114e3024ff27?q=80&w=2225&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')center/cover;
-  background-repeat: repeat-y;
+  background: repeat-y center url('https://images.unsplash.com/photo-1634117622592-114e3024ff27?q=80&w=2225&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
   min-height: 100vh;
-  background-size: cover;
   z-index: 0;
 }
 
@@ -159,6 +157,7 @@ body {
   border-radius: 8px;
   cursor: pointer;
   margin: 0 auto;
+  z-index: 1;
 }
 
 .logout-container button:hover {

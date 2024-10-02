@@ -5,10 +5,9 @@
       <p class="centered-text">Creating User please wait...</p>
     </div>
   </div>
-  <div class="split-screen">
-    <!-- Left side for the Unsplash image -->
+  <div>
     <div class="registration-container">
-      <h2>Create a New Account</h2>
+      <h1>Create a New Account</h1>
 
       <!-- Display error message if any -->
       <div v-if="errorMessage" class="error-message">
@@ -106,12 +105,12 @@ export default {
 
 <style scoped>
 h1{
-  position:absolute;
+  position:relative;
   width: auto;
-  padding-left: 10%;
-  align-items: center;
-  justify-content: center;
+  align-items: top;
+  justify-content: top;
   color: #767676c4;
+  font-size: 15px;
 }
 
 html, body {
@@ -133,7 +132,6 @@ html, body {
   width: 20%;
   justify-content: center;
   align-items: center;
-  display: flex;
 }
 
 .form-group input{

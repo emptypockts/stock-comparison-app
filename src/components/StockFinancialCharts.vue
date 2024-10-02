@@ -417,13 +417,7 @@ char
   color: red;
   margin-top: 10px;
 }
-.stock-financial-charts {
-  padding: 20px;
-  background-color: transparent;
-  color: #333;
-  max-width: 1200px;
-  margin: 0 auto;
-}
+
 
 h1 {
   font-size: auto;
@@ -447,15 +441,15 @@ p {
 
 .chart-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(350px,10%));
+  gap: 10px;
   background-color: transparent;
 }
 
 .chart-box {
   background-color: transparent;
-  padding: 20px;
-  border-radius: 8px;
+  padding: 5px;
+  border-radius: 10px;
   box-shadow: 0 4px 8px rgb(111, 80, 80);
   transition: transform 0.3s ease;
 }
@@ -464,31 +458,16 @@ p {
   transform: translateY(-5px);
 }
 
-apexcharts {
-  max-width: 100%;
-  margin: 0 auto;
-  background-color: transparent;
-}
+
 
 @media (max-width: 768px) {
   .stock-financial-charts {
     padding: 10px;
   }
 
-  h1 {
-    font-size: 2em;
-  }
-
-  h2 {
-    font-size: 1.2em;
-  }
-
   p {
     font-size: 0.8em;
   }
 
-  .chart-box {
-    padding: 15px;
-  }
 }
 </style>

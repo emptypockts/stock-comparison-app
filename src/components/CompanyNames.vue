@@ -1,9 +1,9 @@
 <template>
   <h1>Ticker Data </h1>
   <div class="input-container">
-    <input v-model="ticker1" placeholder="Enter Stock Ticker 1" id="ticker 1" />
-    <input v-model="ticker2" placeholder="Enter Stock Ticker 2 (Optional)" id="ticker 2" />
-    <input v-model="ticker3" placeholder="Enter Stock Ticker 3 (Optional)" id="ticker 3" />
+    <input v-model="ticker1" placeholder="Ticker 1" id="ticker 1" />
+    <input v-model="ticker2" placeholder="Optional" id="ticker 2" />
+    <input v-model="ticker3" placeholder="Optional" id="ticker 3" />
     <button @click="verifyAndFetchCompanyNames">Analyse Stock</button>
   </div>
   
@@ -149,14 +149,13 @@ export default {
 }
 
 .input-container{
-  display:flex;
   align-items: center;
   gap: 10px;
 
 }
 
 input {
-  width: auto;
+  width: 15%;
   padding: 8px;
   margin-top: 5px;
   border-radius: 8px;
@@ -165,7 +164,9 @@ input {
   
 }
 
-
+input::placeholder{
+  background-color: transparent;
+}
 button {
   display: block;
   width: auto;
@@ -181,20 +182,7 @@ button:hover {
   background-color: #8bb4e0;
 }
 
-.right-layout{
-  text-align: auto;
-  width: auto;
-  height: auto;
-  display: flex;
-  justify-content: flex-end; /* Align the content to the right */
-  border-radius: 8px;
-  z-index: 1000;
-  padding: 10px; /* Optional: adds padding to make it look better */
-  
-}
-.right-layout h1{
-  text-align: auto;
-}
+
 ul {
   list-style-position: inside; /* Moves the bullet inside the content box */
   padding-left: 0; /* Removes additional padding */
