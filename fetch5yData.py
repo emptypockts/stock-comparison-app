@@ -83,7 +83,13 @@ def fetch_5y_data(ticker):
     combined_df['p/b ratio Score'] = int(combined_df['p/b ratio'].mean() < 2)
     combined_df['Sum of Debt/FCF ratio Score'] = int(combined_df['Debt FCF ratio'].sum() > 0)
     combined_df['Earnings Yield Score'] = int(combined_df['Earnings Yield'].gt(0).all())
-    combined_df['1.3 Earnings Yield Score'] = int(combined_df['Earnings Yield'].iloc[-1] >= 1.3 * combined_df['Earnings Yield'].iloc[0])
+    initial_value = combined_df['Earnings Yield'].iloc[-1]  # 2020
+    last_value = combined_df['Earnings Yield'].iloc[0]  # 2023
+    # Calculate the percentage change from 2020 to 2023
+    growth = (last_value - initial_value) / abs(initial_value)
+    print(growth)
+    # Check if the growth is greater than or equal to 1.3x (130%)
+    combined_df['1.3 Earnings Yield Score'] = (growth >= 1.3).astype(int)
     combined_df['Dividends Yield Score'] = int(combined_df['Dividends Yield'].gt(0).all())
     combined_df['Total Score'] = combined_df['Dividends Yield Score'] + combined_df['Earnings Yield Score'] + combined_df['1.3 Earnings Yield Score'] + combined_df['Sum of Debt/FCF ratio Score'] + combined_df['p/b ratio Score'] + combined_df['p/e ratio Score'] + combined_df['Market Cap Score']
 
@@ -112,7 +118,7 @@ def fetch_5y_data(ticker):
 # Example function call
 if __name__ == "__main__":
     
-    tickers = ['lmt']  # Replace with your desired ticker
+    tickers = ['ulta']  # Replace with your desired ticker
     all_data = []
 
     # all_data = [fetch_5y_data(ticker)for ticker in tickers]
