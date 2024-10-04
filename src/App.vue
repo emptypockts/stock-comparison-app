@@ -17,7 +17,8 @@
         or professional guidance. Users should not rely on Honcho for making financial decisions.
         I, as the creator of Honcho, am not responsible or liable for any losses, damages, or negative consequences that
         may arise from the use of this application. Always seek professional financial advice before making any
-        investment or financial decisions.</tr>
+        investment or financial decisions.
+        p/b ratio is calculated using the Stockholders Equity instead of the tangible book value.  </tr>
       <div id="app">
         <!-- Main content on the left side -->
         <div >
