@@ -45,9 +45,11 @@
       </div>
     </div>
   </div>
+  <SpeedInsights />
 </template>
 
 <script>
+import { SpeedInsights } from "@vercel/speed-insights/vue"
 import { ref, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import IntrinsicValue from './components/IntrinsicValue.vue';
@@ -104,6 +106,7 @@ export default {
       currentRouteName, // Expose the current route name
       updateTickers,
       setLoading,
+      
     };
   },
 };
