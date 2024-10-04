@@ -34,8 +34,7 @@ def fetch_5y_data(ticker):
 
     Avg_Shares = stock.financials.loc['Basic Average Shares']
     Avg_Shares_df = Transform_Obj_and_Date(Avg_Shares)
-
-    tangible_book_value = stock.balance_sheet.loc['Tangible Book Value']
+    tangible_book_value = stock.balance_sheet.loc['Stockholders Equity', :]
     tangible_book_value_df = Transform_Obj_and_Date(tangible_book_value)
 
     fcf = stock.cashflow.loc['Free Cash Flow']
@@ -69,6 +68,9 @@ def fetch_5y_data(ticker):
     ], axis=1, join='outer')
     
     combined_df = combined_df.head(4)
+
+
+    
     combined_df['Tangible Book Value Per Share'] = combined_df['Tangible Book Value'] / combined_df['Basic Average Shares']
     combined_df['p/b ratio'] = combined_df['Price Per Share'] / combined_df['Tangible Book Value Per Share']
     combined_df['p/e ratio'] = combined_df['Price Per Share'] / combined_df['Diluted EPS']
@@ -87,7 +89,6 @@ def fetch_5y_data(ticker):
     last_value = combined_df['Earnings Yield'].iloc[0]  # 2023
     # Calculate the percentage change from 2020 to 2023
     growth = (last_value - initial_value) / abs(initial_value)
-    print(growth)
     # Check if the growth is greater than or equal to 1.3x (130%)
     combined_df['1.3 Earnings Yield Score'] = (growth >= 1.3).astype(int)
     combined_df['Dividends Yield Score'] = int(combined_df['Dividends Yield'].gt(0).all())
@@ -113,12 +114,12 @@ def fetch_5y_data(ticker):
     combined_df['Market Cap'] = combined_df['Market Cap'].apply(format_currency)
     combined_df['Symbol'] = ticker
     combined_df['Name'] = stock.info['shortName']
-
+    
     return combined_df
 # Example function call
 if __name__ == "__main__":
     
-    tickers = ['ulta']  # Replace with your desired ticker
+    tickers = ['hpe']  # Replace with your desired ticker
     all_data = []
 
     # all_data = [fetch_5y_data(ticker)for ticker in tickers]
