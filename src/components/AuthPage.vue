@@ -6,8 +6,8 @@
       <p>Authenticating... Please wait.</p>
     </div>
   </div>
-  <h1>Honcho for Honchos</h1>
-    <div class="auth-container">
+  <div class="bg-image">
+    <div class="auth-container" >  
       <form @submit.prevent="handleLogin">
         <div class="input-group">
           <label for="username">Username</label>
@@ -15,16 +15,20 @@
         </div>
         <div class="input-group">
           <label for="password">Password</label>
-          <input type="password" id="password" v-model="password" required />
+          <input v-model="password" id="password" type="password" placeholder="@password"   required />
         </div>
-        <div class="input-group">
+        <div>
           <button type="submit">Login</button>
         </div>
         <div>
           <p class="error-message" v-if="errorMessage">{{ errorMessage }}</p>
         </div>
+        <div>
+        <button @click="goToRegister" class="reg-button">Create Account</button>
+      </div>
       </form>
     </div>
+  </div>
 </template>
 
 
@@ -84,7 +88,11 @@ export default {
         loading.value = false; // Stop loading indicator
       }
     };
-
+    const goToRegister = () => {
+      // Redirect to the registration page
+      console.log("button pushed")
+      router.push('/register');
+    };
 
     return {
       username,
@@ -92,6 +100,7 @@ export default {
       errorMessage,
       handleLogin, // Make sure to return handleLogin for form submission
       loading,
+      goToRegister,
       clearErrorMessage
     };
   },
@@ -99,53 +108,58 @@ export default {
 </script>
 
 <style scoped>
-h1{
-  position:absolute;
-  width: auto;
-  padding-left: 10%;
-  align-items: center;
-  justify-content: center;
-  color: #767676c4;
-}
+
 
 input::placeholder{
   color: white;
   border:0px;
 }
-html, body {
-  margin: 0;
-  padding: 0;
-  overflow: hidden; /* Prevents scrollbars from appearing */
-  width: 100vw;
+.bg-image{
+  background: repeat-y center url('https://images.unsplash.com/photo-1634117622592-114e3024ff27?q=80&w=2225&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+  height: 100vh; /* Make sure it covers the full height of the viewport */
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 
 .auth-container {
-  position: absolute;
-  width: 100vw;
-  height:92.5vh;
-  background-color: rgba(110, 110, 110, 0.249); /* Semi-transparent background */
-  padding: 30px;
-
-  text-align: center;
-  color:#ffffff;
-  width: 20%;
+  padding: auto;
+  color:white;
   justify-content: center;
   align-items: center;
-  display: flex;
+  background-color:rgba(78, 91, 110, 0.21);
+  border-radius: 10px;
+  text-align: center;
 }
+
 
 
 .input-group input {
-  width: 100%;
+  width: 80%;
   padding: 10px;
   border: 0px;
   border-radius: 8px;
-  background-color: rgba(255, 255, 255, 0.187);
-  color: white
+  background-color: rgba(81, 81, 81, 0.224); /*input background color */
+
 }
 
 input[type="submit"], button[type="submit"] {
+  width: auto;
+  padding: 10px;
+  color:white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #dcdada29;
+  margin-top: 10px;
+}
+
+input[type="submit"]:hover, button[type="submit"]:hover {
+  background-color: #8bb4e0;
+}
+
+.reg-button {
   width: auto;
   padding: 10px;
   color: white;
@@ -154,11 +168,13 @@ input[type="submit"], button[type="submit"] {
   cursor: pointer;
   background-color: #dcdada34;
   margin-top: 10px;
+  margin-bottom: 10px;
 }
 
-input[type="submit"]:hover, button[type="submit"]:hover {
+.reg-button:hover {
   background-color: #8bb4e0;
 }
+
 
 .error-message {
   color: red;

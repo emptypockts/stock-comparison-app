@@ -1,23 +1,25 @@
 <template>
   <h1>Ticker Data </h1>
+  <HomeIcon />
   <div class="input-container">
     <input v-model="ticker1" placeholder="Ticker 1" id="ticker 1" />
     <input v-model="ticker2" placeholder="Optional" id="ticker 2" />
     <input v-model="ticker3" placeholder="Optional" id="ticker 3" />
     <button @click="verifyAndFetchCompanyNames">Analyse Stock</button>
   </div>
-  
-    <!-- Error message display -->
-    <div v-if="errorMessage" class="error-message">
-      <p>{{ errorMessage }}</p>
-    
+
+  <!-- Error message display -->
+  <div v-if="errorMessage" class="error-message">
+    <p>{{ errorMessage }}</p>
+
   </div>
   <h1>Highlights</h1>
-  <div >
-    <div  v-if="companyNames">
+  <div>
+    <div v-if="companyNames">
       <ul class="list-container">
         <li v-for="(name, ticker) in companyNames" :key="ticker">
-        <strong>Company:</strong> {{ ticker }}: {{ name[0] }}.  <strong>Current price:</strong> ${{ name[1] }} <strong> Next Earnings:</strong> {{ name[2] }}<br><br>
+          <strong>Company:</strong> {{ ticker }}: {{ name[0] }}. <strong>Current price:</strong> ${{ name[1] }} <strong>
+            Next Earnings:</strong> {{ name[2] }}<br><br>
         </li>
       </ul>
     </div>
@@ -28,6 +30,8 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router'; // Import useRouter for navigation
+import { nextTick } from 'vue';
+
 export default {
   emits: ['tickers-updated', 'loading'], // Declare the custom events
   setup(props, { emit }) {
@@ -49,16 +53,14 @@ export default {
           headers: { token },
         });
 
-        if (response.data.success) {
-          console.log('Token is valid');
-          return true;
-        } else {
-          router.push('/');
-
-        }
+        return response.data.success;
+         
+    
       } catch (error) {
-        console.error('Error verifying token:', error);
-        router.push('/');
+        console.error('Error verifying token:',error.response.data.message);
+        localStorage.removeItem('token');
+        localStorage.removeItem('tokenExpiration')
+        router.push('/')
         return false;
       }
     };
@@ -107,14 +109,22 @@ export default {
       finally {
         // Emit loading status as false to stop loading after the request is complete
         emit('loading', false);
-        
+
       }
     };
     // Wrapper function to verify the token before fetching company names
     const verifyAndFetchCompanyNames = async () => {
       const isTokenValid = await verifyToken();
+      console.log("Is token valid?: ", isTokenValid)
       if (isTokenValid) {
         fetchCompanyNames();
+      } else {
+        console.log("Pushing to login")
+        router.push('/').then(() => {
+          console.log('Navigation successful');
+        }).catch((error) => {
+          console.error('Navigation failed:', error);
+        });
       }
     };
     return {
@@ -148,7 +158,7 @@ export default {
 
 }
 
-.input-container{
+.input-container {
   align-items: center;
   gap: 10px;
 
@@ -161,12 +171,13 @@ input {
   border-radius: 8px;
   border: 1px solid #f1f0f0;
   background-color: #adadad1c;
-  
+
 }
 
-input::placeholder{
+input::placeholder {
   background-color: transparent;
 }
+
 button {
   display: block;
   width: auto;
@@ -184,28 +195,34 @@ button:hover {
 
 
 ul {
-  list-style-position: inside; /* Moves the bullet inside the content box */
-  padding-left: 0; /* Removes additional padding */
+  list-style-position: inside;
+  /* Moves the bullet inside the content box */
+  padding-left: 0;
+  /* Removes additional padding */
 
 }
-.list-container{
+
+.list-container {
   border-radius: 8px;
-  width:90%;
+  width: 90%;
 }
 
 li {
 
-  margin-left: 0; /* Ensure no left margin */
-  padding-left: 0; /* Remove any extra padding on the left */
+  margin-left: 0;
+  /* Ensure no left margin */
+  padding-left: 0;
+  /* Remove any extra padding on the left */
 
 
 }
+
 h1 {
   font-size: auto;
   margin-bottom: 20px;
   color: #333;
   text-align: left;
   font-weight: bold;
-  
+
 }
 </style>

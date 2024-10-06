@@ -5,9 +5,8 @@
       <p class="centered-text">Creating User please wait...</p>
     </div>
   </div>
-  <div>
+  <div class="bg-image">
     <div class="registration-container">
-      <h1>Create a New Account</h1>
 
       <!-- Display error message if any -->
       <div v-if="errorMessage" class="error-message">
@@ -35,6 +34,9 @@
         </div>
         <div v-if="!showSuccessModal" class="modal-overlay">
         <button type="submit">Register</button>
+        </div>
+        <div>
+          <button @click=redirectToLogin class="button-goback">Go back</button>
         </div>
       </form>
       <div>
@@ -113,50 +115,63 @@ h1{
   font-size: 15px;
 }
 
-html, body {
-  margin: 0;
-  padding: 0;
-  overflow: hidden; /* Prevents scrollbars from appearing */
-  width: 100vw;
-}
-
-.registration-container{
-  position: absolute;
-  width: 100vw;
-  height:92.5vh;
-  background-color: rgba(110, 110, 110, 0.249); /* Semi-transparent background */
-  padding: 30px;
-
-  text-align: center;
-  color:#ffffff;
-  width: 20%;
+.bg-image{
+  background: repeat-y center url('https://images.unsplash.com/photo-1634117622592-114e3024ff27?q=80&w=2225&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+  height: 100vh; /* Make sure it covers the full height of the viewport */
+  display: flex;
   justify-content: center;
   align-items: center;
 }
-
-.form-group input{
-  width: 100%;
-  padding: 10px;
-  border: 0px;
-  border-radius: 8px;
-  background-color: rgba(255, 255, 255, 0.187);
-  color: white
-}
-
-input[type="submit"], button[type="submit"] {
+.button-goback{
   width: auto;
   padding: 10px;
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  background-color: #dcdada34;
+  background-color: #dadcdc34;
+  margin-top: 10px;
+  margin-bottom: 10px;
+
+}
+.button-goback:hover{
+  background-color: #8bb4e0;
+}
+
+.registration-container{
+  padding: auto;
+  color:white;
+  justify-content: center;
+  align-items: center;
+  background-color:rgba(78, 91, 110, 0.21);
+  border-radius: 10px;
+  text-align: center;
+}
+
+.form-group input{
+
+  width: 80%;
+  padding: 10px;
+  border: 0px;
+  border-radius: 8px;
+  background-color: rgba(81, 81, 81, 0.224); /*input background color */
+}
+
+input[type="submit"], button[type="submit"] {
+  width: auto;
+  padding: 10px;
+  color:white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #dcdada29;
   margin-top: 10px;
 }
 
 input[type="submit"]:hover, button[type="submit"]:hover {
   background-color: #8bb4e0;
 }
+
 
 .error-message {
   color: red;

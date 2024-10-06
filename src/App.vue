@@ -1,17 +1,24 @@
+
 <template>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <div class="app-container">
+  <div >
     <div v-if="!isAuthenticated">
       <router-view></router-view>
-      <!-- Conditionally show the Register button only on the login page -->
-      <div v-if="currentRouteName === 'Auth'" class="reg-container">
-        <button @click="goToRegister">Create Account</button>
-      </div>
+
     </div>
-    <div v-else>
-      <div class="logout-container">
-        <button @click="logout">Logout</button>
-      </div>
+    <div v-else class="app-container" >
+  <!-- Floating Logout Button -->
+  <svg 
+  @click="logout" 
+  class="logout-container"
+  style="margin: 2rem; height:2em" 
+  xmlns="http://www.w3.org/2000/svg" 
+  viewBox="0 0 512 512"
+  fill="currentColor"
+  >
+  <path d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z"/>
+  
+</svg>
       <tr>Honcho is a demonstration application and is intended for educational and informational purposes only. The
         content and data provided within the application do not constitute financial advice, investment recommendations,
         or professional guidance. Users should not rely on Honcho for making financial decisions.
@@ -49,6 +56,7 @@
 </template>
 
 <script>
+
 import { SpeedInsights } from "@vercel/speed-insights/vue"
 import { ref, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
@@ -57,6 +65,7 @@ import CompanyNames from './components/CompanyNames.vue';
 import RittenhouseAnalysis from './components/RittenhouseAnalysis.vue';
 import StockFinancialCharts from './components/StockFinancialCharts.vue';
 import ValueStockAnalysis from './components/ValueStockAnalysis.vue';
+
 
 export default {
   name: 'App',
@@ -79,6 +88,30 @@ export default {
     const setLoading = (status) => {
       loading.value = status; // Set loading status based on the passed value
     };
+    const token = localStorage.getItem('token');
+    
+    const verifyToken = async () => {
+      if (!token) return false;
+      try {
+        const response = await axios.post('/api/verify', {}, {
+          headers: {
+            'token': token,
+          },
+        });
+        // Check if the token is still valid
+        if (response.data.success) {
+          console.log('Token is valid');
+          return true;
+        } else {
+          console.log('Token verification failed:', response.data.message);
+          return false;
+        }
+      } catch (error) {
+        console.log('Error verifying token:', response.data.message);
+        return false;
+      }
+    };
+
     const isAuthenticated = computed(() => !!localStorage.getItem('token'));
 
     const currentRouteName = computed(() => route.name); // Get current route name
@@ -86,23 +119,19 @@ export default {
     const logout = () => {
       // Clear token from localStorage
       localStorage.removeItem('token');
+      localStorage.removeItem('tokenExpiration')
       // Redirect to login page
-      router.push('/');
+      router.replace('/');
       console.log("Logout successful, routing to the login app");
     };
 
-    const goToRegister = () => {
-      // Redirect to the registration page
-      console.log("button pushed")
-      router.push('/register');
-    };
+
 
     return {
       tickers,
       loading,
       isAuthenticated,
       logout,
-      goToRegister,
       currentRouteName, // Expose the current route name
       updateTickers,
       setLoading,
@@ -113,13 +142,7 @@ export default {
 </script>
 
 <style scoped>
-html,
-body {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  /* Prevents scrollbars from appearing */
-}
+
 
 .app-container {
   position: relative;
@@ -129,45 +152,19 @@ body {
   z-index: 0;
 }
 
-.reg-container button {
-  width: auto;
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  display: block;
-  width: auto;
-  justify-content: center;
-  padding: 10px;
-  color: rgb(136, 136, 136);
-  border: none;
-  border-radius: 8px;
+
+.logout-container{
+  position: fixed;
+  bottom: 20px;   /* Distance from the bottom of the screen */
+  right: 20px;    /* Distance from the right of the screen */
   cursor: pointer;
-  margin: 0 auto;
+  color: #6e6e6e8f; /* Customize the icon color */
+  z-index: 1000;  /* Ensure it's on top of other elements */
+  transition: color 0.3s ease;
 }
 
-.reg-container button:hover {
-  background-color: #8bb4e0;
-}
-
-.logout-container button {
-  width: auto;
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  display: block;
-  width: auto;
-  justify-content: center;
-  padding: 10px;
-  color: rgb(136, 136, 136);
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  margin: 0 auto;
-  z-index: 1;
-}
-
-.logout-container button:hover {
-  background-color: #8bb4e0;
+.logout-container:hover{
+  color: #3e3e3ece; /* Customize the icon color */
 }
 
 h1 {
