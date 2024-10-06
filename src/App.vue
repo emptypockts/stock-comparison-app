@@ -25,9 +25,8 @@
         I, as the creator of Honcho, am not responsible or liable for any losses, damages, or negative consequences that
         may arise from the use of this application. Always seek professional financial advice before making any
         investment or financial decisions. 
+        <br>p/b ratio is calculated using the Stockholders Equity instead of the tangible book value.
           </tr>
-         <tr>p/b ratio is calculated using the Stockholders Equity instead of the tangible book value.</tr>
-         <tr>feedback is welcome at cloudmagicstreet@outlook.com</tr>
       <div id="app">
         <!-- Main content on the left side -->
         <div >
@@ -147,11 +146,14 @@ export default {
 .app-container {
   position: relative;
   width: 100vw;
-  background: repeat-y center url('https://images.unsplash.com/photo-1634117622592-114e3024ff27?q=80&w=2225&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+  background: repeat-y top url('https://images.unsplash.com/photo-1634117622592-114e3024ff27?q=80&w=2225&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
   min-height: 100vh;
   z-index: 0;
 }
 
+tr{
+  background:transparent;
+}
 
 .logout-container{
   position: fixed;

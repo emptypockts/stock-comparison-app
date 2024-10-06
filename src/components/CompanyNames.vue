@@ -5,7 +5,9 @@
     <input v-model="ticker1" placeholder="Ticker 1" id="ticker 1" />
     <input v-model="ticker2" placeholder="Optional" id="ticker 2" />
     <input v-model="ticker3" placeholder="Optional" id="ticker 3" />
-    <button @click="verifyAndFetchCompanyNames">Analyse Stock</button>
+  </div>
+  <div>
+    <button @click="verifyAndFetchCompanyNames">Analyse</button>
   </div>
 
   <!-- Error message display -->
@@ -13,7 +15,6 @@
     <p>{{ errorMessage }}</p>
 
   </div>
-  <h1>Highlights</h1>
   <div>
     <div v-if="companyNames">
       <ul class="list-container">
@@ -44,7 +45,7 @@ export default {
     const verifyToken = async () => {
       const token = localStorage.getItem('token');
       if (!token) {
-        alert('Token not found. Please log in again.');
+        alert('Session has expired. Please refresh the page and login again');
         return false;
       }
 
@@ -158,20 +159,21 @@ export default {
 
 }
 
-.input-container {
-  align-items: center;
-  gap: 10px;
+.input-container{
+width: auto;
+background: transparent;
 
 }
 
 input {
-  width: 15%;
+  width: auto;
   padding: 8px;
   margin-top: 5px;
   border-radius: 8px;
   border: 1px solid #f1f0f0;
   background-color: #adadad1c;
-
+  row-gap: 10px;
+  display: flex;
 }
 
 input::placeholder {
@@ -179,7 +181,7 @@ input::placeholder {
 }
 
 button {
-  display: block;
+  position: relative;
   width: auto;
   justify-content: left;
   padding: 8px;
@@ -187,6 +189,7 @@ button {
   border: none;
   border-radius: 8px;
   cursor: pointer;
+  margin-top: 10px;
 }
 
 button:hover {
@@ -223,6 +226,5 @@ h1 {
   color: #333;
   text-align: left;
   font-weight: bold;
-
 }
 </style>

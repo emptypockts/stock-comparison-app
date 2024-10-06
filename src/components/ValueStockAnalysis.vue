@@ -12,7 +12,7 @@
       <div v-if="financialData.length" class="table-container">
         <button @click="toggleCollapse">Click to expand or collapse</button>
         <div class="table-scroll">
-          <table>
+          <table class="copyable-table">
             <thead>
               <tr>
                 <th>Date</th>
@@ -161,39 +161,29 @@ export default {
 
 <style scoped>
 .table-container {
-  margin-top: 20px;
-  background-color: #ffffff00;
-  padding: 20px;
-  border-radius: 10px;
-}
-
-.table-scroll {
-  max-width: auto;
-  overflow-x: auto; /* Adds a horizontal scrollbar to the table */
-  scrollbar-darkshadow-color: #333;
+  overflow-x: auto; /* Enable horizontal scrolling if the table is too wide */
 }
 
 table {
-  width: auto;
+  width: 100%;
   border-collapse: collapse;
-  background-color: transparent;
 }
 
-th, td {
-  padding: 4px; /* Reduced padding for more compact columns */
+thead th, tbody td {
+  padding: 10px;
   border: 1px solid #ddd;
   text-align: left;
-  font-size: auto; /* Smaller font size for more compact text */
-  background-color: transparent;
+  user-select: text; /* Ensure text can be selected */
 }
 
-th {
-  background-color: transparent;
-  white-space: nowrap; /* Prevent header text from wrapping */
+
+tbody tr:hover {
+  background-color: #f9f9f9; /* Optional: highlight row on hover */
 }
 
-td {
-  white-space: nowrap; /* Prevent cell text from wrapping */
+/* Add CSS class to allow easy selection and copying */
+.copyable-table {
+  user-select: text; /* Ensure that table text can be selected for copying */
 }
 
 
