@@ -186,6 +186,19 @@ tbody tr:hover {
   user-select: text; /* Ensure that table text can be selected for copying */
 }
 
+.title-container {
+  justify-content: auto; /* Adjusts space between the title and the button */
+  align-items: center; /* Vertically aligns the button and title */
+}
+
+.title-container h1 {
+  margin-right: 10px; /* Optional: adds some space between the title and button */
+}
+
+.title-container button {
+  margin-left: 10px; /* Optional: adds some space between the button and title */
+  margin-top: 5px;
+}
 
 @media screen and (max-width: 768px) {
   th, td {
@@ -214,6 +227,21 @@ h1 {
   color: #333;
   text-align: left;
   font-weight: bold;
+}
+button {
+  display: block;
+  width: auto;
+  justify-content: auto;
+  padding: 8px;
+  color: white;
+  border: 1px;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #8bb4e0;
+}
+
+button:hover {
+  background-color: #468eda;
 }
 
 </style>

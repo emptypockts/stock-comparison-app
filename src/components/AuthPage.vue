@@ -115,8 +115,8 @@ input::placeholder{
   border:0px;
 }
 .bg-image{
-  background: repeat-y center url('https://images.unsplash.com/photo-1634117622592-114e3024ff27?q=80&w=2225&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
-  height: 100vh; /* Make sure it covers the full height of the viewport */
+  background: repeat center url('https://images.unsplash.com/photo-1634117622592-114e3024ff27?q=80&w=2225&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+  height: 98vh; /* Make sure it covers the full height of the viewport */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -151,12 +151,12 @@ input[type="submit"], button[type="submit"] {
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  background-color: #dcdada29;
+  background-color: #8bb4e0;
   margin-top: 10px;
 }
 
 input[type="submit"]:hover, button[type="submit"]:hover {
-  background-color: #8bb4e0;
+  background-color: #468eda;
 }
 
 .reg-button {
@@ -166,13 +166,13 @@ input[type="submit"]:hover, button[type="submit"]:hover {
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  background-color: #dcdada34;
+  background-color: #8bb4e0;
   margin-top: 10px;
   margin-bottom: 10px;
 }
 
 .reg-button:hover {
-  background-color: #8bb4e0;
+  background-color: #468eda;
 }
 
 

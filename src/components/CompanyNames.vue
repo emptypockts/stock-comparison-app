@@ -1,6 +1,5 @@
 <template>
   <h1>Ticker Data </h1>
-  <HomeIcon />
   <div class="input-container">
     <input v-model="ticker1" placeholder="Ticker 1" id="ticker 1" />
     <input v-model="ticker2" placeholder="Optional" id="ticker 2" />
@@ -185,15 +184,16 @@ button {
   width: auto;
   justify-content: left;
   padding: 8px;
-  color: rgb(136, 136, 136);
+  color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   margin-top: 10px;
+  background-color: #8bb4e0;
 }
 
 button:hover {
-  background-color: #8bb4e0;
+  background-color: #468eda;
 }
 
 

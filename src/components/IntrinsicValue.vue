@@ -217,20 +217,20 @@ input {
 }
   
 }
-.button-calculate {
+button {
   display: block;
   width: auto;
   justify-content: auto;
   padding: 8px;
-  color: rgb(136, 136, 136);
+  color: white;
   border: 1px;
   border-radius: 8px;
   cursor: pointer;
-
+  background-color: #8bb4e0;
 }
 
-.button-calculate:hover {
-  background-color: #8bb4e0;
+button:hover {
+  background-color: #468eda;
 }
 
 .loading-overlay {
@@ -257,6 +257,8 @@ input {
   width: 50px;
   height: 50px;
   animation: spin 1s ease-in-out infinite;
+  margin: 0 auto;
+
 }
 
 @keyframes spin {

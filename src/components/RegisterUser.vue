@@ -82,7 +82,7 @@ export default {
         });
 
         if (response.data.success) {
-          console.log("register success ",response.data.message)
+          console.log("register success ")
           this.successMessage = 'User created successfully! You will be redirected to the login page.';
           this.errorMessage = '';
           this.loading = false;
@@ -122,20 +122,20 @@ h1{
   justify-content: center;
   align-items: center;
 }
-.button-goback{
+button{
   width: auto;
   padding: 10px;
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  background-color: #dadcdc34;
+  background-color: #8bb4e0;
   margin-top: 10px;
   margin-bottom: 10px;
 
 }
-.button-goback:hover{
-  background-color: #8bb4e0;
+button:hover{
+  background-color: #468eda;
 }
 
 .registration-container{
@@ -164,12 +164,12 @@ input[type="submit"], button[type="submit"] {
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  background-color: #dcdada29;
+  background-color: #8bb4e0;
   margin-top: 10px;
 }
 
 input[type="submit"]:hover, button[type="submit"]:hover {
-  background-color: #8bb4e0;
+  background-color: #468eda;
 }
 
 
