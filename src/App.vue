@@ -21,6 +21,7 @@
   
 </svg>
       <div id="app">
+        <CookieBanner/>
         <LoginAlert v-if="showLoginAlert"/>
         <!-- Main content on the left side -->
         <div >
@@ -51,7 +52,7 @@
 </template>
 
 <script>
-
+import CookieBanner from "./components/CookieBanner.vue";
 import LoginAlert from "./components/LoginAlert.vue";
 import { SpeedInsights } from "@vercel/speed-insights/vue"
 import { ref, computed,onMounted } from 'vue';
@@ -72,6 +73,7 @@ export default {
     RittenhouseAnalysis,
     IntrinsicValue,
     LoginAlert,
+    CookieBanner
   },
   setup() {
     const showLoginAlert = ref(true);
@@ -124,9 +126,13 @@ const containerClass = computed(() => {
       // Clear token from localStorage
       localStorage.removeItem('token');
       localStorage.removeItem('tokenExpiration')
+      localStorage.removeItem('cookieAccepted')
+      localStorage.removeItem('cookieAcceptedTimestamp')
+      localStorage.removeItem('cookieDeclined')
       // Redirect to login page
       router.replace('/');
       console.log("Logout successful, routing to the login app");
+      
     };
 
 
