@@ -21,6 +21,7 @@
   
 </svg>
       <div id="app">
+        <LoginAlert v-if="showLoginAlert"/>
         <!-- Main content on the left side -->
         <div >
           <CompanyNames @tickers-updated="updateTickers" />
@@ -46,7 +47,7 @@
     </div>
   </div>
   <SpeedInsights />
-  <LoginAlert v-if="showLoginAlert"/>
+  
 </template>
 
 <script>
