@@ -40,14 +40,14 @@
 import CookieBanner from "./components/CookieBanner.vue";
 import LoginAlert from "./components/LoginAlert.vue";
 import { ref, computed, onMounted } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+// import { useRouter, useRoute } from 'vue-router';
 import IntrinsicValue from './components/IntrinsicValue.vue';
 import CompanyNames from './components/CompanyNames.vue';
-import RittenhouseAnalysis from './components/RittenhouseAnalysis.vue';
+// import RittenhouseAnalysis from './components/RittenhouseAnalysis.vue';
 import StockFinancialCharts from './components/StockFinancialCharts.vue';
 import ValueStockAnalysis from './components/ValueStockAnalysis.vue';
 import axios from 'axios'; // Import Axios for HTTP requests
-import Logout from "./components/Logout.vue";
+import Logout from "./components/Log_out.vue";
 import BotLogo from "./components/botLogo.vue";
 import AI from "./components/AI.vue";
 
@@ -57,7 +57,7 @@ export default {
     CompanyNames,
     StockFinancialCharts,
     ValueStockAnalysis,
-    RittenhouseAnalysis,
+    // RittenhouseAnalysis,
     IntrinsicValue,
     LoginAlert,
     CookieBanner,
@@ -70,8 +70,8 @@ export default {
     const tickers = ref([]);
     const loading = ref(false);
     const isAuthenticated = ref(false);
-    const router = useRouter();
-    const route = useRoute(); // Get access to the current route
+    // const router = useRouter();
+    // const route = useRoute(); // Get access to the current route
     const updateTickers = (newTickers) => {
       tickers.value = newTickers;
       loading.value = false; // Data is ready, stop loading

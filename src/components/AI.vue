@@ -26,8 +26,8 @@
 import { defineProps } from 'vue';
 import { ref, watch } from 'vue';
 import GoBack from './goBack.vue';
-import Logout from './Logout.vue';
-import { useRouter } from 'vue-router';
+import Logout from './Log_out.vue';
+// import { useRouter } from 'vue-router';
 import axios from 'axios';
 const userMessage = ref('You are a financial expert that will conduct the 7power analysis framework from Hamilton Helmer about the company with ticker pltr. Layout each of the 7 powers and your conclusion of each. Include any URL for reference.');
 const props = defineProps({
@@ -45,7 +45,7 @@ watch(() => props.tickers, (newTickers) => {
   }
 });
 
-const router = useRouter();
+// const router = useRouter();
 const messages = ref([
     { text: 'I will conduct the 7power analysis for this ticker. If you want analysis for another, ticker just change the first ticker field in the main page. Hit send to start. ', isUser: false }
 ]);
@@ -59,9 +59,9 @@ async function sendMessage() {
         userMessage.value = '';
         setTimeout(() => {
             let formattedResponse = response.data['assistant']
-            .replace(/\*\ \*\*/g, '<br>')
-            .replace(/\. \*\*/g, '<br>')
-            .replace(/\:\*\*/g, '<br><br>')
+            .replace(/\* \*\*/g, '<br>')
+            .replace(/. \*\*/g, '<br>')
+            .replace(/:\*\*/g, '<br><br>')
             .replace(/\*\*/g, '<br><br>');
             
             formattedResponse = formattedResponse.trim(); // Remove any leading new line or space

@@ -230,8 +230,8 @@ export default {
     async fetchCompanyData(tickers) {
       try {
         if (!tickers.length) {
-          errorMessage.value = 'Please enter at least one stock ticker.';
-          return errorMessage;
+          this.errorMessage.value = 'Please enter at least one stock ticker.';
+          return this.errorMessage;
         }
 
         const financialResponse = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/financial_data`, {
@@ -264,6 +264,7 @@ export default {
         console.log("this is how the financial data object looks like:",this.financialData)
 
       } catch (error) {
+        this.errorMessage = error.response ? error.response.data : error.message; // Update here
         console.error('Error fetching data:', error.response ? error.response.data : error.message);
       }
       

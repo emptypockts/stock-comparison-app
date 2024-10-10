@@ -19,9 +19,9 @@ const routes = [
     component: RegisterUser,
   },
   {
-    path:'/ai',
-    name:'AI',
-    component:AI,
+    path: '/ai',
+    name: 'AI',
+    component: AI,
   },
 ];
 
@@ -31,23 +31,23 @@ const router = createRouter({
   routes,
 });
 
-console.log("router variable",router)
-async function verifyToken() {
-  const token = localStorage.getItem('token');
-  if (!token) return false; // No token exists
-  
-  try {
-    const response = await axios.post('/api/verify', {}, {
-      headers: {
-        'token': token,
-      },
-    });
-    return response.data.success; // Return true if token is valid, false otherwise
-  } catch (error) {
-    console.error('Token verification error:', error.response ? error.response.data.message : error.message);
-    return false;
-  }
-}
+console.log("router variable", router)
+// async function verifyToken() {
+//   const token = localStorage.getItem('token');
+//   if (!token) return false; // No token exists
+
+//   try {
+//     const response = await axios.post('/api/verify', {}, {
+//       headers: {
+//         'token': token,
+//       },
+//     });
+//     return response.data.success; // Return true if token is valid, false otherwise
+//   } catch (error) {
+//     console.error('Token verification error:', error.response ? error.response.data.message : error.message);
+//     return false;
+//   }
+// }
 
 // // Add a global beforeEach navigation guard
 // router.beforeEach(async (to, from, next) => {

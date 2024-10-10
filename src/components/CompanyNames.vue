@@ -30,7 +30,7 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router'; // Import useRouter for navigation
-import { nextTick } from 'vue';
+// import { nextTick } from 'vue';
 
 export default {
   emits: ['tickers-updated', 'loading'], // Declare the custom events
