@@ -1,11 +1,11 @@
 
 from dotenv import load_dotenv
 import os
-import google.generativeai as genai
+from google.generativeai import configure,GenerativeModel
 load_dotenv()
 API_KEY = os.getenv('GEMINI_API')
-genai.configure(api_key=API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
+configure(api_key=API_KEY)
+model = GenerativeModel('gemini-1.5-flash')
 
 def chatQuery(query):
     response = model.generate_content(query)
