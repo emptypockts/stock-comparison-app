@@ -60,8 +60,8 @@ async function sendMessage() {
         setTimeout(() => {
             let formattedResponse = response.data['assistant']
             .replace(/\* \*\*/g, '<br>')
-            .replace(/. \*\*/g, '<br>')
-            .replace(/:\*\*/g, '<br><br>')
+            .replace(/\. \*\*/g, '<br>')
+            .replace(/\:\*\*/g, '<br><br>')
             .replace(/\*\*/g, '<br><br>');
             
             formattedResponse = formattedResponse.trim(); // Remove any leading new line or space
