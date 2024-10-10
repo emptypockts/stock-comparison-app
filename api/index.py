@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import pandas as pd
-import secDBFetch # Assuming secDBFetch.py is refactored as a module
+# import secDBFetch # Assuming secDBFetch.py is refactored as a module
 # import rittenhouse  # Assuming rittenhouse.py is refactored as a module
 import fetch5yData
 import stockPlotData
@@ -73,19 +73,19 @@ def fetch_5y_financial_data():
 
     return jsonify(result),200
 #fetch sec report data if non existing
-@app.route('/api/fetch_sec_reports', methods=['GET'])
-def fetch_sec_reports():
-    tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
-    if not tickers:
-        return jsonify({'error': 'No tickers provided'}), 400
-    for ticker in tickers:
-        try:
-            form_types = request.args.getlist('form_types') or ['10-K', '10-Q', '8-K', 'DEF 14A']
-            # Fetch the SEC filings using the secDBFetch module
-            secDBFetch.get_sec_filings(ticker.capitalize(), form_types)
-            return jsonify({'message': 'SEC filings fetched successfully'}), 200
-        except Exception as e:
-            return jsonify({'error check the secDBFetch flow': str(e)}), 500
+# @app.route('/api/fetch_sec_reports', methods=['GET'])
+# def fetch_sec_reports():
+#     tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
+#     if not tickers:
+#         return jsonify({'error': 'No tickers provided'}), 400
+#     for ticker in tickers:
+#         try:
+#             form_types = request.args.getlist('form_types') or ['10-K', '10-Q', '8-K', 'DEF 14A']
+#             # Fetch the SEC filings using the secDBFetch module
+#             secDBFetch.get_sec_filings(ticker.capitalize(), form_types)
+#             return jsonify({'message': 'SEC filings fetched successfully'}), 200
+#         except Exception as e:
+#             return jsonify({'error check the secDBFetch flow': str(e)}), 500
 #analyse text from 10-K 8-K 6-K and DEF reports for rittenhouse analysis
 # @app.route('/api/analyze_rittenhouse', methods=['GET'])
 # def analyze_rittenhouse():
