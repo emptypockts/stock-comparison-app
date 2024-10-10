@@ -53,8 +53,11 @@ const messages = ref([
 async function sendMessage() {
     if (userMessage.value.trim()) {
         messages.value.push({ text: userMessage.value, isUser: true });
+        try{
+            console.log("Sending query")
         const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/chat`, {
             query:userMessage.value,
+            ticker:'pltr',
         });
         userMessage.value = '';
         setTimeout(() => {
@@ -67,7 +70,12 @@ async function sendMessage() {
             formattedResponse = formattedResponse.trim(); // Remove any leading new line or space
             messages.value.push({ text: formattedResponse, isUser: false });
         }, 1000);
-    }else(messages.value.push({text:"<br>This ticker has been analysed already. To do another analysis, change the ticker in the main page",
+    }
+        catch (error) {
+            console.error('Error sending query',error);
+    }
+    }
+    else(messages.value.push({text:"<br>This ticker has been analysed already. To do another analysis, change the ticker in the main page",
     isUser:false}))
 }
 

@@ -187,9 +187,9 @@ def messageBot():
     query = data.get('query')
     ticker=data.get('ticker')
     try:
-        response = geminiChat.chatQuery(query)
+        response = geminiChat.chatQuery(query,ticker)
         return jsonify({
-            'assistant':response.text,
+            'assistant':response,
             'ticker':ticker,
             }),200
     except:
