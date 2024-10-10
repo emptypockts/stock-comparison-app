@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import pandas as pd
 import secDBFetch # Assuming secDBFetch.py is refactored as a module
-import rittenhouse  # Assuming rittenhouse.py is refactored as a module
+# import rittenhouse  # Assuming rittenhouse.py is refactored as a module
 import fetch5yData
 import stockPlotData
 import companyName
@@ -87,13 +87,13 @@ def fetch_sec_reports():
         except Exception as e:
             return jsonify({'error check the secDBFetch flow': str(e)}), 500
 #analyse text from 10-K 8-K 6-K and DEF reports for rittenhouse analysis
-@app.route('/api/analyze_rittenhouse', methods=['GET'])
-def analyze_rittenhouse():
-    tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
-    if not tickers:
-        return jsonify({'error': 'No tickers provided'}), 400
-    data = {ticker: rittenhouse.analyze_ticker(DOWNLOAD_DIR,ticker) for ticker in tickers} 
-    return jsonify({"reports": data}),200
+# @app.route('/api/analyze_rittenhouse', methods=['GET'])
+# def analyze_rittenhouse():
+#     tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
+#     if not tickers:
+#         return jsonify({'error': 'No tickers provided'}), 400
+#     data = {ticker: rittenhouse.analyze_ticker(DOWNLOAD_DIR,ticker) for ticker in tickers} 
+#     return jsonify({"reports": data}),200
 #calculate intrinsic values
 @app.route('/api/intrinsic_value', methods=['GET'])
 def analyze_intrinsic_value():

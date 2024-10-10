@@ -62,10 +62,11 @@ async function sendMessage() {
         userMessage.value = '';
         setTimeout(() => {
             let formattedResponse = response.data['assistant']
-            .replace(/\* \*\*/g, '<br>')
-            .replace(/\. \*\*/g, '<br>')
-            .replace(/\:\*\*/g, '<br><br>')
-            .replace(/\*\*/g, '<br><br>');
+            // .replace(/\* \*\*/g, '<br>')
+            // .replace(/\. \*\*/g, '<br>')
+            // .replace(/\:\*\*/g, '<br><br>')
+            // .replace(/\*\*/g, '<br><br>');
+            .replace(/\n/g, '<br>');
             
             formattedResponse = formattedResponse.trim(); // Remove any leading new line or space
             messages.value.push({ text: formattedResponse, isUser: false });
@@ -133,8 +134,8 @@ h1 {
     align-items: left;
     align-items: start;
     justify-content: left;
-    height: 98vh;
-    width: 98vw;
+    height: 79vh;
+    width: auto;
 }
 
 
