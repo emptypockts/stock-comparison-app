@@ -221,13 +221,7 @@ tbody tr:hover {
   z-index: 1000;
 }
 
-h1 {
-  font-size: auto;
-  margin-bottom: 20px;
-  color: #333;
-  text-align: left;
-  font-weight: bold;
-}
+
 button {
   display: block;
   width: auto;

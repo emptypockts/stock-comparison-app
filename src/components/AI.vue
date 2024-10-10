@@ -1,12 +1,13 @@
 <template>
+
     <div>
         <div class="chat-header">
-            <h1>AI Chat</h1>
+            <h1>7power Analysis Framework from Helmer Hamilton.</h1>
+            <h2>Powered by google Gemini 1.5 flash</h2>
         </div>
         <div class="chat-messages">
             <div v-for="(message, index) in messages" :key="index" class="message"
-                :class="{ 'user-message': message.isUser }"
-                v-html="message.text" >
+                :class="{ 'user-message': message.isUser }" v-html="message.text">
             </div>
         </div>
         <div class="chatty">
@@ -19,7 +20,14 @@
             <Logout />
             <GoBack />
         </div>
+        <div v-if="loading" class="loading-overlay">
+        <div class="loading-throbber">
+            <div class="spinner"></div>
+            <p>Sending query... Please wait</p>
+        </div>
     </div>
+    </div>
+    
 </template>
 
 <script setup>
@@ -29,20 +37,24 @@ import GoBack from './goBack.vue';
 import Logout from './Log_out.vue';
 // import { useRouter } from 'vue-router';
 import axios from 'axios';
-const userMessage = ref('You are a financial expert that will conduct the 7power analysis framework from Hamilton Helmer about the company with ticker pltr. Layout each of the 7 powers and your conclusion of each. Include any URL for reference.');
+const analysisDone=ref(false);
+const loading = ref(false);
+const userMessage = ref('');
+const ticker=ref('')
 const props = defineProps({
-  tickers: {
-    type: Array,
-    required: true,
-  },
+    tickers: {
+        type: Array,
+        required: true,
+    },
 });
-
 // Watch for changes in tickers prop and update userMessage
-watch(() => props.tickers, (newTickers) => {
-    console.log("tickers: ",newTickers)
-  if (newTickers.length > 0) {
-    userMessage.value = `You are a financial expert that will conduct the 7power analysis framework from Hamilton Helmer about the company with ticker ${newTickers.join(', ')}. Layout each of the 7 powers and your conclusion of each. Include any URL for reference.`;
-  }
+watch(
+    () => props.tickers,
+     (newTickers) => {
+    if (newTickers.length) {
+        console.log('Tickers received in AI.vue:', newTickers); // Debugging line
+
+    }
 });
 
 // const router = useRouter();
@@ -51,71 +63,73 @@ const messages = ref([
 ]);
 
 async function sendMessage() {
-    if (userMessage.value.trim()) {
+    ticker.value=localStorage.getItem('ticker')
+    userMessage.value = `You are a financial expert that will conduct the 7power analysis framework from Hamilton Helmer about the company with ticker ${ticker.value}. Layout each of the 7 powers and your conclusion of each. Include any URL for reference.Make the analysis with the latest information and display those dates for any reference.
+    You must include the urls used for this research.`;
+    if (userMessage.value.trim() && !analysisDone.value&& ticker.value) {
         messages.value.push({ text: userMessage.value, isUser: true });
-        try{
+        try {
+
             console.log("Sending query")
-        const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/chat`, {
-            query:userMessage.value,
-            ticker:'pltr',
-        });
-        userMessage.value = '';
-        setTimeout(() => {
-            let formattedResponse = response.data['assistant']
-            // .replace(/\* \*\*/g, '<br>')
-            // .replace(/\. \*\*/g, '<br>')
-            // .replace(/\:\*\*/g, '<br><br>')
-            // .replace(/\*\*/g, '<br><br>');
-            .replace(/\n/g, '<br>');
+            console.log("loading status:",loading)
+            loading.value = true // Loading state for authentication
+            const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/chat`, {
+                query: userMessage.value,
+            });
+            setTimeout(() => {
+                let formattedResponse = response.data['assistant']
+                    // .replace(/\* \*\*/g, '<br>')
+                    // .replace(/\. \*\*/g, '<br>')
+                    // .replace(/\:\*\*/g, '<br><br>')
+                    // .replace(/\*\*/g, '<br><br>');
+                    .replace(/\n/g, '<br>');
+
+                formattedResponse = formattedResponse.trim(); // Remove any leading new line or space
+                messages.value.push({ text: formattedResponse, isUser: false });
+                localStorage.removeItem('ticker')
+                analysisDone.value=true;
+            }, 1000);
             
-            formattedResponse = formattedResponse.trim(); // Remove any leading new line or space
-            messages.value.push({ text: formattedResponse, isUser: false });
-        }, 1000);
-    }
+        }
         catch (error) {
-            console.error('Error sending query',error);
+            console.error('Error sending query', error);
+        }loading.value=false;
     }
-    }
-    else(messages.value.push({text:"<br>This ticker has been analysed already. To do another analysis, change the ticker in the main page",
-    isUser:false}))
+    else (messages.value.push({
+        text: "<br>This ticker has been analysed already or the ticker field is empty. If you don't see any analysis done yet, try to update the ticker field and click the analyse button and then come back to this page.",
+        isUser: false
+    }))
 }
 
 
 </script>
 
 <style scoped>
-.input-container{
-width: auto;
-background: transparent;
+.input-container {
+    width: auto;
+    background: transparent;
 
 }
 
 input {
-  width: auto;
-  padding: 8px;
-  margin-top: 5px;
-  border-radius: 8px;
-  border: 1px solid #f1f0f0;
-  background-color: #adadad1c;
-  row-gap: 10px;
-  display: flex;
+    width: auto;
+    padding: 8px;
+    margin-top: 5px;
+    border-radius: 8px;
+    border: 1px solid #f1f0f0;
+    background-color: #adadad1c;
+    row-gap: 10px;
+    display: flex;
 }
+
 .user-message {
-  align-self: flex-end;
-  color: rgb(212, 85, 106);
-  
+    align-self: flex-end;
+    color: rgb(212, 85, 106);
+
 }
 
 
-h1 {
 
-  font-size: auto;
-  margin-bottom: 20px;
-  margin-left: 10px;
-  color: #333;
-  text-align: left;
-  font-weight: bold;
-}
 
 .page {
     top: 0;
@@ -156,8 +170,8 @@ h1 {
     /* Text color */
     line-height: 1.5;
     text-align: left;
-    width:90%
-    /* Aligns text to the left */
+    width: 90%
+        /* Aligns text to the left */
 
 }
 
@@ -174,13 +188,7 @@ h1 {
 
 }
 
-h1 {
-    font-size: auto;
-    margin-bottom: 20px;
-    color: #333;
-    text-align: left;
-    font-weight: bold;
-}
+
 
 button {
     display: block;

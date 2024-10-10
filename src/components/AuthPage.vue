@@ -180,40 +180,4 @@ input[type="submit"]:hover, button[type="submit"]:hover {
   color: red;
   margin-top: 10px;
 }
-
-.loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(77, 76, 76, 0.66);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
-
-.loading-throbber {
-  text-align: center;
-  color: rgb(255, 255, 255);
-  font-size: 20px;
-  margin-top: 220px;
-}
-
-.spinner {
-  border: 4px solid rgba(165, 155, 155, 0.269);
-  border-top: 4px solid #74bc2c1d;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-  margin: 0 auto;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
 </style>

@@ -185,12 +185,10 @@ def verify_token():
 def messageBot():
     data = request.json
     query = data.get('query')
-    ticker=data.get('ticker')
     try:
-        response = geminiChat.chatQuery(query,ticker)
+        response = geminiChat.chatQuery(query)
         return jsonify({
             'assistant':response,
-            'ticker':ticker,
             }),200
     except:
         return jsonify({'error':response}),400

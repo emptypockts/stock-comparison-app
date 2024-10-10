@@ -1,8 +1,9 @@
 <template>
 
     <h1>Intrinsic Value Analysis</h1>
+    <div v-if="tickers.length">
     <button class="button-calculate" @click="calculateIntrinsicValue">Calculate new value</button>
-
+  </div>
     
     <div>
     <!-- Input fields for each ticker -->
@@ -233,39 +234,7 @@ button:hover {
   background-color: #468eda;
 }
 
-.loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background to create a shadow effect */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
 
-.loading-throbber {
-  text-align: center;
-  color: white;
-}
-
-.spinner {
-  border: 4px solid rgba(255, 255, 255, 0.3); /* Light border for the spinner */
-  border-radius: 50%;
-  border-top-color: white; /* The top border is solid to create the spinning effect */
-  width: 50px;
-  height: 50px;
-  animation: spin 1s ease-in-out infinite;
-  margin: 0 auto;
-
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
 
 /* Error message style */
 .error-message {
@@ -281,13 +250,7 @@ button:hover {
   }
 }
 
-h1 {
-  font-size: auto;
-  margin-bottom: 20px;
-  color: #333;
-  text-align: left;
-  font-weight: bold;
-}
+
 
 .table-container {
   overflow-x: auto; /* Enable horizontal scrolling if the table is too wide */

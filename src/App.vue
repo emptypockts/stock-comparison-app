@@ -74,6 +74,7 @@ export default {
     // const route = useRoute(); // Get access to the current route
     const updateTickers = (newTickers) => {
       tickers.value = newTickers;
+      localStorage.setItem('ticker',newTickers[0])
       loading.value = false; // Data is ready, stop loading
 
     };
@@ -158,13 +159,7 @@ tr {
   background: transparent;
 }
 
-h1 {
-  font-size: auto;
-  margin-bottom: 20px;
-  color: #333;
-  text-align: left;
-  font-weight: bold;
-}
+
 
 button {
   background-color: #8bb4e0;
@@ -173,4 +168,55 @@ button {
 button:hover {
   background-color: #468eda;
 }
+</style>
+
+<style>
+*{
+  font-family: monospace;
+}
+h1,h2 {
+
+font-size: auto;
+margin-bottom: 20px;
+margin-left: 10px;
+color: #6d6d6d;
+text-align: left;
+font-weight: bold;
+
+}
+/* Loading overlay styles */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loading-throbber {
+  text-align: center;
+  color: white;
+}
+
+.spinner {
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s ease-in-out infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 </style>

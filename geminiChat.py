@@ -8,7 +8,7 @@ API_KEY = os.getenv('GEMINI_API')
 url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
 querystring = {"key":API_KEY}
 
-def chatQuery(query,ticker):
+def chatQuery(query):
 
     payload = {"contents": [{"parts": [{"text": query}]}]}
     headers = {"Content-Type": "application/json"}

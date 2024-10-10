@@ -220,11 +220,4 @@ li {
 
 }
 
-h1 {
-  font-size: auto;
-  margin-bottom: 20px;
-  color: #333;
-  text-align: left;
-  font-weight: bold;
-}
 </style>
