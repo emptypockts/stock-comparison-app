@@ -31,7 +31,7 @@
           <RittenhouseAnalysis :tickers="tickers" />
         </div> -->
       </div>
-
+      <AI :tickers="tickers" hidden/>
     </div>
   </div>
 </template>
@@ -49,6 +49,7 @@ import ValueStockAnalysis from './components/ValueStockAnalysis.vue';
 import axios from 'axios'; // Import Axios for HTTP requests
 import Logout from "./components/Logout.vue";
 import BotLogo from "./components/botLogo.vue";
+import AI from "./components/AI.vue";
 
 export default {
   name: 'App',
@@ -62,6 +63,7 @@ export default {
     CookieBanner,
     Logout,
     BotLogo,
+    AI,
   },
   setup() {
     const showLoginAlert = ref(true);
@@ -140,7 +142,7 @@ export default {
 
 .app-container {
   margin-left: 20px;
-  width: 100vw;
+  width: 98vw;
   background: transparent;
   height: 98vh;
 }

@@ -53,13 +53,15 @@
   }
   
   .modal-content {
-    padding: auto;
+  padding: auto;
   color:white;
   justify-content: center;
   align-items: center;
   background-color:rgba(78, 91, 110, 0.21);
   border-radius: 10px;
   text-align: center;
+  width: 90%;
+
   }
 
   button{

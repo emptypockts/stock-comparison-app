@@ -66,8 +66,10 @@
     text-align: center;
   }
   .cookie-banner p {
-    display: inline;
-    margin-right: 10px;
+    display: flex;
+    width: 90%;
+    justify-content: center;
+
   }
   .cookie-banner button {
     background-color: #f1c40f;

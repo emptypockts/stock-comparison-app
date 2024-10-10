@@ -5,14 +5,14 @@
         </div>
         <div class="chat-messages">
             <div v-for="(message, index) in messages" :key="index" class="message"
-                :class="{ 'user-message': message.isUser }">
-                {{ message.text }}
+                :class="{ 'user-message': message.isUser }"
+                v-html="message.text" >
             </div>
         </div>
         <div class="chatty">
-            <textarea v-model="userMessage" @keyup.enter="sendMessage" placeholder="Type a message..." rows="2"
-                class="chatty-textarea">
-                </textarea>
+            <!-- <textarea v-model="userMessage" @keyup.enter="sendMessage" placeholder="Type a message..." rows="2"
+                class="chatty-textarea" disabled>
+                </textarea> -->
             <button @click="sendMessage">Send</button>
         </div>
         <div>
@@ -23,31 +23,74 @@
 </template>
 
 <script setup>
+import { defineProps } from 'vue';
+import { ref, watch } from 'vue';
 import GoBack from './goBack.vue';
 import Logout from './Logout.vue';
 import { useRouter } from 'vue-router';
-import { ref } from 'vue';
+import axios from 'axios';
+const userMessage = ref('You are a financial expert that will conduct the 7power analysis framework from Hamilton Helmer about the company with ticker pltr. Layout each of the 7 powers and your conclusion of each. Include any URL for reference.');
+const props = defineProps({
+  tickers: {
+    type: Array,
+    required: true,
+  },
+});
+
+// Watch for changes in tickers prop and update userMessage
+watch(() => props.tickers, (newTickers) => {
+    console.log("tickers: ",newTickers)
+  if (newTickers.length > 0) {
+    userMessage.value = `You are a financial expert that will conduct the 7power analysis framework from Hamilton Helmer about the company with ticker ${newTickers.join(', ')}. Layout each of the 7 powers and your conclusion of each. Include any URL for reference.`;
+  }
+});
+
 const router = useRouter();
 const messages = ref([
-    { text: 'Hello! How can I assist you?', isUser: false }
+    { text: 'I will conduct the 7power analysis for this ticker. If you want analysis for another, ticker just change the first ticker field in the main page. Hit send to start. ', isUser: false }
 ]);
-const userMessage = ref('');
 
 async function sendMessage() {
     if (userMessage.value.trim()) {
         messages.value.push({ text: userMessage.value, isUser: true });
+        const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/chat`, {
+            query:userMessage.value,
+        });
         userMessage.value = '';
         setTimeout(() => {
-            messages.value.push({ text: 'AI is thinking...', isUser: false });
+            let formattedResponse = response.data['assistant']
+            .replace(/\*\ \*\*/g, '<br>')
+            .replace(/\. \*\*/g, '<br>')
+            .replace(/\:\*\*/g, '<br><br>')
+            .replace(/\*\*/g, '<br><br>');
+            
+            formattedResponse = formattedResponse.trim(); // Remove any leading new line or space
+            messages.value.push({ text: formattedResponse, isUser: false });
         }, 1000);
-    }
+    }else(messages.value.push({text:"<br>This ticker has been analysed already. To do another analysis, change the ticker in the main page",
+    isUser:false}))
 }
 
 
 </script>
 
 <style scoped>
+.input-container{
+width: auto;
+background: transparent;
 
+}
+
+input {
+  width: auto;
+  padding: 8px;
+  margin-top: 5px;
+  border-radius: 8px;
+  border: 1px solid #f1f0f0;
+  background-color: #adadad1c;
+  row-gap: 10px;
+  display: flex;
+}
 .user-message {
   align-self: flex-end;
   color: rgb(212, 85, 106);

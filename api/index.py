@@ -8,6 +8,7 @@ import stockPlotData
 import companyName
 import getStockPrice
 import stockIntrinsicVal
+import geminiChat
 from dotenv import load_dotenv
 import os
 import bcrypt
@@ -179,6 +180,20 @@ def verify_token():
         return jsonify({'success': False, 'message': 'Token has expired'}), 401
     except jwt.InvalidTokenError:
         return jsonify({'success': False, 'message': 'Invalid token'}), 401
+
+@app.route('/api/chat', methods=['POST'])
+def messageBot():
+    data = request.json
+    query = data.get('query')
+    ticker=data.get('ticker')
+    try:
+        response = geminiChat.chatQuery(query)
+        return jsonify({
+            'assistant':response.text,
+            'ticker':ticker,
+            }),200
+    except:
+        return jsonify({'error':response}),400
 
 if __name__ == '__main__':
     app.run(debug=True)
