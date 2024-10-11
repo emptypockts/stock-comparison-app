@@ -59,12 +59,13 @@
   <style scoped>
   .cookie-banner {
     position: fixed;
-    bottom: 0;
-    width: 100%;
+    bottom: 30px;
+    width: 85%;
     background-color: #33333377;
     color: white;
     padding: 10px;
     text-align: center;
+    border-radius: 5px;
   }
   .cookie-banner p {
     display: flex;

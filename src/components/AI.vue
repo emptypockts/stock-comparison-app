@@ -1,20 +1,22 @@
 <template>
-    <div >
-        <div class="chat-header">
+    <div class="page">
+            <div>
             <h1>7power Analysis Framework from Helmer Hamilton.</h1>
-            <h2>Powered by google Gemini 1.5 flash</h2>
+        </div>
+        <div>
+           <h2> Powered by google Gemini 1.5 flash</h2>
         </div>
         <div class="chat-messages">
             <div v-for="(message, index) in messages" :key="index" :class="{ 'user-message': message.isUser }"
                 v-html="message.text">
             </div>
         </div>
-        <div>
-            <!-- <textarea v-model="userMessage" @keyup.enter="sendMessage" placeholder="Type a message..." rows="2"
+
+        <!-- <textarea v-model="userMessage" @keyup.enter="sendMessage" placeholder="Type a message..." rows="2"
                 class="chatty-textarea" disabled>
                 </textarea> -->
-            <button @click="sendMessage">Send</button>
-        </div>
+        <button @click="sendMessage">Send</button>
+
         <div>
             <Logout />
             <GoBack />
@@ -30,7 +32,6 @@
 </template>
 
 <script setup>
-import { defineProps } from 'vue';
 import { ref, watch } from 'vue';
 import GoBack from './goBack.vue';
 import Logout from './Log_out.vue';
@@ -40,21 +41,8 @@ const analysisDone = ref(false);
 const loading = ref(false);
 const userMessage = ref('');
 const ticker = ref('')
-const props = defineProps({
-    tickers: {
-        type: Array,
-        required: true,
-    },
-});
-// Watch for changes in tickers prop and update userMessage
-watch(
-    () => props.tickers,
-    (newTickers) => {
-        if (newTickers.length) {
-            console.log('Tickers received in AI.vue:', newTickers); // Debugging line
 
-        }
-    });
+
 
 // const router = useRouter();
 const messages = ref([
@@ -102,76 +90,37 @@ async function sendMessage() {
 
 
 </script>
-
 <style scoped>
-.input-container {
-    width: auto;
-    background: transparent;
-
-}
-
-input {
-    width: auto;
-    padding: 8px;
-    margin-top: 5px;
-    border-radius: 8px;
-    border: 1px solid #f1f0f0;
-    background-color: #adadad1c;
-    row-gap: 10px;
+.page {
     display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    height: 100vh;
+    background: repeat center url('https://images.unsplash.com/photo-1634117622592-114e3024ff27?q=80&w=2225&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+    background-size:auto;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
-.user-message {
-    align-self: flex-end;
-    color: rgb(212, 85, 106);
-
+h1 {
+    text-align: center;
+    font-size: 2em;
+    margin-bottom: 20px;
+    color: rgb(62, 61, 61);
 }
-
-
-
-
-
-
-.chatty {
-    align-items: left;
-    align-items: start;
-    justify-content: left;
-    height: 79vh;
-    width: auto;
+h2 {
+    text-align: center;
+    font-size: 1em;
+    margin-bottom: 20px;
+    color: rgb(62, 61, 61);
 }
-
-
-
-
-
-
-.chat-textarea:focus {
-    outline: none;
-}
-
-
-
-
-
-button {
-    position: relative;
-    width: auto;
-    padding: 8px;
-    color: white;
-    border: 1px;
-    border-radius: 8px;
-    cursor: pointer;
-    background-color: #8bb4e0;
-    margin-left: 20px;
-}
-
-button:hover {
-    background-color: #468eda;
-}
-
 .chat-messages {
-    flex: 1;
-    margin-left: 10px;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 350px;
     padding: 10px;
     overflow-y: auto;
     border-radius: 8px;
@@ -179,8 +128,68 @@ button:hover {
     color: rgba(255, 255, 255, 0.66);
     line-height: 1.5;
     font-family: monospace;
-    width: 85%;
-    
+    margin-bottom: 20px;
 }
 
+button {
+    padding: 10px 20px;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background-color: #8bb4e0;
+    margin-bottom: 20px;
+}
+
+button:hover {
+    background-color: #468eda;
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.loading-throbber {
+    text-align: center;
+    color: white;
+}
+
+@media (max-width: 768px) {
+    h1 {
+        font-size: 1.5em;
+    }
+
+    button {
+        width: 90%;
+        padding: 12px;
+    }
+
+    .chat-messages {
+        width: 100%;
+    }
+}
+
+@media (min-width: 769px) {
+    .page {
+        padding: 50px;
+    }
+
+    .chat-messages {
+        max-width: 800px;
+    }
+
+    button {
+        width: auto;
+        padding: 15px 30px;
+    }
+}
 </style>
