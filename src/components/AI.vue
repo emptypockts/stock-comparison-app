@@ -3,9 +3,7 @@
             <div>
             <h1>7power Analysis Framework from Helmer Hamilton.</h1>
         </div>
-        <div>
-           <h2> Powered by google Gemini 1.5 flash</h2>
-        </div>
+
         <div class="chat-messages">
             <div v-for="(message, index) in messages" :key="index" :class="{ 'user-message': message.isUser }"
                 v-html="message.text">
@@ -24,7 +22,7 @@
         <div v-if="loading" class="loading-overlay">
             <div class="loading-throbber">
                 <div class="spinner"></div>
-                <p>Sending query... Please wait</p>
+                <p>Sending query...Powered by google Gemini 1.5 flash Please wait...</p>
             </div>
         </div>
     </div>

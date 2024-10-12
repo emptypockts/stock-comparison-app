@@ -3,7 +3,7 @@
   <div v-if="loading" class="loading-overlay">
     <div class="loading-throbber">
       <div class="spinner"></div>
-      <p>Authenticating... Please wait.</p>
+      <p>Authenticating... Please wait. DB powered by MongoDB</p>
     </div>
   </div>
   <div class="bg-image">
@@ -11,11 +11,11 @@
       <form @submit.prevent="handleLogin">
         <div class="input-group">
           <label for="username">Username</label>
-          <input v-model="username" id="username" placeholder="@username" required autocomplete="name" />
+          <input v-model="username"  placeholder="use:boo" required  />
         </div>
         <div class="input-group">
           <label for="password">Password</label>
-          <input v-model="password" id="password" type="password" placeholder="@password"   required />
+          <input v-model="password"  type="password" placeholder="use:boo1234"   required />
         </div>
         <div>
           <button type="submit">Login</button>

@@ -1,9 +1,9 @@
 <template>
   <h1>Ticker Data </h1>
   <div class="input-container">
-    <input v-model="ticker1" placeholder="Ticker 1" id="ticker 1" />
-    <input v-model="ticker2" placeholder="Optional" id="ticker 2" />
-    <input v-model="ticker3" placeholder="Optional" id="ticker 3" />
+    <input v-model="ticker1" placeholder="Try:intc" id="ticker 1" />
+    <input v-model="ticker2" placeholder="Try:axp" id="ticker 2" />
+    <input v-model="ticker3" placeholder="Try:nvda" id="ticker 3" />
   </div>
   <div>
     <button @click="verifyAndFetchCompanyNames">Analyse</button>
