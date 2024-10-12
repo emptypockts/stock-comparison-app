@@ -2,7 +2,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <div class="page">
     <div v-if="!isAuthenticated">
-      <h1 class="app-title">Welcome to Honcho <br>Demo App</h1> <!-- Add your title here -->
+      <h1 class="app-title">Welcome to Honcho</h1> <!-- Add your title here -->
       <router-view></router-view>
     </div>
     <div v-else :class="containerClass">
@@ -223,7 +223,7 @@ font-weight: bold;
   color: #6d6d6d;
   margin-bottom: 20px;
   font-weight: bold;
-  width: 90%; /* Ensure it takes the full width */
+  width: 100%; /* Ensure it takes the full width */
   display: flex;
   justify-content: center;
   align-items: center;
