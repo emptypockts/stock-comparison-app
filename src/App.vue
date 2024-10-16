@@ -8,6 +8,8 @@
     <div v-else :class="containerClass">
       <Logout/>
       <BotLogo/>  
+      <economyIdxLogo/>
+      <GoBack/>
       <div id="app">
         <CookieBanner />
         <LoginAlert v-if="showLoginAlert" />
@@ -49,6 +51,9 @@ import ValueStockAnalysis from './components/ValueStockAnalysis.vue';
 import axios from 'axios'; // Import Axios for HTTP requests
 import Logout from "./components/Log_out.vue";
 import BotLogo from "./components/botLogo.vue";
+import economyIdxLogo from "./components/economyIdxLogo.vue";
+import GoBack from "./components/goBack.vue";
+
 
 
 export default {
@@ -63,6 +68,8 @@ export default {
     CookieBanner,
     Logout,
     BotLogo,
+    economyIdxLogo,
+    GoBack,
   },
   setup() {
     const showLoginAlert = ref(true);

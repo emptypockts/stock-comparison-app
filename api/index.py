@@ -16,11 +16,21 @@ import jwt
 import datetime
 from authLogin import loginStep
 from authRegister import registerStep
-from datetime import timedelta
+import EconomyStats
 load_dotenv()
 app = Flask(__name__)
 CORS(app)
 DOWNLOAD_DIR = 'sec_filings'
+#fetch Economy Indicators
+@app.route('/api/economy_index', methods=['GET'])
+def fetch_economy_index():
+    all_data = {}
+    indexList= ["STLFSI4","SP500","HOUST1F","UNRATE","SOFR","DRCLACBS","WTREGEN"]
+    for myIndex in indexList:
+      indexData = EconomyStats.getEconomicIndex(myIndex)
+      all_data[myIndex] = indexData
+    return jsonify(all_data)
+
 
 #fetch company names, price and earnings day
 @app.route('/api/company_name', methods=['GET'])

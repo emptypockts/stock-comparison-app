@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import AuthPage from '../components/AuthPage.vue';
 import RegisterUser from '../components/RegisterUser.vue';
 import AI from '../components/AI.vue';
+import EconomyStats from '@/components/EconomyStats.vue';
 const routes = [
   {
     path: '/',
@@ -22,6 +23,11 @@ const routes = [
     path: '/ai',
     name: 'AI',
     component: AI,
+  },
+  {
+    path: '/economyidx',
+    name: 'EconomyStats',
+    component: EconomyStats,
   },
 ];
 

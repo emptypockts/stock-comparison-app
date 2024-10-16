@@ -1,6 +1,6 @@
 <template>
     <div class="page">
-            <div>
+        <div>
             <h1>7power Analysis Framework from Helmer Hamilton.</h1>
         </div>
 
@@ -17,6 +17,8 @@
 
         <div>
             <Logout />
+            <BotLogo />
+            <economyIdxLogo />
             <GoBack />
         </div>
         <div v-if="loading" class="loading-overlay">
@@ -33,8 +35,10 @@
 import { ref, watch } from 'vue';
 import GoBack from './goBack.vue';
 import Logout from './Log_out.vue';
+import economyIdxLogo from './economyIdxLogo.vue';
 // import { useRouter } from 'vue-router';
 import axios from 'axios';
+import BotLogo from './botLogo.vue';
 const analysisDone = ref(false);
 const loading = ref(false);
 const userMessage = ref('');
@@ -97,7 +101,7 @@ async function sendMessage() {
     width: 100%;
     height: 100vh;
     background: repeat center url('https://images.unsplash.com/photo-1634117622592-114e3024ff27?q=80&w=2225&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
-    background-size:auto;
+    background-size: auto;
     padding: 20px;
     box-sizing: border-box;
 }
@@ -108,12 +112,14 @@ h1 {
     margin-bottom: 20px;
     color: rgb(62, 61, 61);
 }
+
 h2 {
     text-align: center;
     font-size: 1em;
     margin-bottom: 20px;
     color: rgb(62, 61, 61);
 }
+
 .chat-messages {
     display: flex;
     flex-direction: column;
