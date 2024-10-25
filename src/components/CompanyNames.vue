@@ -44,7 +44,7 @@ export default {
     const verifyToken = async () => {
       const token = localStorage.getItem('token');
       if (!token) {
-        alert('Session has expired. Please refresh the page and login again');
+        alert('Token not available in local storage. Please refresh the page and login again');
         return false;
       }
 
@@ -60,6 +60,9 @@ export default {
         console.error('Error verifying token:',error.response.data.message);
         localStorage.removeItem('token');
         localStorage.removeItem('tokenExpiration')
+        localStorage.removeItem('cookieAccepted')
+        localStorage.removeItem('cookieAcceptedTimestamp')
+        localStorage.removeItem('cookieDeclined')
         router.push('/')
         return false;
       }
