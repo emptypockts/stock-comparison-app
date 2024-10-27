@@ -6,10 +6,10 @@
       <router-view></router-view>
     </div>
     <div v-else :class="containerClass">
-      <Logout/>
-      <BotLogo/>  
-      <economyIdxLogo/>
-      <GoBack/>
+      <Logout />
+      <BotLogo />
+      <economyIdxLogo />
+      <GoBack />
       <div id="app">
         <CookieBanner />
         <LoginAlert v-if="showLoginAlert" />
@@ -80,7 +80,7 @@ export default {
     // const route = useRoute(); // Get access to the current route
     const updateTickers = (newTickers) => {
       tickers.value = newTickers;
-      localStorage.setItem('ticker',newTickers[0])
+      localStorage.setItem('ticker', newTickers[0])
       loading.value = false; // Data is ready, stop loading
 
     };
@@ -102,10 +102,28 @@ export default {
           return true;
         } else {
           console.log('Token verification failed:', response.data.message);
+          localStorage.removeItem('token');
+          localStorage.removeItem('tokenExpiration')
+          localStorage.removeItem('cookieAccepted')
+          localStorage.removeItem('cookieAcceptedTimestamp')
+          localStorage.removeItem('cookieDeclined')
+          localStorage.removeItem('ticker')
+          console.log("Logout successful, routing to the login app");
+          // Redirect to login page
+          router.replace('/');
           return false;
         }
       } catch (error) {
         console.log('Error verifying token:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('tokenExpiration')
+        localStorage.removeItem('cookieAccepted')
+        localStorage.removeItem('cookieAcceptedTimestamp')
+        localStorage.removeItem('cookieDeclined')
+        localStorage.removeItem('ticker')
+        console.log("Logout successful, routing to the login app");
+        // Redirect to login page
+        router.replace('/');
         return false;
       }
     };
@@ -178,19 +196,22 @@ button:hover {
 </style>
 
 <style>
-*{
+* {
   font-family: monospace;
 }
-h1,h2 {
 
-font-size: auto;
-margin-bottom: 20px;
-margin-left: 10px;
-color: #6d6d6d;
-text-align: left;
-font-weight: bold;
+h1,
+h2 {
+
+  font-size: auto;
+  margin-bottom: 20px;
+  margin-left: 10px;
+  color: #6d6d6d;
+  text-align: left;
+  font-weight: bold;
 
 }
+
 /* Loading overlay styles */
 .loading-overlay {
   position: fixed;
@@ -225,13 +246,15 @@ font-weight: bold;
     transform: rotate(360deg);
   }
 }
+
 .app-title {
   font-size: 2em;
   text-align: center;
   color: #6d6d6d;
   margin-bottom: 20px;
   font-weight: bold;
-  width: 100%; /* Ensure it takes the full width */
+  width: 100%;
+  /* Ensure it takes the full width */
   display: flex;
   justify-content: center;
   align-items: center;
