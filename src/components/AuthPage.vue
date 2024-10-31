@@ -11,11 +11,11 @@
       <form @submit.prevent="handleLogin">
         <div class="input-group">
           <label for="username">Username</label>
-          <input v-model="username"  placeholder="use:boo" required  />
+          <input v-model="username"  placeholder="@username" required  />
         </div>
         <div class="input-group">
           <label for="password">Password</label>
-          <input v-model="password"  type="password" placeholder="use:boo1234"   required />
+          <input v-model="password"  type="password" placeholder="@password"   required />
         </div>
         <div>
           <button type="submit">Login</button>
