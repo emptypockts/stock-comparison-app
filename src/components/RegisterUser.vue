@@ -15,22 +15,26 @@
       <form @submit.prevent="registerUser">
         <div class="form-group">
           <label for="name">Name</label>
-          <input v-model="name" type="text" id="name" required autocomplete="name"/>
+          <input v-model="name" type="text" id="name" required placeholder="@name"/>
         </div>
 
         <div class="form-group">
           <label for="username">Username</label>
-          <input v-model="username" type="text" id="regUsername" required autocomplete="regUsername"/>
+          <input v-model="username" type="text" id="username" required placeholder="@username"/>
         </div>
 
         <div class="form-group">
           <label for="email">Email</label>
-          <input v-model="email" type="email" id="email" required autocomplete="email"/>
+          <input v-model="email" type="email" id="email" required placeholder="@email"/>
         </div>
 
         <div class="form-group">
           <label for="password">Password</label>
-          <input v-model="password" type="password" id="regPassword" required />
+          <input v-model="password" type="password" id="regPassword" required placeholder="@password"/>
+        </div>
+        <div class="form-group">
+          <label for="password2">Password</label>
+          <input v-model="password2" type="password" id="regPassword2" required placeholder="@password repeat" />
         </div>
         <div v-if="!showSuccessModal" class="modal-overlay">
         <button type="submit">Register</button>
@@ -63,6 +67,7 @@ export default {
       username: '',
       email: '',
       password: '',
+      password2:'',
       errorMessage: '',
       successMessage: '',
       loading: false,
@@ -72,6 +77,16 @@ export default {
   },
   methods: {
     async registerUser() {
+          // Check if passwords match before proceeding
+      if (this.password !== this.password2) {
+        this.errorMessage = "Passwords do not match";
+        return;
+      }
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+      if (!passwordRegex.test(this.password)) {
+        this.errorMessage = "Password must be at least 8 characters long, contain one uppercase letter, one lowercase letter, one number, and one special character.";
+        return;
+      }
       this.loading = true;
       try {
         const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/register`, {
@@ -116,11 +131,17 @@ h1{
 }
 
 .bg-image{
-  background: repeat-y center url('https://images.unsplash.com/photo-1634117622592-114e3024ff27?q=80&w=2225&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
-  height: 100vh; /* Make sure it covers the full height of the viewport */
-  display: flex;
+  background: repeat center url('https://images.unsplash.com/photo-1634117622592-114e3024ff27?q=80&w=2225&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+  height: 100%; /* Make sure it covers the full height of the viewport */
+  position: fixed;
   justify-content: center;
   align-items: center;
+  width: 100%;
+  display:flex;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 button{
   width: auto;
@@ -140,23 +161,37 @@ button:hover{
 
 .registration-container{
   padding: auto;
-  color:white;
+  color:rgba(255, 255, 255, 0.256);
   justify-content: center;
   align-items: center;
-  background-color:rgba(78, 91, 110, 0.21);
+  background-color:rgba(78, 91, 110, 0.174);
   border-radius: 10px;
   text-align: center;
+  width: auto;
+  height: auto;
+}
+label{
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.671);
+  display: flex;
 }
 
 .form-group input{
-
-  width: 80%;
+  width: auto;
   padding: 10px;
   border: 0px;
   border-radius: 8px;
   background-color: rgba(81, 81, 81, 0.224); /*input background color */
+  height: auto;
 }
-
+.form-group input:focus{
+  width: auto;
+  padding: 10px;
+  border: 0px;
+  border-radius: 8px;
+  background-color: rgba(81, 81, 81, 0.224); /*input background color */
+  height: auto;
+}
 input[type="submit"], button[type="submit"] {
   width: auto;
   padding: 10px;
@@ -165,6 +200,16 @@ input[type="submit"], button[type="submit"] {
   border-radius: 8px;
   cursor: pointer;
   background-color: #8bb4e0;
+  margin-top: 10px;
+}
+input[type="text"], input[type="email"] input[type="password"]{
+  width: auto;
+  padding: 10px;
+  color:white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: rgba(81, 81, 81, 0.224);
   margin-top: 10px;
 }
 
@@ -176,6 +221,7 @@ input[type="submit"]:hover, button[type="submit"]:hover {
 .error-message {
   color: red;
   margin-bottom: 20px;
+  font-size: small;
 }
 
 .success-message {
