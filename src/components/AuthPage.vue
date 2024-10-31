@@ -77,7 +77,7 @@ export default {
 
       } catch (error) {
         console.log(error);  // Debugging step
-        if (error.response && error.response.status === 401) {
+        if (error.response && error.response.status === 404) {
           // Show invalid username or password message
           errorMessage.value = 'Invalid username or password.';
         } else {

@@ -1,9 +1,10 @@
 <template>
   <div class="page">
+    <div class="title-container">
     <h1>Economic Indicators</h1>
+  </div>
     <div>
       <div v-if="indexList.length" class="chart-container">
-
         <!-- Economic Index Charts -->
         <div v-for="index in indexList" :key="index" class="chart-box">
           <h2>{{ index.name }}</h2>
@@ -24,7 +25,7 @@
       <div v-if="loading" class="loading-overlay">
         <div class="loading-throbber">
           <div class="spinner"></div>
-          <p>Getting eonomy data. Please wait...</p>
+          <p1>Getting eonomy data. Please wait...</p1>
         </div>
       </div>
     </div>
@@ -120,18 +121,21 @@ export default {
 </script>
 
 <style scoped>
+
+.title-container {
+  width: 100%;
+  text-align: center;
+  padding: 20px 0;
+}
 .page {
+  background: repeat center url('https://images.unsplash.com/photo-1634117622592-114e3024ff27?q=80&w=2225&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+  min-height: 100vh; /* Ensure it covers the full viewport */
+  width: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   align-items: center;
-  width: 100%;
-  height: 100%;
-  background: repeat center url('https://images.unsplash.com/photo-1634117622592-114e3024ff27?q=80&w=2225&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
-  background-size: auto;
-  padding: 20px;
-  box-sizing: border-box;
-  background: transparent;
+  overflow: auto;
+  position: relative;
 }
 
 .chart-container {
@@ -144,7 +148,7 @@ export default {
 .chart-box {
   padding: 5px;
   border-radius: 10px;
-  box-shadow: 0 4px 8px rgb(111, 80, 80);
+  box-shadow: 0 4px 8px rgb(178, 76, 76);
   transition: transform 0.3s ease;
   background: transparent;
 }
@@ -158,18 +162,27 @@ export default {
   margin-top: 10px;
 }
 
-h2 {
-  font-size: 1.5em;
-  margin-bottom: 10px;
-  color: #555;
+h1 {
+
+font-size: auto;
+margin-bottom: 20px;
+margin-left: 10px;
+color: #6d6d6d;
+text-align: left;
+font-weight: bold;
+
 }
 
 p {
   font-size: 0.9em;
-  color: #666;
+  color: rgba(144, 120, 120, 0.977);
   text-align: center;
 }
-
+p1 {
+  font-size: 0.9em;
+  color:white;
+  text-align: center;
+}
 @media (max-width: 768px) {
   .chart-container {
     grid-template-columns: 1fr;

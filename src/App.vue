@@ -2,7 +2,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <div class="page">
     <div v-if="!isAuthenticated">
-      <h1 class="app-title">Welcome to Honcho</h1> <!-- Add your title here -->
       <router-view></router-view>
     </div>
     <div v-else :class="containerClass">
@@ -15,6 +14,7 @@
         <LoginAlert v-if="showLoginAlert" />
         <!-- Main content on the left side -->
         <div>
+          <h1 class="app-title">Welcome to Honcho</h1> <!-- Add your title here -->
           <CompanyNames @tickers-updated="updateTickers" />
         </div>
         <!-- Value Analysis -->
@@ -155,15 +155,17 @@ export default {
 
 <style scoped>
 .page {
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
+  background: repeat center url('https://images.unsplash.com/photo-1634117622592-114e3024ff27?q=80&w=2225&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+  height: 100%; /* Make sure it covers the full height of the viewport */
   justify-content: center;
   align-items: center;
-  background: repeat center url('https://images.unsplash.com/photo-1634117622592-114e3024ff27?q=80&w=2225&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
-  flex-direction: column-reverse;
+  width: 100%;
+  display:flex;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  
 }
 
 .app-container {
