@@ -1,5 +1,5 @@
 <template>
-    <div class="page">
+    <div>
         <div>
             <h1>7power Analysis Framework from Helmer Hamilton.</h1>
         </div>
@@ -16,10 +16,7 @@
         <button @click="sendMessage">Send</button>
 
         <div>
-            <Logout />
-            <BotLogo />
-            <economyIdxLogo />
-            <GoBack />
+            <Navigation/>
         </div>
         <div v-if="loading" class="loading-overlay">
             <div class="loading-throbber">
@@ -33,12 +30,9 @@
 
 <script setup>
 import { ref, watch } from 'vue';
-import GoBack from './goBack.vue';
-import Logout from './Log_out.vue';
-import economyIdxLogo from './economyIdxLogo.vue';
+import Navigation from './Navigation.vue';
 // import { useRouter } from 'vue-router';
 import axios from 'axios';
-import BotLogo from './botLogo.vue';
 const analysisDone = ref(false);
 const loading = ref(false);
 const userMessage = ref('');
@@ -88,23 +82,15 @@ async function sendMessage() {
         text: "<br>This ticker has been analysed already or the ticker field is empty. If you don't see any analysis done yet, try to update the ticker field and click the analyse button and then come back to this page.",
         isUser: false
     }))
+    return{
+        Navigation,
+    }
 }
 
 
 </script>
 <style scoped>
-.page {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    height: 100vh;
-    background: repeat center url('https://images.unsplash.com/photo-1634117622592-114e3024ff27?q=80&w=2225&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
-    background-size: auto;
-    padding: 20px;
-    box-sizing: border-box;
-}
+
 
 h1 {
     text-align: center;
@@ -123,7 +109,7 @@ h2 {
 .chat-messages {
     display: flex;
     flex-direction: column;
-    width: 100%;
+    width: 90%;
     max-width: 350px;
     padding: 10px;
     overflow-y: auto;

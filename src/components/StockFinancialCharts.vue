@@ -55,7 +55,7 @@
 
         <!-- Net Income and Basic EPS -->
         <div class="chart-box">
-          <h2>Net Income and Basic EPS</h2>
+          <h2>Basic EPS</h2>
           <apexcharts v-if="netIncomeEPSSeries(tickers).length" type="line" :options="chartOptions" :series="netIncomeEPSSeries(tickers)"></apexcharts>
           <p>EPS diluted takes into account stock options issued to managers but not yet exercised. It also figures in bonds, preferred shares, and stock warrants that can be converted to common stock causing an EPS drop.</p>
         </div>
@@ -375,10 +375,11 @@ export default {
     return this.tickers.map(ticker => {
       const data = this.financialData[ticker] || [];
       return [
-        {
-          name: `${ticker} Net Income`,
-          data: data.map(item => ({ x: item.date, y: item.net_income })),
-        },
+        // removed because it is already plotted in another chart.
+        // {
+        //   name: `${ticker} Net Income`,
+        //   data: data.map(item => ({ x: item.date, y: item.net_income })),
+        // },
         {
           name: `${ticker} Basic EPS`,
           data: data.map(item => ({ x: item.date, y: item['Basic EPS'] })),
@@ -413,15 +414,7 @@ export default {
 };
 </script>
 <style scoped>
-.page{
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    justify-content: center;
-    align-items: center;
-  background: repeat top url('https://images.unsplash.com/photo-1634117622592-114e3024ff27?q=80&w=2225&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
-}
+
 char
 .error-message {
   color: red;

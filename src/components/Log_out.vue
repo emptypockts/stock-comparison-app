@@ -1,8 +1,7 @@
 <template>
     <div class="tooltip-container">
         <svg @click="logout" class="logout-container" style="margin: 2rem; height:2em"
-            xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor"
-            title="Logout">
+            xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" title="Logout">
             <path
                 d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z" />
         </svg>
@@ -10,23 +9,37 @@
     </div>
 </template>
 
-<script setup>
+<script>
 import { useRouter } from 'vue-router';
-const router = useRouter();
+import {ref} from 'vue';
+export default {
+    setup() {
+        const router = useRouter();
+        const isAuthenticated = ref(false); // Ensure isAuthenticated is reactive if you need to use it elsewhere
 
-function logout() {
-    // Clear token from localStorage
-    localStorage.removeItem('token');
-    localStorage.removeItem('tokenExpiration')
-    localStorage.removeItem('cookieAccepted')
-    localStorage.removeItem('cookieAcceptedTimestamp')
-    localStorage.removeItem('cookieDeclined')
-    localStorage.removeItem('ticker')
-    console.log("Logout successful, routing to the login app");
-    // Redirect to login page
-    router.replace('/');
-    
-}
+
+        function logout() {
+            // Clear token from localStorage
+            localStorage.removeItem('token');
+            localStorage.removeItem('tokenExpiration');
+            localStorage.removeItem('cookieAccepted');
+            localStorage.removeItem('cookieAcceptedTimestamp');
+            localStorage.removeItem('cookieDeclined');
+            localStorage.removeItem('ticker');
+            localStorage.clear()
+            console.log("Logout successful, routing to the login app");
+            // Redirect to login page
+            router.push('/');
+            isAuthenticated.value=false;
+
+        }
+        return {
+            logout,
+            isAuthenticated,
+        };
+    },
+};
+
 </script>
 
 
@@ -50,6 +63,7 @@ function logout() {
     color: #3e3e3ece;
     /* Customize the icon color */
 }
+
 .tooltip-container {
     position: fixed;
     width: auto;
@@ -68,7 +82,8 @@ function logout() {
     padding: 5px 0;
     position: absolute;
     z-index: 1;
-    bottom: 125%; /* Position above the icon */
+    bottom: 125%;
+    /* Position above the icon */
     left: 50%;
     margin-left: -50px;
     opacity: 0;

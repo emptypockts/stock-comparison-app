@@ -3,16 +3,16 @@ import pandas as pd
 def fetch_stock_price_data(ticker):
     stock = yf.Ticker(ticker)
     data = stock.history(period="5y")
-    return ({str(date): round(price,2)for date, price in data['Close'].items()})
+    return ({str(date): round(price,2)for date, price in data['Close'].dropna().items()})
 
 if __name__ == "__main__":
 
     price = []
     
-    tickers = ['rost','intc']  # Example ticker
+    tickers = ['hci','intc']  # Example ticker
     for ticker in tickers:
         try:
-            data,current_price= fetch_stock_price_data(ticker)
+            data= fetch_stock_price_data(ticker)
             price.append(data)
             
         except:

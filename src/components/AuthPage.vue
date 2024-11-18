@@ -62,7 +62,7 @@ export default {
             }
           });
 
-        console.log("Response :", response)
+        console.log("Login Response :", response.data.success)
 
         if (response.data.success) {
           // Store JWT in localStorage

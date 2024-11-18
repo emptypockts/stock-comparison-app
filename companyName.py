@@ -8,8 +8,9 @@ def get_company_name(ticker):
     earnings_data = stock.earnings_dates
     current_date = pd.Timestamp.now().tz_localize('UTC')
     future_earnings = earnings_data[earnings_data.index > current_date]
-    future_earnings=future_earnings.iloc[-1].name.strftime('%Y-%m-%d %H:%M:%S %Z')
+    
     try:
+        future_earnings=future_earnings.iloc[-1].name.strftime('%Y-%m-%d %H:%M:%S %Z')
         current_price = round(stock.fast_info.last_price,2)
         return (stock.info.get('longName', 'Unknown'),current_price,future_earnings)
     except:
