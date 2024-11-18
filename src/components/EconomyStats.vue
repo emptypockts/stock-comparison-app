@@ -1,5 +1,5 @@
 <template>
-  <div class="page">
+  <div>
     <div class="title-container">
     <h1>Economic Indicators</h1>
   </div>
@@ -17,10 +17,7 @@
         <p class="error-message">{{ errorMessage }}</p>
       </div>
       <div>
-      <Logout/>
-      <BotLogo/>  
-      <economyIdxLogo/>
-      <GoBack/>
+        <Navigation/>
       </div>
       <div v-if="loading" class="loading-overlay">
         <div class="loading-throbber">
@@ -35,19 +32,13 @@
 <script>
 import axios from 'axios';
 import VueApexCharts from "vue3-apexcharts";
-import GoBack from './goBack.vue';
-import Logout from './Log_out.vue';
-import BotLogo from './botLogo.vue';
-import economyIdxLogo from './economyIdxLogo.vue';
+import Navigation from './Navigation.vue';
 
 
 export default {
   components: {
     apexcharts: VueApexCharts,
-    GoBack,
-    Logout,
-    BotLogo,
-    economyIdxLogo,
+    Navigation,
   },
   data() {
     return {
@@ -55,6 +46,7 @@ export default {
       chartOptions: null,
       errorMessage: '',
       loading: false,
+      Navigation,
     };
   },
   created() {
@@ -116,7 +108,7 @@ export default {
     }
 
   }
-
+ 
 };
 </script>
 
@@ -127,16 +119,7 @@ export default {
   text-align: center;
   padding: 20px 0;
 }
-.page {
-  background: repeat center url('https://images.unsplash.com/photo-1634117622592-114e3024ff27?q=80&w=2225&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
-  min-height: 100vh; /* Ensure it covers the full viewport */
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  overflow: auto;
-  position: relative;
-}
+
 
 .chart-container {
   display: grid;

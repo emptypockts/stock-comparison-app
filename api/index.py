@@ -17,6 +17,7 @@ import datetime
 from authLogin import loginStep
 from authRegister import registerStep
 import EconomyStats
+from fetchStockfromdB import stockFetch
 load_dotenv()
 app = Flask(__name__)
 CORS(app)
@@ -203,5 +204,30 @@ def messageBot():
     except:
         return jsonify({'error':response}),400
 
+@app.route('/api/fetchStockfromDB', methods=['GET'])
+def MongoFetchStock():
+    try:
+        # Get pagination parameters
+        page = int(request.args.get('page', 1))
+        page_size = int(request.args.get('page_size', 10))  # Number of symbols per page
+        
+        # Fetch grouped stock data
+        grouped_stocks,total_symbols = stockFetch(page,page_size)
+        # Pagination logic
+        start = (page - 1) * page_size
+        end = start + page_size
+
+        # Build paginated response
+
+        return jsonify({
+            'data': grouped_stocks,
+            'page': page,
+            'total_symbols':total_symbols
+        }), 200
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'error': str(e)}), 400
+
+    
 if __name__ == '__main__':
     app.run(debug=True)

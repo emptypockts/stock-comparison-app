@@ -1,83 +1,65 @@
 <template>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <div class="page">
-    <div v-if="!isAuthenticated">
-      <router-view></router-view>
-    </div>
-    <div v-else :class="containerClass">
-      <Logout />
-      <BotLogo />
-      <economyIdxLogo />
-      <GoBack />
-      <div id="app">
-        <CookieBanner />
-        <LoginAlert v-if="showLoginAlert" />
-        <!-- Main content on the left side -->
+  <meta name="viewport" content="width=device-width, initial-scale=0.5">
+  <div id="app">
+    <!-- Navigation visible on all pages -->
+    <!-- Main Area -->
+      <div v-if="isAuthenticated">
+        <Navigation/>
         <div>
-          <h1 class="app-title">Welcome to Honcho</h1> <!-- Add your title here -->
+          <CookieBanner />
+          <LoginAlert />
+        </div>
+        <div>
+          <h1 class="app-title">Welcome to Honcho</h1>
           <CompanyNames @tickers-updated="updateTickers" />
         </div>
-        <!-- Value Analysis -->
         <div>
           <ValueStockAnalysis :tickers="tickers" :loading="loading" />
         </div>
-        <!-- Stock Financial Charts on the right side -->
-        <div class="right-content">
+        <div>
           <StockFinancialCharts :tickers="tickers" />
         </div>
-        <!-- Intrinsic Value section -->
         <div>
           <IntrinsicValue :tickers="tickers" />
         </div>
-        <!-- Rittenhouse Analysis -->
-        <!-- <div>
-          <RittenhouseAnalysis :tickers="tickers" />
-        </div> -->
+      </div>
+      <div v-else>
+        <router-view />
+
       </div>
     </div>
-  </div>
 </template>
 
 <script>
 import CookieBanner from "./components/CookieBanner.vue";
 import LoginAlert from "./components/LoginAlert.vue";
 import { ref, computed, onMounted } from 'vue';
-// import { useRouter, useRoute } from 'vue-router';
 import IntrinsicValue from './components/IntrinsicValue.vue';
 import CompanyNames from './components/CompanyNames.vue';
-// import RittenhouseAnalysis from './components/RittenhouseAnalysis.vue';
 import StockFinancialCharts from './components/StockFinancialCharts.vue';
 import ValueStockAnalysis from './components/ValueStockAnalysis.vue';
 import axios from 'axios'; // Import Axios for HTTP requests
-import Logout from "./components/Log_out.vue";
-import BotLogo from "./components/botLogo.vue";
-import economyIdxLogo from "./components/economyIdxLogo.vue";
-import GoBack from "./components/goBack.vue";
-
-
-
+import { useRouter } from 'vue-router';
+import StockChart from "./components/StockChart.vue";
+import Navigation from "./components/Navigation.vue";
 export default {
   name: 'App',
   components: {
     CompanyNames,
     StockFinancialCharts,
     ValueStockAnalysis,
-    // RittenhouseAnalysis,
     IntrinsicValue,
     LoginAlert,
     CookieBanner,
-    Logout,
-    BotLogo,
-    economyIdxLogo,
-    GoBack,
+    StockChart,
+    Navigation,
   },
   setup() {
-    const showLoginAlert = ref(true);
+    const showLoginAlert = ref();
     const tickers = ref([]);
     const loading = ref(false);
     const isAuthenticated = ref(false);
-    // const router = useRouter();
-    // const route = useRoute(); // Get access to the current route
+    const router = useRouter();
     const updateTickers = (newTickers) => {
       tickers.value = newTickers;
       localStorage.setItem('ticker', newTickers[0])
@@ -86,6 +68,9 @@ export default {
     };
     const setLoading = (status) => {
       loading.value = status; // Set loading status based on the passed value
+    };
+    const clearLocalStorage = () => {
+      localStorage.clear()
     };
 
     const verifyToken = async () => {
@@ -99,34 +84,22 @@ export default {
         });
         if (response.data.success) {
           console.log('Token is valid');
+          localStorage.setItem('isAuthenticated','true')
           return true;
         } else {
           console.log('Token verification failed:', response.data.message);
-          localStorage.removeItem('token');
-          localStorage.removeItem('tokenExpiration')
-          localStorage.removeItem('cookieAccepted')
-          localStorage.removeItem('cookieAcceptedTimestamp')
-          localStorage.removeItem('cookieDeclined')
-          localStorage.removeItem('ticker')
-          console.log("Logout successful, routing to the login app");
-          // Redirect to login page
-          router.replace('/');
+          clearLocalStorage();
+          router.push('/');
           return false;
         }
       } catch (error) {
-        console.log('Error verifying token:', error);
-        localStorage.removeItem('token');
-        localStorage.removeItem('tokenExpiration')
-        localStorage.removeItem('cookieAccepted')
-        localStorage.removeItem('cookieAcceptedTimestamp')
-        localStorage.removeItem('cookieDeclined')
-        localStorage.removeItem('ticker')
-        console.log("Logout successful, routing to the login app");
-        // Redirect to login page
-        router.replace('/');
+        console.log('Error verifying token ', error)
+        clearLocalStorage();
+        router.push('/');
         return false;
       }
     };
+
     onMounted(() => {
       verifyToken().then(result => {
         isAuthenticated.value = result; // Reactive update when token is verified
@@ -137,7 +110,11 @@ export default {
       return tickers.value.length > 0 ? 'app-container-full' : 'app-container';
     });
 
-
+    const verifyLoginAlert = computed(() => {
+      showLoginAlert = localStorage.getItem('loginAlert')
+      console.log("Login Alert", showLoginAlert.value)
+      return showLoginAlert
+    });
 
 
     return {
@@ -148,44 +125,25 @@ export default {
       setLoading,
       showLoginAlert,
       containerClass,
+      verifyLoginAlert,
     };
   },
 };
 </script>
 
 <style scoped>
-.page {
-  background: repeat center url('https://images.unsplash.com/photo-1634117622592-114e3024ff27?q=80&w=2225&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
-  height: 100%; /* Make sure it covers the full height of the viewport */
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  display:flex;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  
-}
 
-.app-container {
-  margin-left: 20px;
-  width: 98vw;
-  background: transparent;
-  height: 98vh;
-}
-
-.app-container-full {
-  margin-left: 20px;
-  width: 100vw;
-  background: transparent;
-  height: 98%;
-}
 
 tr {
   background: transparent;
 }
 
+.navigation {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  background: rgba(76, 114, 237, 0);
+}
 
 
 button {
