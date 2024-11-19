@@ -1,5 +1,9 @@
 <template>
   <h1>Value Stock Analysis</h1>
+  <h2>Message</h2>
+  <td>
+    The growth value is calculated from cash flow values. Any data fetch problem with the stock will cause the growth value default to 5%
+  </td>
   <Navigation/>
   <div>
     <div >
@@ -72,7 +76,7 @@
           </table>
         </div>
         <div class="pagination-controls">
-          <button @click="prev" :disabled="currentPage === 1">Prev</button>
+          <button @click="previousPage" :disabled="currentPage === 1">Prev</button>
 
           <span>Page {{ currentPage }} of {{ totalPages }}</span>
 

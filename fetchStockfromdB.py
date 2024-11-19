@@ -30,17 +30,12 @@ def stockFetch(page=1, items_per_page=10):
 
     # Calculate how many records to skip
     skip = (page - 1) * items_per_page * 4  # Each symbol has 4 records
-    filter= {
-        'Total Score':{
-        '$gt': 4
-        }
-    }
+
     sort = list({
         'Growth':-1
     }.items())
     # Fetch records with pagination
     stocks = stock_collection.find (
-        filter=filter,
         sort=sort
         )  # Sort by symbol, year, then score
 
