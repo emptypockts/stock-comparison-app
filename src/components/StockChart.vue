@@ -1,5 +1,5 @@
 <template>
-  <h1>Value Stock Analysis</h1>
+  <h1>Value Stock Score Chart</h1>
   <h2>Message</h2>
   <td>
     The growth value is calculated from cash flow values. Any data fetch problem with the stock will cause the growth value default to 5%
