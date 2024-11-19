@@ -32,7 +32,7 @@ def stockFetch(page=1, items_per_page=10):
     skip = (page - 1) * items_per_page * 4  # Each symbol has 4 records
     filter= {
         'Total Score':{
-        '$gt': 2
+        '$gt': 3
         }
     }
     sort = list({
