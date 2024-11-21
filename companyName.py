@@ -1,6 +1,11 @@
 import yfinance as yf
 import pandas as pd
 import logging
+import dotenv
+import os
+import requests
+dotenv.load_dotenv()
+
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def get_company_name(ticker):
@@ -20,24 +25,44 @@ def get_company_name(ticker):
     except:
         logging.info(f"stock price not available:{ticker}")
         return ("NA",0)
-    
+# def alpha_get_company_name(ticker):
+#     matchScore = '0'
+#     ALPHA_VANTAGE_API_KEY=os.getenv('ALPHA_VANTAGE_API_KEY')
+#     url = f"https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords={ticker}&apikey={ALPHA_VANTAGE_API_KEY}"
+#     response = requests.get(url)
+#     data= response.json()
+#     StockObj = data['bestMatches']
+#     for item in StockObj:
+#        if item['8. currency']=='USD':
+#         if matchScore<item['9. matchScore']:
+#             name = item['2. name']
+#             matchScore= item['9. matchScore']
+
+#     return {name}
 
 # Example function call
 if __name__ == "__main__":
 
-    names = []
-    tickers = ['amzn','intc']  # Example ticker
+    # names = []
+    # tickers = ['amzn','intc']  # Example ticker
+    # for ticker in tickers:
+    #     try:
+    #         data= get_company_name(ticker)
+    #         names.append(data)
+    #     except:
+    #         print(f"Cannot fetch stock {ticker}.")
+    #         names.append(None)
+
+    # company_names_df = pd.DataFrame({
+    #     'symbol' : tickers,
+    #     'name' : names
+
+    # })
+    # print(company_names_df)
+
+    names=[]
+    tickers = ['rost','intc']
     for ticker in tickers:
-        try:
-            data= get_company_name(ticker)
-            names.append(data)
-        except:
-            print(f"Cannot fetch stock {ticker}.")
-            names.append(None)
+        print(get_company_name(ticker))
 
-    company_names_df = pd.DataFrame({
-        'symbol' : tickers,
-        'name' : names
-
-    })
-    print(company_names_df)
+    
