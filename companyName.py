@@ -5,12 +5,16 @@ logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %
 
 def get_company_name(ticker):
     stock = yf.Ticker(ticker)
-    earnings_data = stock.earnings_dates
-    current_date = pd.Timestamp.now().tz_localize('UTC')
-    future_earnings = earnings_data[earnings_data.index > current_date]
+    try:
+        earnings_data = stock.earnings_dates
+        current_date = pd.Timestamp.now().tz_localize('UTC')
+        future_earnings = earnings_data[earnings_data.index > current_date]
+        future_earnings=future_earnings.iloc[-1].name.strftime('%Y-%m-%d %H:%M:%S %Z')
+    except:
+        logging.info(f"earnings date not available for :{ticker}")
+        future_earnings=0
     
     try:
-        future_earnings=future_earnings.iloc[-1].name.strftime('%Y-%m-%d %H:%M:%S %Z')
         current_price = round(stock.fast_info.last_price,2)
         return (stock.info.get('longName', 'Unknown'),current_price,future_earnings)
     except:
