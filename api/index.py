@@ -97,7 +97,7 @@ def fetch_5y_financial_data():
 #             return jsonify({'message': 'SEC filings fetched successfully'}), 200
 #         except Exception as e:
 #             return jsonify({'error check the secDBFetch flow': str(e)}), 500
-#analyse text from 10-K 8-K 6-K and DEF reports for rittenhouse analysis
+# # analyse text from 10-K 8-K 6-K and DEF reports for rittenhouse analysis
 # @app.route('/api/analyze_rittenhouse', methods=['GET'])
 # def analyze_rittenhouse():
 #     tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
