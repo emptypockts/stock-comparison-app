@@ -5,6 +5,7 @@
     <economyIdxLogo />
     <GoBack />
     <StockChartLogo />
+    <QtrStockChartLogo />
   </div>
     </template>
 
@@ -15,13 +16,15 @@ import BotLogo from "./botLogo.vue";
 import economyIdxLogo from "./economyIdxLogo.vue";
 import GoBack from "./goBack.vue";
 import StockChartLogo from "./StockChartLogo.vue";
+import QtrStockChartLogo from "./QtrStockChartLogo.vue";
     export default{
         components:{
             Logout,
             BotLogo,
             economyIdxLogo,
             GoBack,
-            StockChartLogo
+            StockChartLogo,
+            QtrStockChartLogo
         },
     setup (){
     const isAuthenticated = localStorage.getItem('isAuthenticated');

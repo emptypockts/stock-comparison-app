@@ -5,7 +5,7 @@ import pandas as pd
 # import rittenhouse  # Assuming rittenhouse.py is refactored as a module
 import fetch5yData
 import stockPlotData
-import companyName
+import companyData
 import getStockPrice
 import stockIntrinsicVal
 import geminiChat
@@ -18,6 +18,13 @@ from authLogin import loginStep
 from authRegister import registerStep
 import EconomyStats
 from fetchStockfromdB import stockFetch
+from QStockScore import pull_QStockData,pullAllStockData,RevenueGrowthQtrStockData,PullQtrStockRevenueTrends
+from pymongo import MongoClient
+from pymongo.server_api import ServerApi
+
+uri = os.getenv('MONGODB_URI')
+client = MongoClient(uri, server_api=ServerApi('1'))
+db = client["test"]
 load_dotenv()
 app = Flask(__name__)
 CORS(app)
@@ -34,13 +41,13 @@ def fetch_economy_index():
 
 
 #fetch company names, price and earnings day
-@app.route('/api/company_name', methods=['GET'])
-def fetch_company_names():
+@app.route('/api/company_data', methods=['GET'])
+def fetch_company_data():
     tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
     if not tickers:
         return jsonify({'error': 'No tickers provided'}), 400
-    company_names = {ticker: companyName.get_company_name(ticker) for ticker in tickers}
-    return jsonify(company_names)
+    company_data = companyData.compile_stockData(tickers)
+    return jsonify(company_data)
 #fetch the stock price
 @app.route('/api/stock_price', methods=['GET'])
 def fetch_stock_price():
@@ -228,6 +235,50 @@ def MongoFetchStock():
         print(f"Error: {e}")
         return jsonify({'error': str(e)}), 400
 
+@app.route('/api/QStockScore', methods=['GET'])
+def QtrStockScore ():
+    stockData=[]
+    tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
+    if not tickers:
+        return jsonify({'error': 'No tickers provided'}), 400
+    for ticker in tickers:
+        try:
+            response = pull_QStockData(db,ticker)
+            stockData.extend( [{
+                **item,
+                '_id':str(item['_id']),
+
+            }for item in response])
+
+        except Exception as e:
+            print(f"Error: {e}")
+            return jsonify({'error': str(e)}), 400
+    return jsonify(stockData)
     
+@app.route('/api/AllQStockTrend',methods=['GET'])
+def AllQtrStockRevTrend():
+    try:
+        print("trying to get parameters")
+        # Get pagination parameters
+        page = int(request.args.get('page', 1))
+        page_size = int(request.args.get('page_size', 10))  # Number of symbols per page
+        
+        
+        # Fetch grouped stock data
+        grouped_stocks,total_symbols = PullQtrStockRevenueTrends(db,page,page_size)
+        # Pagination logic
+        start = (page - 1) * page_size
+        end = start + page_size
+
+        # Build paginated response
+
+        return jsonify({
+            'data': grouped_stocks,
+            'page': page,
+            'total_symbols':total_symbols
+            }), 200
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'error': str(e)}), 400
 if __name__ == '__main__':
     app.run(debug=True)

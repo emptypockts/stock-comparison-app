@@ -5,6 +5,8 @@ import AI from '../components/AI.vue';
 import EconomyStats from '@/components/EconomyStats.vue';
 import StockChart from '@/components/StockChart.vue';
 import App from '@/App.vue';
+import QtrStockTrend from '@/components/QtrStockTrend.vue';
+
 const routes = [
   {
     path: '/',
@@ -35,6 +37,11 @@ const routes = [
     path: '/stockchart',
     name: 'StockChart',
     component: StockChart,
+  },
+  {
+    path:'/qtrtrend',
+    name:'qtrTrend',
+    component:QtrStockTrend
   },
 ];
 

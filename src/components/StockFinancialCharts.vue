@@ -1,5 +1,6 @@
 <template>
   <h1>Charts</h1>
+
   <div>
     <!-- Display the company names based on the tickers -->
       <div v-if="tickers.length" class="chart-container">
@@ -465,5 +466,19 @@ p {
     font-size: 0.8em;
   }
 
+}
+button {
+  width: auto;
+  justify-content: auto;
+  padding: 8px;
+  color: white;
+  border: 1px;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #8bb4e0;
+}
+
+button:hover {
+  background-color: #468eda;
 }
 </style>

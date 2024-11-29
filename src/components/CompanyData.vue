@@ -6,7 +6,7 @@
     <input v-model="ticker3" placeholder="Try:nvda" id="ticker 3" />
   </div>
   <div>
-    <button @click="verifyAndFetchCompanyNames">Analyse</button>
+    <button @click="verifyAndFetchCompanyData">Analyse</button>
   </div>
 
   <!-- Error message display -->
@@ -15,11 +15,11 @@
 
   </div>
   <div>
-    <div v-if="companyNames">
+    <div v-if="companyData">
       <ul class="list-container">
-        <li v-for="(name, ticker) in companyNames" :key="ticker">
-          <strong>Company:</strong> {{ ticker }}: {{ name[0] }}. <strong>Current price:</strong> ${{ name[1] }} <strong>
-            Next Earnings:</strong> {{ name[2] }}<br><br>
+        <li v-for="(name, ticker) in companyData" :key="ticker">
+          <strong>Company:</strong> {{ ticker }}: {{ name['gStockData']['name'] }}. <strong>Current price:</strong> ${{ name['gStockData']['current_price'] }} <strong>
+            Last Filing :</strong> {{ name['last_filing_date'] }}<br><br>
         </li>
       </ul>
     </div>
@@ -39,7 +39,7 @@ export default {
     const ticker1 = ref('');
     const ticker2 = ref('');
     const ticker3 = ref('');
-    const companyNames = ref({});
+    const companyData = ref({});
     const router = useRouter(); // Use Vue Router for navigation
     const verifyToken = async () => {
       const token = localStorage.getItem('token');
@@ -67,7 +67,7 @@ export default {
         return false;
       }
     };
-    const fetchCompanyNames = async () => {
+    const fetchCompanyData = async () => {
       const tickers = [ticker1, ticker2, ticker3].map(tickerRef => tickerRef.value).filter(Boolean);
       if (tickers.length === 0) {
         errorMessage.value = "Please enter at least one stock ticker."
@@ -82,7 +82,7 @@ export default {
       // Function to verify the token before fetching company names
 
       try {
-        const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/company_name`, {
+        const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/company_data`, {
           params: tickers.reduce((acc, ticker, index) => {
             acc[`ticker${index + 1}`] = ticker;
             return acc;
@@ -90,9 +90,9 @@ export default {
         });
 
 
-        companyNames.value = response.data;
-        console.log("Company Names Object:", companyNames.value)
-        const unknownCompany = Object.values(companyNames).includes('Unknown');
+        companyData.value = response.data;
+        console.log("Company Data Object:", companyData.value)
+        const unknownCompany = Object.values(companyData).includes('Unknown');
         if (unknownCompany) {
           errorMessage.value = "One or more ticker symbols are invalid. Please check your input."
           console.log("error is ", errorMessage.value)
@@ -116,11 +116,11 @@ export default {
       }
     };
     // Wrapper function to verify the token before fetching company names
-    const verifyAndFetchCompanyNames = async () => {
+    const verifyAndFetchCompanyData = async () => {
       const isTokenValid = await verifyToken();
       console.log("Is token valid?: ", isTokenValid)
       if (isTokenValid) {
-        fetchCompanyNames();
+        fetchCompanyData();
       } else {
         console.log("Pushing to login")
         router.push('/').then(() => {
@@ -134,9 +134,9 @@ export default {
       ticker1,
       ticker2,
       ticker3,
-      fetchCompanyNames,
-      companyNames,
-      verifyAndFetchCompanyNames,
+      fetchCompanyData,
+      companyData,
+      verifyAndFetchCompanyData,
       errorMessage,
     };
   },

@@ -11,7 +11,7 @@
         </div>
         <div>
           <h1 class="app-title">Welcome to Honcho</h1>
-          <CompanyNames @tickers-updated="updateTickers" />
+          <CompanyData @tickers-updated="updateTickers" />
         </div>
         <div>
           <ValueStockAnalysis :tickers="tickers" :loading="loading" />
@@ -35,7 +35,7 @@ import CookieBanner from "./components/CookieBanner.vue";
 import LoginAlert from "./components/LoginAlert.vue";
 import { ref, computed, onMounted } from 'vue';
 import IntrinsicValue from './components/IntrinsicValue.vue';
-import CompanyNames from './components/CompanyNames.vue';
+import CompanyData from './components/CompanyData.vue';
 import StockFinancialCharts from './components/StockFinancialCharts.vue';
 import ValueStockAnalysis from './components/ValueStockAnalysis.vue';
 import axios from 'axios'; // Import Axios for HTTP requests
@@ -45,7 +45,7 @@ import Navigation from "./components/Navigation.vue";
 export default {
   name: 'App',
   components: {
-    CompanyNames,
+    CompanyData,
     StockFinancialCharts,
     ValueStockAnalysis,
     IntrinsicValue,
