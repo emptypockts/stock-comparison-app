@@ -9,4 +9,3 @@ src/components/RittenhouseAnalysis.vue
 rittenhouse.py
 secDBFetch.py
 CIKTickerUpdate.py
-QStockScore.py

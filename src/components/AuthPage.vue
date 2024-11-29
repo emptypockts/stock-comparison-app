@@ -1,6 +1,6 @@
 <template>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <div v-if="!loading" class="loading-overlay">
+  <div v-if="loading" class="loading-overlay">
     <div class="loading-throbber">
       <div class="spinner"></div>
       <p>Authenticating... Please wait. DB powered by MongoDB</p>

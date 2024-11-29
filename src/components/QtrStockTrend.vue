@@ -1,10 +1,12 @@
 <template>
-  <h1>Value Stock Score Chart</h1>
-  <h2>Message</h2>
-  <td>
-    The growth value is calculated from cash flow values. Any data fetch problem with the stock will cause the growth value default to 5%
-  </td>
-  <Navigation/>
+    <h1>
+        Quarterly Stock Trend
+    </h1>
+    <h2>Message</h2>
+    <td>
+        The trend is the angle of the line following the trend. above 0 trending up, below 0 trending down. Ideal is 90 degrees
+    </td>
+    <Navigation/>
   <div>
     <div >
       <div v-if="paginatedRecords.length" class="table-container">
@@ -13,64 +15,16 @@
           <table class="copyable-table">
             <thead>
               <tr>
-                <th @click="sortTable('Symbol')">Symbol<span :class="sortClass"></span></th>
-                <th @click="sortTable('Date')">Date<span :class="sortClass"></span></th>
-                <th @click="sortTable('Name')">Name<span :class="sortClass"></span></th>
-                <th @click="sortTable('Total Score')">Total Score<span :class="sortClass"></span></th>
-                <th @click="sortTable('Growth')">E_Growth 1Y<span :class="sortClass"></span></th>
-                <th v-if="!collapsed">Basic Average Shares</th>
-                <th v-if="!collapsed">Basic EPS</th>
-                <th v-if="!collapsed">Diluted EPS</th>
-                <th v-if="!collapsed">Dividends</th>
-                <th v-if="!collapsed">Dividends Yield</th>
-                <th v-if="!collapsed">Earnings Yield</th>
-                <th v-if="!collapsed">Free Cash Flow</th>
-                <th v-if="!collapsed">Market Cap</th>
-                <th v-if="!collapsed">Price Per Share</th>
-                <th v-if="!collapsed">Tangible Book Value</th>
-                <th v-if="!collapsed">Tangible Book Value Per Share</th>
-                <th v-if="!collapsed">Total Debt</th>
-                <th v-if="!collapsed">p/b ratio</th>
-                <th v-if="!collapsed">p/e ratio</th>
-                <th v-if="!collapsed">Debt FCF ratio</th>
-                <th v-if="!collapsed">Sum of Debt/FCF ratio Score</th>
-                <th v-if="!collapsed">Market Cap Score</th>
-                <th v-if="!collapsed">p/b ratio Score</th>
-                <th v-if="!collapsed">p/e ratio Score</th>
-                <th v-if="!collapsed">1.3 Earnings Yield Score</th>
-                <th v-if="!collapsed">Dividends Yield Score</th>
-                <th v-if="!collapsed">Earnings Yield Score</th>
+                <th @click="sortTable('ticker')">Symbol<span :class="sortClass"></span></th>
+                <th @click="sortTable('value')">Value in $ Billions <span :class="sortClass"></span></th>
+                <th @click="sortTable('trend')">Angle of the trend line<span :class="sortClass"></span></th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="(record, index) in paginatedRecords" :key="index">
-                <td>{{ record['Symbol'] }}</td>
-                <td>{{ record['Date'] }}</td>
-                <td>{{ record['Name'] }}</td>
-                <td>{{ record['Total Score'] }}</td>
-                <td>{{ record['Growth'] }}</td>
-                <td v-if="!collapsed">{{ record['Basic Average Shares'] }}</td>
-                <td v-if="!collapsed">{{ record['Basic EPS'] }}</td>
-                <td v-if="!collapsed">{{ record['Diluted EPS'] }}</td>
-                <td v-if="!collapsed">{{ record['Dividends'] }}</td>
-                <td v-if="!collapsed">{{ record['Dividends Yield'] }}</td>
-                <td v-if="!collapsed">{{ record['Earnings Yield'] }}</td>
-                <td v-if="!collapsed">{{ record['Free Cash Flow'] }}</td>
-                <td v-if="!collapsed">{{ record['Market Cap'] }}</td>
-                <td v-if="!collapsed">{{ record['Price Per Share'] }}</td>
-                <td v-if="!collapsed">{{ record['Tangible Book Value'] }}</td>
-                <td v-if="!collapsed">{{ record['Tangible Book Value Per Share'] }}</td>
-                <td v-if="!collapsed">{{ record['Total Debt'] }}</td>
-                <td v-if="!collapsed">{{ record['p/b ratio'] }}</td>
-                <td v-if="!collapsed">{{ record['p/e ratio'] }}</td>
-                <td v-if="!collapsed">{{ record['Debt FCF ratio'] }}</td>
-                <td v-if="!collapsed">{{ record['Sum of Debt/FCF ratio Score'] }}</td>
-                <td v-if="!collapsed">{{ record['Market Cap Score'] }}</td>
-                <td v-if="!collapsed">{{ record['p/b ratio Score'] }}</td>
-                <td v-if="!collapsed">{{ record['p/e ratio Score'] }}</td>
-                <td v-if="!collapsed">{{ record['130pcnt_Earnings Yield Score'] }}</td>
-                <td v-if="!collapsed">{{ record['Dividends Yield Score'] }}</td>
-                <td v-if="!collapsed">{{ record['Earnings Yield Score'] }}</td>
+                <td>{{ record['ticker'] }}</td>
+                <td>{{ record['value'] }}</td>
+                <td>{{ record['trend'] }}</td>
               </tr>
             </tbody>
           </table>
@@ -101,32 +55,30 @@
 </template>
 
 <script>
+
 import axios from 'axios';
-import { ref, watch, onMounted, computed } from 'vue';
+import {ref,watch,onMounted,computed} from 'vue';
 import Navigation from './Navigation.vue';
-export default {
-  props: {
-    isAuthenticated: Boolean, // Define isAuthenticated as a prop
+export default{
+    props:{
+        isAuthenticated: Boolean, // Define isAuthenticated as a prop
     itemsPerPage: {
       type: Number,
       default: 100,
     },
-  },
-  components:{
-    Navigation,
-  },
-  setup(props) {
-    const currentPage = ref(1);
+},
+    components:{
+        Navigation,
+    },
+    setup(props){
+        const currentPage = ref(1);
     const totalSymbols = ref();
     const enteredPage = ref(currentPage.value); // Store entered page number
     const totalPages = ref(10); // Replace with actual total pages logic
     const loading = ref(false);
     const stocks = ref([]);
-    const collapsed = ref(true); // Controls the visibility of extra columns
     const flatRecords = ref([]); // Flattened array of records
-    const toggleCollapse = () => {
-    collapsed.value = !collapsed.value;
-    };
+
 
     const sortKey = ref(''); 
     const sortOrder = ref(1); 
@@ -141,30 +93,19 @@ export default {
         } 
       };
     
-    const sortedRecords = computed(() => { 
-    const sorted = flatRecords.value.slice().sort((a, b) => { 
-    let aValue = a[sortKey.value];
-    let bValue = b[sortKey.value];
-    
-    // Parse percentages to numeric values if sorting `E_Growth 1Y`
-    if (sortKey.value === "Growth") {
-      aValue = parseFloat(aValue.replace('%', '')); // Convert to a number
-      bValue = parseFloat(bValue.replace('%', ''));
-    }
-    
-    // Perform the sorting
-    if (aValue < bValue) return -sortOrder.value; 
-    if (aValue > bValue) return sortOrder.value; 
-    return 0; 
-  }); 
-  return sorted; 
-});
+      const sortedRecords = computed(() => { 
+        const sorted = flatRecords.value.slice().sort((a, b) => { 
+          if (a[sortKey.value] < b[sortKey.value]) 
+          return -sortOrder.value; if (
+        a[sortKey.value] > b[sortKey.value]) 
+        return sortOrder.value; return 0; 
+      }); 
+      return sorted; 
+    });
     const paginatedRecords = computed(() => {
       const start = (currentPage.value - 1) * props.itemsPerPage;
       const end = start + props.itemsPerPage;
-      console.log("Paginated Records Start:",start)
-      console.log("Paginated Records End:",end)
-      return sortedRecords.value.slice(0, 100); //Start and end is constant to 100 records 
+      return sortedRecords.value.slice(0, 100);
     });
 
     // You can also watch isAuthenticated for changes
@@ -185,7 +126,7 @@ export default {
       loading.value = true;
 
       try {
-        const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/fetchStockfromDB`, {
+        const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/AllQStockTrend`, {
           params: { page, page_size: props.itemsPerPage },
         });
         console.log("Pages to query: ", page)
@@ -196,7 +137,6 @@ export default {
           stocks.value = response.data.data;
           totalSymbols.value = response.data.total_symbols;
           totalPages.value=Math.ceil(totalSymbols.value/100)
-          console.log("Total Pages:",totalPages.value)
           console.log("This is the response data :", response.data)
           console.log("totalSymbols :", totalSymbols.value)
           // Flatten the structure
@@ -223,7 +163,6 @@ export default {
       if (currentPage.value > 1) currentPage.value--;
     };
     const goToPage = () => {
-      console.log("Click go to page ",enteredPage.value)
       if (enteredPage.value >= 1 && enteredPage.value <= totalPages.value) {
         currentPage.value = enteredPage.value;
       } else {
@@ -239,7 +178,6 @@ export default {
     return {
       currentPage,
       totalPages,
-      enteredPage,
       nextPage,
       previousPage,
       loading,
@@ -248,9 +186,8 @@ export default {
       sortedRecords,
       paginatedRecords,
       goToPage,
-      toggleCollapse,
-      collapsed,
       sortTable,
+      enteredPage
     };
   },
 
@@ -258,9 +195,7 @@ export default {
 
 
 
-
 </script>
-
 <style scoped>
 .input-container{
 width: 100px;
@@ -374,5 +309,4 @@ th span {
 .pagination-controls{
   width: 90%;
 }
-
-</style>
+ </style>

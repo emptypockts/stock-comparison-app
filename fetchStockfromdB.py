@@ -18,7 +18,7 @@ def format_percentage(value):
 def format_percentage_growth(value):
     return "{:.2f}%".format(value) if value is not None else "N/A"
 
-def stockFetch(page=1, items_per_page=10):
+def stockFetch(page=1, items_per_page=100):
     print("Page query ",page)
     print("Page size ",items_per_page)
     load_dotenv()
@@ -27,23 +27,18 @@ def stockFetch(page=1, items_per_page=10):
 
     db = client["test"]
     stock_collection = db["StockScore"]
-
-    # Calculate how many records to skip
-    skip = (page - 1) * items_per_page * 4  # Each symbol has 4 records
-    filter= {
-        'Total Score':{
-        '$gt': 3
-        }
-    }
-    sort = list({
-        'Growth':-1
-    }.items())
+  
     # Fetch records with pagination
-    stocks = stock_collection.find (
-        filter=filter,
-        sort=sort
-        )  # Sort by symbol, year, then score
+    stocks = stock_collection.aggregate([
+    {
+        '$skip': (page-1)*items_per_page
+    }, {
+        '$limit': 100
+    }
+    ])
 
+  
+        
     # Group the fetched records by symbol
     grouped_stocks = {}
     for stock in stocks:
@@ -72,7 +67,6 @@ def stockFetch(page=1, items_per_page=10):
     
     total_symbols = stock_collection.distinct("Symbol")
     total_symbols_count = len(total_symbols)
-
     return grouped_stocks,total_symbols_count
 
 def stockInsert(jsonData):
@@ -99,6 +93,6 @@ if __name__ == "__main__":
     except Exception as e:
         print("Error trying to connect to the DB")
 
-    grouped_stocks, total_symbols_count = stockFetch(page=1, items_per_page=10)
+    grouped_stocks, total_symbols_count = stockFetch(page=9, items_per_page=100)
     print("Grouped Stocks:", grouped_stocks)
     print("Total Symbols Count:", total_symbols_count)
