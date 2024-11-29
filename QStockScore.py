@@ -13,26 +13,42 @@ def fetch_Stock_Info(ticker):
     cik = str(fetch_cik(db,ticker.upper()))
     cik="CIK"+("0"*(10 -len(cik)))+cik
     file = f"C:\\Users\\ejujo\\Downloads\\companyfacts\\{cik}.json"
+    seen_frames = set()  # To track unique frames
+
     with open(file) as f:
         item = json.loads(f.read())
         f.close()
-    revenues=item['facts']['us-gaap']['RevenueFromContractWithCustomerExcludingAssessedTax']['units']['USD']
-    for revenue in revenues:
-        if revenue['form']=='10-Q'and revenue.get('frame'):
-            qtr_revenue={
-                'ticker':ticker,
-                'value':revenue['val'],
-                'fp':revenue['fp'],
-                'filed':revenue['filed'],
-                'frame':revenue['frame']
-            }
-            revenue_obj.append(qtr_revenue)
-    
+    if 'RevenueFromContractWithCustomerExcludingAssessedTax' in item['facts']['us-gaap']:
+        revenues = item['facts']['us-gaap']['RevenueFromContractWithCustomerExcludingAssessedTax']['units']['USD']
+        for revenue in revenues:
+            if revenue['form'] == '10-Q' and revenue.get('frame') and revenue['frame'] not in seen_frames:
+                qtr_revenue = {
+                    'ticker': ticker,
+                    'value': revenue['val'],
+                    'fp': revenue['fp'],
+                    'filed': revenue['filed'],
+                    'frame': revenue['frame']
+                }
+                revenue_obj.append(qtr_revenue)
+                seen_frames.add(revenue['frame'])  # Mark this frame as processed
+
+    # Process Revenues
+    if 'Revenues' in item['facts']['us-gaap']:
+        revenues = item['facts']['us-gaap']['Revenues']['units']['USD']
+        for revenue in revenues:
+            if revenue['form'] == '10-Q' and revenue.get('frame') and revenue['frame'] not in seen_frames:
+                qtr_revenue = {
+                    'ticker': ticker,
+                    'value': revenue['val'],
+                    'fp': revenue['fp'],
+                    'filed': revenue['filed'],
+                    'frame': revenue['frame']
+                }
+                revenue_obj.append(qtr_revenue)
+                seen_frames.add(revenue['frame'])  # Mark this frame as processed
+
     return revenue_obj
 
-from pymongo import MongoClient, errors
-import os
-from dotenv import load_dotenv
 
 def push_QStockData(db, objects, collection='QtrStockData'):
     load_dotenv()
@@ -137,13 +153,16 @@ if __name__=="__main__":
     uri = os.getenv('MONGODB_URI')
     client = MongoClient(uri, server_api=ServerApi('1'))
     db = client["test"]
-    tickers = ['MCK']
-    stockData=[]
+    # tickers = ['CVS']
+    # for ticker in tickers:
+    #     object=fetch_Stock_Info(ticker)
+    #     push_QStockData(db,object)
+
+    
     print("Main function to update revenue trends in DB")
-    #Flow to update qtrRevTrends in DB
-    # response =PullProcessMergeRevenueGrowthQtrStockData(db)
-    # pushMergedRevenueGrowthQtrStockData(db,response)
-    print(fetch_cik(db,'CVS'))
+    response =PullProcessMergeRevenueGrowthQtrStockData(db)
+    pushMergedRevenueGrowthQtrStockData(db,response)
+    
 
    
 
