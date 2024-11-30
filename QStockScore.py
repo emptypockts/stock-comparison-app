@@ -4,49 +4,62 @@ from pymongo.server_api import ServerApi
 from pymongo import MongoClient, errors
 import json
 import pandas as pd
-from CIKTickerUpdate import fetch_cik
+from CIKTickerUpdate import fetch_cik,fetch_ticker
 from math import atan, degrees
 import numpy as np
-def fetch_Stock_Info(ticker):
+def fetch_Stock_Info():
     qtr_revenue={}
     revenue_obj=[]
-    cik = str(fetch_cik(db,ticker.upper()))
-    cik="CIK"+("0"*(10 -len(cik)))+cik
-    file = f"C:\\Users\\ejujo\\Downloads\\companyfacts\\{cik}.json"
-    seen_frames = set()  # To track unique frames
+    path = f"C:\\Users\\ejujo\\Downloads\\companyfacts\\"
+    files = os.listdir(path)
+    seen_frames = {}  # Dictionary to track the highest value for each frame per ticker
+    revenue_obj = []  # Final list of deduplicated revenue objects
 
-    with open(file) as f:
-        item = json.loads(f.read())
-        f.close()
-    if 'RevenueFromContractWithCustomerExcludingAssessedTax' in item['facts']['us-gaap']:
-        revenues = item['facts']['us-gaap']['RevenueFromContractWithCustomerExcludingAssessedTax']['units']['USD']
-        for revenue in revenues:
-            if revenue['form'] == '10-Q' and revenue.get('frame') and revenue['frame'] not in seen_frames:
-                qtr_revenue = {
-                    'ticker': ticker,
-                    'value': revenue['val'],
-                    'fp': revenue['fp'],
-                    'filed': revenue['filed'],
-                    'frame': revenue['frame']
-                }
-                revenue_obj.append(qtr_revenue)
-                seen_frames.add(revenue['frame'])  # Mark this frame as processed
+    for file in files:
+        cik_integer = int(file[:-5].lstrip("CIK").lstrip("0"))
+        ticker=fetch_ticker(cik_integer)
+        with open(path + file) as f:
+            item = json.loads(f.read())
 
-    # Process Revenues
-    if 'Revenues' in item['facts']['us-gaap']:
-        revenues = item['facts']['us-gaap']['Revenues']['units']['USD']
-        for revenue in revenues:
-            if revenue['form'] == '10-Q' and revenue.get('frame') and revenue['frame'] not in seen_frames:
-                qtr_revenue = {
-                    'ticker': ticker,
-                    'value': revenue['val'],
-                    'fp': revenue['fp'],
-                    'filed': revenue['filed'],
-                    'frame': revenue['frame']
-                }
-                revenue_obj.append(qtr_revenue)
-                seen_frames.add(revenue['frame'])  # Mark this frame as processed
+        if item and 'entityName' in item and 'facts' in item and 'us-gaap' in item['facts'] and 'cik' in item:
+            # Process RevenueFromContractWithCustomerExcludingAssessedTax
+            if 'RevenueFromContractWithCustomerExcludingAssessedTax' in item['facts']['us-gaap']:
+                if 'USD' in item['facts']['us-gaap']['RevenueFromContractWithCustomerExcludingAssessedTax']['units']:
+                    revenues = item['facts']['us-gaap']['RevenueFromContractWithCustomerExcludingAssessedTax']['units']['USD']
+                    for revenue in revenues:
+                        if revenue['form'] == '10-Q' and revenue.get('frame'):
+                            frame_key = (revenue['frame'], file[:-5])  # Frame and ticker as key
+                            if frame_key not in seen_frames or revenue['val'] > seen_frames[frame_key]['value']:
+                                # Update the record if it's a new frame or has a higher value
+                                seen_frames[frame_key] = {
+                                    'cik': item['cik'],
+                                    'value': revenue['val'],
+                                    'fp': revenue['fp'],
+                                    'filed': revenue['filed'],
+                                    'frame': revenue['frame'],
+                                    'ticker': ticker
+                                }
 
+            # Process Revenues
+            if 'Revenues' in item['facts']['us-gaap']:
+                if 'USD' in item['facts']['us-gaap']['Revenues']['units']:
+                    revenues = item['facts']['us-gaap']['Revenues']['units']['USD']
+                    for revenue in revenues:
+                        if revenue['form'] == '10-Q' and revenue.get('frame'):
+                            frame_key = (revenue['frame'], file[:-5])  # Frame and ticker as key
+                            if frame_key not in seen_frames or revenue['val'] > seen_frames[frame_key]['value']:
+                                # Update the record if it's a new frame or has a higher value
+                                seen_frames[frame_key] = {
+                                    'cik': item['cik'],
+                                    'value': revenue['val'],
+                                    'fp': revenue['fp'],
+                                    'filed': revenue['filed'],
+                                    'frame': revenue['frame'],
+                                    'ticker': ticker
+                                }
+
+    # Convert the deduplicated frames into a list
+    revenue_obj = list(seen_frames.values())
     return revenue_obj
 
 
@@ -153,18 +166,18 @@ if __name__=="__main__":
     uri = os.getenv('MONGODB_URI')
     client = MongoClient(uri, server_api=ServerApi('1'))
     db = client["test"]
-    # tickers = ['CVS']
-    # for ticker in tickers:
-    #     object=fetch_Stock_Info(ticker)
-    #     push_QStockData(db,object)
+    tickers = ['CVS','ROST']
+    object=[]
+    # Flow to update stock info from json files
+    # object.extend(fetch_Stock_Info())
+    # push_QStockData(db,object)
 
     
-    print("Main function to update revenue trends in DB")
+    # print("Main function to update revenue trends in DB")
     response =PullProcessMergeRevenueGrowthQtrStockData(db)
     pushMergedRevenueGrowthQtrStockData(db,response)
     
 
-   
 
 
 
