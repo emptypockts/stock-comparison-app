@@ -33,7 +33,7 @@ def stockFetch(page=1, items_per_page=100):
     {
         '$skip': (page-1)*items_per_page
     }, {
-        '$limit': 10000
+        '$limit': 5000
     }
     ])
 
