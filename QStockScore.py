@@ -177,11 +177,3 @@ if __name__=="__main__":
     response =PullProcessMergeRevenueGrowthQtrStockData(db)
     pushMergedRevenueGrowthQtrStockData(db,response)
     
-
-
-
-
-
-
-
-

@@ -91,7 +91,7 @@ export default {
     };
     const goToRegister = () => {
       // Redirect to the registration page
-      console.log("button pushed")
+      console.log("register request")
       router.push('/register');
     };
 

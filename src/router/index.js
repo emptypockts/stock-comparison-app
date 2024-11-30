@@ -54,7 +54,7 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const isAuthenticated = localStorage.getItem('token'); // Example auth check
-  if (to.name !== 'Auth' && !isAuthenticated) (next({ name: 'Auth' }),console.log("Token is not valid"));
+  if ((to.name !== 'Auth' && to.name !== 'RegisterUser') && !isAuthenticated) (next({ name: 'Auth' }),console.log("Token is not valid"));
   else next();
 }),
 
