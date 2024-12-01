@@ -219,7 +219,7 @@ def MongoFetchStock():
         page_size = int(request.args.get('page_size', 10))  # Number of symbols per page
         
         # Fetch grouped stock data
-        grouped_stocks,total_symbols = stockFetch(page,page_size)
+        grouped_stocks,total_symbols = stockFetch(db,page,page_size)
         # Pagination logic
         start = (page - 1) * page_size
         end = start + page_size

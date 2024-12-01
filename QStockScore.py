@@ -7,60 +7,61 @@ import pandas as pd
 from CIKTickerUpdate import fetch_cik,fetch_ticker
 from math import atan, degrees
 import numpy as np
+from datetime import datetime
+
 def fetch_Stock_Info():
-    qtr_revenue={}
-    revenue_obj=[]
     path = f"C:\\Users\\ejujo\\Downloads\\companyfacts\\"
     files = os.listdir(path)
-    seen_frames = {}  # Dictionary to track the highest value for each frame per ticker
-    revenue_obj = []  # Final list of deduplicated revenue objects
+    qtr_obj = []
 
-    for file in files:
+    
+    # Define the metrics to process and their corresponding keys
+    metric_keys = {
+        'RevenueFromContractWithCustomerExcludingAssessedTax': 'revenue',
+        'Revenues': 'revenue',
+        'Assets': 'assets',
+        'CashAndCashEquivalentsAtCarryingValue':'cash',
+        'Liabilities':'liabilities',
+        'NetIncomeLoss':'netIncome',
+        'ResearchAndDevelopmentExpense':'R&D',
+        'NetCashProvidedByUsedInOperatingActivities':'operatingCashFlow',
+        'PaymentsOfDividends':'dividends'
+
+    }
+
+    for file in files[:10:]:
         cik_integer = int(file[:-5].lstrip("CIK").lstrip("0"))
-        ticker=fetch_ticker(cik_integer)
-        with open(path + file) as f:
-            item = json.loads(f.read())
+        ticker=fetch_ticker(db,cik_integer)
+        if ticker:
+            with open(path + file) as f:
+                item = json.loads(f.read())
 
-        if item and 'entityName' in item and 'facts' in item and 'us-gaap' in item['facts'] and 'cik' in item:
-            # Process RevenueFromContractWithCustomerExcludingAssessedTax
-            if 'RevenueFromContractWithCustomerExcludingAssessedTax' in item['facts']['us-gaap']:
-                if 'USD' in item['facts']['us-gaap']['RevenueFromContractWithCustomerExcludingAssessedTax']['units']:
-                    revenues = item['facts']['us-gaap']['RevenueFromContractWithCustomerExcludingAssessedTax']['units']['USD']
-                    for revenue in revenues:
-                        if revenue['form'] == '10-Q' and revenue.get('frame'):
-                            frame_key = (revenue['frame'], file[:-5])  # Frame and ticker as key
-                            if frame_key not in seen_frames or revenue['val'] > seen_frames[frame_key]['value']:
-                                # Update the record if it's a new frame or has a higher value
-                                seen_frames[frame_key] = {
-                                    'cik': item['cik'],
-                                    'value': revenue['val'],
-                                    'fp': revenue['fp'],
-                                    'filed': revenue['filed'],
-                                    'frame': revenue['frame'],
-                                    'ticker': ticker
-                                }
 
-            # Process Revenues
-            if 'Revenues' in item['facts']['us-gaap']:
-                if 'USD' in item['facts']['us-gaap']['Revenues']['units']:
-                    revenues = item['facts']['us-gaap']['Revenues']['units']['USD']
-                    for revenue in revenues:
-                        if revenue['form'] == '10-Q' and revenue.get('frame'):
-                            frame_key = (revenue['frame'], file[:-5])  # Frame and ticker as key
-                            if frame_key not in seen_frames or revenue['val'] > seen_frames[frame_key]['value']:
-                                # Update the record if it's a new frame or has a higher value
-                                seen_frames[frame_key] = {
-                                    'cik': item['cik'],
-                                    'value': revenue['val'],
-                                    'fp': revenue['fp'],
-                                    'filed': revenue['filed'],
-                                    'frame': revenue['frame'],
-                                    'ticker': ticker
-                                }
 
+        # Iterate through items in the dataset
+            if item and 'entityName' in item and 'facts' in item and 'us-gaap' in item['facts'] and 'cik' in item:
+                for metric_name, key_name in metric_keys.items():
+                    # Check if the metric exists in the current item
+                    if metric_name in item['facts']['us-gaap']:
+                        if 'USD' in item['facts']['us-gaap'][metric_name]['units']:
+                            metrics = item['facts']['us-gaap'][metric_name]['units']['USD']
+                            for metric in metrics:
+                                # Process only 10-Q forms with a frame
+                                endDate=datetime.strptime(metric['end'],'%Y-%m-%d')
+                                if metric['form'] == '10-Q' and (endDate.year>2022)  :
+                                    qtr_obj.append({
+                                            'ticker':ticker,
+                                            'metric':metric_name,
+                                            'value':metric['val'],
+                                            'date':metric['end'],
+                                            'form':metric['form'],
+                                            'fp':metric.get('fp',None),
+                                            'frame':metric.get('frame',None)
+                                            })
+                                    
+                                    
     # Convert the deduplicated frames into a list
-    revenue_obj = list(seen_frames.values())
-    return revenue_obj
+    return qtr_obj
 
 
 def push_QStockData(db, objects, collection='QtrStockData'):
@@ -124,8 +125,8 @@ def PullProcessMergeRevenueGrowthQtrStockData(db):
 
     ResponsePullAllStockData = pullAllStockData(db)
     DfResponseRevenueGrowthQtrStockData= pd.DataFrame(ResponsePullAllStockData)
-    DfResponseRevenueGrowthQtrStockData['filed']=pd.to_datetime(DfResponseRevenueGrowthQtrStockData['filed'])    
-    DfResponseRevenueGrowthQtrStockData= DfResponseRevenueGrowthQtrStockData.sort_values(by=['ticker','frame']).groupby('ticker').tail(4).reset_index(level=0,drop=True)
+    DfResponseRevenueGrowthQtrStockData['filed']=pd.to_datetime(DfResponseRevenueGrowthQtrStockData['date'])    
+    DfResponseRevenueGrowthQtrStockData= DfResponseRevenueGrowthQtrStockData.sort_values(by=['ticker','date']).groupby('ticker').tail(4).reset_index(level=0,drop=True)
     DfResponseRevenueGrowthQtrStockData['trend']=round(DfResponseRevenueGrowthQtrStockData.groupby(["ticker"],sort=False).apply(lambda group: RevenueGrowthQtrStockData(group)).reset_index(level=0, drop=True),1)
     DfResponseRevenueGrowthQtrStockData['value']=round((DfResponseRevenueGrowthQtrStockData['value']/1e9),2)
     MergedDfResponseRevenueGrowthQtrStockData = DfResponseRevenueGrowthQtrStockData.groupby('ticker').agg({ 'value': lambda x: ','.join(map(str, x)), 'trend': 'first' }).reset_index()
@@ -139,11 +140,13 @@ def PullQtrStockRevenueTrends(db, page=1,items_per_page=100,collection='QtrStock
 
     # Fetch records with pagination
     stocks = QtrStockRevTrendCollection.aggregate([
-    {
-        '$skip': (page-1)*items_per_page
-    }, {
+        {
+        '$sort' :{'trend':-1}
+        },{
         '$limit': 10000
-    }
+        },{
+        '$skip': (page-1)*items_per_page
+        }
     ])
     # Group the fetched records by symbol
     grouped_stocks = {}
@@ -167,13 +170,13 @@ if __name__=="__main__":
     client = MongoClient(uri, server_api=ServerApi('1'))
     db = client["test"]
     tickers = ['CVS','ROST']
-    object=[]
+    
     # Flow to update stock info from json files
-    # object.extend(fetch_Stock_Info())
-    # push_QStockData(db,object)
+    object=fetch_Stock_Info()
+    push_QStockData(db,object)
 
     
     # print("Main function to update revenue trends in DB")
-    response =PullProcessMergeRevenueGrowthQtrStockData(db)
-    pushMergedRevenueGrowthQtrStockData(db,response)
+    # response =PullProcessMergeRevenueGrowthQtrStockData(db)
+    # pushMergedRevenueGrowthQtrStockData(db,response)
     

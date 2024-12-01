@@ -109,7 +109,7 @@ def compile_stockData(tickers):
 
 # Example function call
 if __name__ == "__main__":
-    tickers= ['aapl','amzn']
+    tickers= ['msft','cnc']
     stockInfo = compile_stockData(tickers)
     
     print(stockInfo)
