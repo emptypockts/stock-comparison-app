@@ -143,9 +143,9 @@ def PullQtrStockRevenueTrends(db, page=1,items_per_page=100,collection='QtrStock
         {
         '$sort' :{'trend':-1}
         },{
-        '$limit': 10000
-        },{
         '$skip': (page-1)*items_per_page
+        },{
+        '$limit': items_per_page
         }
     ])
     # Group the fetched records by symbol

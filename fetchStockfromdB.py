@@ -29,9 +29,9 @@ def stockFetch(db,page=1, items_per_page=100):
         {
         '$sort':{'Growth':-1}
         },{
-        '$limit': 5000
-        },{
         '$skip': (page-1)*items_per_page
+        },{
+        '$limit': items_per_page   
     }
     ])
 
