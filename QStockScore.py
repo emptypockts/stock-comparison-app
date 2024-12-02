@@ -29,7 +29,7 @@ def fetch_Stock_Info():
 
     }
 
-    for file in files[:10:]:
+    for file in files:
         cik_integer = int(file[:-5].lstrip("CIK").lstrip("0"))
         ticker=fetch_ticker(db,cik_integer)
         if ticker:
