@@ -14,11 +14,6 @@ def fetch_Stock_Info():
     files = os.listdir(path)
     qtr_obj = []
 
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-=======
-=======
->>>>>>> d62fa37d652aceb772fcf6505f8eccefbba7733a
     
     # Define the metrics to process and their corresponding keys
     metric_keys = {
@@ -34,12 +29,7 @@ def fetch_Stock_Info():
 
     }
 
-<<<<<<< HEAD
->>>>>>> Stashed changes
     for file in files:
-=======
-    for file in files[:10:]:
->>>>>>> d62fa37d652aceb772fcf6505f8eccefbba7733a
         cik_integer = int(file[:-5].lstrip("CIK").lstrip("0"))
         ticker=fetch_ticker(db,cik_integer)
         if ticker:
@@ -153,9 +143,10 @@ def PullQtrStockRevenueTrends(db, page=1,items_per_page=100,collection='QtrStock
         {
         '$sort' :{'trend':-1}
         },{
-        '$limit': 10000
-        },{
+        
         '$skip': (page-1)*items_per_page
+        },{
+        '$limit': items_per_page
         }
     ])
     # Group the fetched records by symbol
