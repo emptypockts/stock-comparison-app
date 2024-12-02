@@ -15,6 +15,24 @@ def fetch_Stock_Info():
     seen_frames = {}  # Dictionary to track the highest value for each frame per ticker
     revenue_obj = []  # Final list of deduplicated revenue objects
 
+<<<<<<< Updated upstream
+=======
+    
+    # Define the metrics to process and their corresponding keys
+    metric_keys = {
+        'RevenueFromContractWithCustomerExcludingAssessedTax': 'revenue',
+        'Revenues': 'revenue',
+        'Assets': 'assets',
+        'CashAndCashEquivalentsAtCarryingValue':'cash',
+        'Liabilities':'liabilities',
+        'NetIncomeLoss':'netIncome',
+        'ResearchAndDevelopmentExpense':'R&D',
+        'NetCashProvidedByUsedInOperatingActivities':'operatingCashFlow',
+        'PaymentsOfDividends':'dividends'
+
+    }
+
+>>>>>>> Stashed changes
     for file in files:
         cik_integer = int(file[:-5].lstrip("CIK").lstrip("0"))
         ticker=fetch_ticker(cik_integer)
