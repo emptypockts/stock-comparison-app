@@ -92,7 +92,7 @@ def RevenueGrowthQtrStockData (df):
         print("Empty dataFrame")
         return pd.Series([0.0] * len(df), index=df.index)
     x = np.arange(len(df))
-    y=df["value"].values/1e9
+    y=df['maxRev'].apply(lambda x:x['output']/1e9)
     if len(x) < 4 or len(set(y)) == 1:  
         return pd.Series([0.0] * len(df), index=df.index)
     slope = np.polyfit(x,y,1)[0]
@@ -101,9 +101,48 @@ def RevenueGrowthQtrStockData (df):
     return pd.Series([trend] * len(df), index=df.index) 
 
 
-def pullAllStockData(db,collection='QtrStockData'):
+def pullAllStockData(db,skip,limit_size=10000,collection='QtrStockData'):
     QStockData_Collection = db[collection]
-    QStockData = QStockData_Collection.find()
+    QStockData = QStockData_Collection.aggregate([
+ {
+        '$match': {
+            'metric': {
+                '$in': [
+                    'Revenues', 'RevenueFromContractWithCustomerExcludingAssessedTax'
+                ]
+            },
+            'frame':{'$ne':None},
+        }
+    }, {
+        '$group': {
+            '_id': {
+                'ticker': '$ticker', 
+                'date': '$date', 
+                'form': '$form', 
+                'fp': '$fp', 
+                'frame': '$frame'
+            }, 
+            'maxRev': {
+                '$max': {
+                    'output': '$value'
+                }
+            }
+        }
+    }, {
+        '$skip':skip*limit_size
+        },{
+        
+        '$limit':limit_size
+        },
+    {
+        '$project': {
+            '_id': 0, 
+            'ticker': '$_id.ticker', 
+            'date': '$_id.date', 
+            'maxRev': 1
+        }
+    }
+])
     return QStockData
 
 
@@ -121,14 +160,14 @@ def pushMergedRevenueGrowthQtrStockData(db, MergedJsonResponseRevenueGrowthQtrSt
     except Exception as e:
         print(f"An error occurred: {e}")
 
-def PullProcessMergeRevenueGrowthQtrStockData(db):
+def PullProcessMergeRevenueGrowthQtrStockData(db,skip,limit_size):
 
-    ResponsePullAllStockData = pullAllStockData(db)
+    ResponsePullAllStockData = pullAllStockData(db,skip,limit_size)
     DfResponseRevenueGrowthQtrStockData= pd.DataFrame(ResponsePullAllStockData)
     DfResponseRevenueGrowthQtrStockData['filed']=pd.to_datetime(DfResponseRevenueGrowthQtrStockData['date'])    
     DfResponseRevenueGrowthQtrStockData= DfResponseRevenueGrowthQtrStockData.sort_values(by=['ticker','date']).groupby('ticker').tail(4).reset_index(level=0,drop=True)
     DfResponseRevenueGrowthQtrStockData['trend']=round(DfResponseRevenueGrowthQtrStockData.groupby(["ticker"],sort=False).apply(lambda group: RevenueGrowthQtrStockData(group)).reset_index(level=0, drop=True),1)
-    DfResponseRevenueGrowthQtrStockData['value']=round((DfResponseRevenueGrowthQtrStockData['value']/1e9),2)
+    DfResponseRevenueGrowthQtrStockData['value']=round((DfResponseRevenueGrowthQtrStockData['maxRev'].apply(lambda x:x['output']/1e9)),2)
     MergedDfResponseRevenueGrowthQtrStockData = DfResponseRevenueGrowthQtrStockData.groupby('ticker').agg({ 'value': lambda x: ','.join(map(str, x)), 'trend': 'first' }).reset_index()
     MergedJsonResponseRevenueGrowthQtrStockData=MergedDfResponseRevenueGrowthQtrStockData.to_dict(orient='records')
     return MergedJsonResponseRevenueGrowthQtrStockData
@@ -137,7 +176,7 @@ def PullQtrStockRevenueTrends(db, page=1,items_per_page=100,collection='QtrStock
     print("Page",page)
     print("Page size ",items_per_page)
     QtrStockRevTrendCollection = db[collection]
-
+# 
     # Fetch records with pagination
     stocks = QtrStockRevTrendCollection.aggregate([
         {
@@ -166,18 +205,59 @@ def PullQtrStockRevenueTrends(db, page=1,items_per_page=100,collection='QtrStock
 
     return grouped_stocks,total_tickers_count
 
+def CountAggRecordPipeline(db, collection='QtrStockData'):
+    QStockData_Collection = db[collection]
+    QstockData=QStockData_Collection.aggregate([
+ {
+        '$match': {
+            'metric': {
+                '$in': [
+                    'Revenues', 'RevenueFromContractWithCustomerExcludingAssessedTax'
+                ]
+            },
+            'frame':{
+                '$ne':None
+                }
+        }
+    }, {
+        '$group': {
+            '_id': {
+                'ticker': '$ticker', 
+                'date': '$date', 
+                'form': '$form', 
+                'fp': '$fp', 
+                'frame': '$frame'
+            }, 
+            'maxRev': {
+                '$max': {
+                    'output': '$value'
+                }
+            }
+        }
+    },{
+        '$count': 'totalRecords'
+}
+])
+    resultObj = list(QstockData)
+    return resultObj[0]['totalRecords'] if resultObj else 0
+
 if __name__=="__main__":
     uri = os.getenv('MONGODB_URI')
     client = MongoClient(uri, server_api=ServerApi('1'))
     db = client["test"]
     tickers = ['CVS','ROST']
-    
-    # Flow to update stock info from json files
-    object=fetch_Stock_Info()
-    push_QStockData(db,object)
+    collectionSize=CountAggRecordPipeline(db)
+    limit_size=10000
+    skip=0
+    # # Flow to update stock info from json files
+    # object=fetch_Stock_Info()
+    # push_QStockData(db,object)
 
     
     # print("Main function to update revenue trends in DB")
-    # response =PullProcessMergeRevenueGrowthQtrStockData(db)
-    # pushMergedRevenueGrowthQtrStockData(db,response)
+   
+    for skip in range((collectionSize//limit_size)+1):
+        print(skip,collectionSize)
+        response =PullProcessMergeRevenueGrowthQtrStockData(db,skip,limit_size)
+        pushMergedRevenueGrowthQtrStockData(db,response)
     
