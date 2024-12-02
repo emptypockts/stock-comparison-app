@@ -14,12 +14,7 @@ def fetch_Stock_Info():
     files = os.listdir(path)
     qtr_obj = []
 
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-=======
-=======
->>>>>>> d62fa37d652aceb772fcf6505f8eccefbba7733a
-    
+
     # Define the metrics to process and their corresponding keys
     metric_keys = {
         'RevenueFromContractWithCustomerExcludingAssessedTax': 'revenue',
@@ -34,12 +29,7 @@ def fetch_Stock_Info():
 
     }
 
-<<<<<<< HEAD
->>>>>>> Stashed changes
     for file in files:
-=======
-    for file in files[:10:]:
->>>>>>> d62fa37d652aceb772fcf6505f8eccefbba7733a
         cik_integer = int(file[:-5].lstrip("CIK").lstrip("0"))
         ticker=fetch_ticker(db,cik_integer)
         if ticker:
