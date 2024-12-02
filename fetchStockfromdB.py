@@ -18,22 +18,20 @@ def format_percentage(value):
 def format_percentage_growth(value):
     return "{:.2f}%".format(value) if value is not None else "N/A"
 
-def stockFetch(page=1, items_per_page=100):
+def stockFetch(db,page=1, items_per_page=100):
     print("Page query ",page)
     print("Page size ",items_per_page)
-    load_dotenv()
-    uri = os.getenv('MONGODB_URI')
-    client = MongoClient(uri, server_api=ServerApi('1'))
 
-    db = client["test"]
     stock_collection = db["StockScore"]
   
     # Fetch records with pagination
     stocks = stock_collection.aggregate([
-    {
-        '$skip': (page-1)*items_per_page
-    }, {
+        {
+        '$sort':{'Growth':-1}
+        },{
         '$limit': 5000
+        },{
+        '$skip': (page-1)*items_per_page
     }
     ])
 
@@ -69,13 +67,7 @@ def stockFetch(page=1, items_per_page=100):
     total_symbols_count = len(total_symbols)
     return grouped_stocks,total_symbols_count
 
-def stockInsert(jsonData):
-    load_dotenv()
-    uri = os.getenv('MONGODB_URI')
-    client = MongoClient(uri, server_api=ServerApi('1'))
-
-    # Access the StockScore collection in the test database
-    db = client["test"]
+def stockInsert(db,jsonData):
     stock_collection = db["StockScore"]
     #inkect the object in the database
     stock_collection.insert_many(jsonData)
@@ -85,7 +77,8 @@ if __name__ == "__main__":
     load_dotenv()
     uri = os.getenv('MONGODB_URI')
     client = MongoClient(uri, server_api=ServerApi('1'))
-    
+    db = client["test"]
+
     try:
         client.admin.command('ping')
         print("Pinged your deployment. You successfully connected to MongoDB!")

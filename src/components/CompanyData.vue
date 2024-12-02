@@ -8,7 +8,6 @@
   <div>
     <button @click="verifyAndFetchCompanyData">Analyse</button>
   </div>
-
   <!-- Error message display -->
   <div v-if="errorMessage" class="error-message">
     <p>{{ errorMessage }}</p>
@@ -92,13 +91,14 @@ export default {
 
         companyData.value = response.data;
         console.log("Company Data Object:", companyData.value)
-        const unknownCompany = Object.values(companyData).includes('Unknown');
-        if (unknownCompany) {
+        if (!companyData.value || Object.keys(companyData.value).length === 0 || tickers.length!==Object.keys(companyData.value).length) {
           errorMessage.value = "One or more ticker symbols are invalid. Please check your input."
           console.log("error is ", errorMessage.value)
+          
           emit('loading', false); // Emit loading status as false to stop loading
           return errorMessage; // Stop further processing
         }
+
 
         // Emit the tickers and company names to the parent component
         emit('tickers-updated', tickers);
@@ -137,7 +137,7 @@ export default {
       fetchCompanyData,
       companyData,
       verifyAndFetchCompanyData,
-      errorMessage,
+      errorMessage
     };
   },
 };
