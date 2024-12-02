@@ -15,6 +15,10 @@ def fetch_Stock_Info():
     qtr_obj = []
 
 
+<<<<<<< HEAD
+=======
+    
+>>>>>>> 443ab7512e6da3ce0db3f3f2801aaebbc554c82e
     # Define the metrics to process and their corresponding keys
     metric_keys = {
         'RevenueFromContractWithCustomerExcludingAssessedTax': 'revenue',
