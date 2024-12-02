@@ -14,6 +14,7 @@ def fetch_Stock_Info():
     files = os.listdir(path)
     qtr_obj = []
 
+
     
     # Define the metrics to process and their corresponding keys
     metric_keys = {
