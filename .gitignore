@@ -5,7 +5,4 @@ __pycache__
 .env.production
 .vercel
 .notes
-src/components/RittenhouseAnalysis.vue
-rittenhouse.py
-secDBFetch.py
-
+sec_filings/

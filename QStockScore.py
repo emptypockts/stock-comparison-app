@@ -250,7 +250,7 @@ if __name__=="__main__":
     limit_size=10000
     skip=0
     # # Flow to update stock info from json files
-    # object=fetch_Stock_Info()
+    object=fetch_Stock_Info()
     # push_QStockData(db,object)
 
     
@@ -259,5 +259,5 @@ if __name__=="__main__":
     for skip in range((collectionSize//limit_size)+1):
         print(skip,collectionSize)
         response =PullProcessMergeRevenueGrowthQtrStockData(db,skip,limit_size)
-        pushMergedRevenueGrowthQtrStockData(db,response)
+        # pushMergedRevenueGrowthQtrStockData(db,response)
     

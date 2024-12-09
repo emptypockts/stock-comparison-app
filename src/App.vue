@@ -17,10 +17,13 @@
           <ValueStockAnalysis :tickers="tickers" :loading="loading" />
         </div>
         <div>
-          <StockFinancialCharts :tickers="tickers" />
+          <StockFinancialCharts :tickers="tickers":loading="loading" />
         </div>
         <div>
-          <IntrinsicValue :tickers="tickers" />
+          <IntrinsicValue :tickers="tickers" :loading="loading" />
+        </div>
+        <div>
+          <RittenhouseAnalysis Analyis :tickers="tickers" :loading="loading" />
         </div>
       </div>
       <div v-else>
@@ -42,6 +45,7 @@ import axios from 'axios'; // Import Axios for HTTP requests
 import { useRouter } from 'vue-router';
 import StockChart from "./components/StockChart.vue";
 import Navigation from "./components/Navigation.vue";
+import RittenhouseAnalysis from "./components/RittenhouseAnalysis.vue";
 export default {
   name: 'App',
   components: {
@@ -53,6 +57,7 @@ export default {
     CookieBanner,
     StockChart,
     Navigation,
+    RittenhouseAnalysis
   },
   setup() {
     const showLoginAlert = ref();
