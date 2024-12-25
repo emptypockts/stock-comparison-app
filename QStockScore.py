@@ -16,20 +16,33 @@ def fetch_Stock_Info():
 
     
     # Define the metrics to process and their corresponding keys
-    metric_keys = {
-        'RevenueFromContractWithCustomerExcludingAssessedTax': 'revenue',
-        'Revenues': 'revenue',
-        'Assets': 'assets',
-        'CashAndCashEquivalentsAtCarryingValue':'cash',
-        'Liabilities':'liabilities',
-        'NetIncomeLoss':'netIncome',
-        'ResearchAndDevelopmentExpense':'R&D',
-        'NetCashProvidedByUsedInOperatingActivities':'operatingCashFlow',
-        'PaymentsOfDividends':'dividends'
+    
 
+    metric_keys = {
+        'RevenueFromContractWithCustomerExcludingAssessedTax': 'revenue',#revenue
+        'Revenues': 'revenue', #revenue
+        'Assets': 'assets',#assets
+        'CashAndCashEquivalentsAtCarryingValue':'end_cash_postion', #cash
+        'Liabilities':'liabilities', #total liabilities
+        'NetIncomeLoss':'netIncome', #net_income #return on assets = net_income / assets
+        'ResearchAndDevelopmentExpense':'R&D', #rd
+        'NetCashProvidedByUsedInOperatingActivities':'operatingCashFlow', #fcf =NetCashProvidedByUsedInOperatingActivities- PaymentsToAcquirePropertyPlantAndEquipment
+        'PaymentsOfDividends':'dividends', #dividends
+        'EntityCommonStockSharesOutstanding':'OutstandingShares', #outstandingshares
+        'EarningsPerShareBasic':'EPS',
+        'EarningsPerShareDiluted':'EPS_diluted',
+        'CommercialPaper':'CommercialPaper',
+        'OtherLiabilitiesCurrent':'OtherLiabilitiesCurrent', #total debt = OtherLiabilitiesCurrent+ OtherLiabilitiesNonCurrent +LiabilitiesCurrent +LiabilitiesNoncurrent
+        'OtherLiabilitiesNoncurrent':'OtherLiabilitiesNoncurrent', #total debt = OtherLiabilitiesCurrent+ OtherLiabilitiesNonCurrent +LiabilitiesCurrent +LiabilitiesNoncurrent
+        'LiabilitiesCurrent':'LiabilitiesCurrent', #total debt = OtherLiabilitiesCurrent+ OtherLiabilitiesNonCurrent +LiabilitiesCurrent +LiabilitiesNoncurrent
+        'LiabilitiesNoncurrent':'LiabilitiesNoncurrent', #total debt = OtherLiabilitiesCurrent+ OtherLiabilitiesNonCurrent +LiabilitiesCurrent +LiabilitiesNoncurrent
+        'PaymentsToAcquirePropertyPlantAndEquipment':'capex',
+        'NetCashProvidedByUsedInInvestingActivities':'capex2'
     }
 
     for file in files:
+        # use to debug
+    # for file in files[:3:]: 
         cik_integer = int(file[:-5].lstrip("CIK").lstrip("0"))
         ticker=fetch_ticker(db,cik_integer)
         if ticker:
@@ -40,31 +53,79 @@ def fetch_Stock_Info():
 
         # Iterate through items in the dataset
             if item and 'entityName' in item and 'facts' in item and 'us-gaap' in item['facts'] and 'cik' in item:
-                for metric_name, key_name in metric_keys.items():
-                    # Check if the metric exists in the current item
-                    if metric_name in item['facts']['us-gaap']:
-                        if 'USD' in item['facts']['us-gaap'][metric_name]['units']:
-                            metrics = item['facts']['us-gaap'][metric_name]['units']['USD']
-                            for metric in metrics:
-                                # Process only 10-Q forms with a frame
-                                endDate=datetime.strptime(metric['end'],'%Y-%m-%d')
-                                if metric['form'] == '10-Q' and (endDate.year>2022)  :
+                # for metric_name, key_value in metric_keys.items():
+                #     # Check if the metric exists in the current item
+                #     if metric_name in item['facts']['us-gaap']:
+                #         if 'USD' in item['facts']['us-gaap'][metric_name]['units'] or 'USD/shares' in item['facts']['us-gaap'][metric_name]['units']:
+                #             if metric_name=='EarningsPerShareBasic' or metric_name=='EarningsPerShareDiluted':
+                #                 metrics = item['facts']['us-gaap'][metric_name]['units']['USD/shares']
+                #             else:
+                #                 metrics = item['facts']['us-gaap'][metric_name]['units']['USD']
+                #             for metric in metrics:
+                #                 # Process only 10-Q forms with a frame
+                #                 endDate=datetime.strptime(metric['end'],'%Y-%m-%d')
+                #                 if metric['form'] == '10-Q' and (endDate.year>2022)  :
                                     qtr_obj.append({
                                             'ticker':ticker,
-                                            'metric':metric_name,
-                                            'value':metric['val'],
-                                            'date':metric['end'],
-                                            'form':metric['form'],
-                                            'fp':metric.get('fp',None),
-                                            'frame':metric.get('frame',None)
+                                            # 'metric':metric_name,
+                                            # 'value':metric['val'],
+                                            # 'date':metric['end'],
+                                            # 'form':metric['form'],
+                                            # 'fp':metric.get('fp',None),
+                                            # 'frame':metric.get('frame',None)
+                                            'financialData':item
                                             })
-                                    
+
+
                                     
     # Convert the deduplicated frames into a list
     return qtr_obj
 
 
-def push_QStockData(db, objects, collection='QtrStockData'):
+def fetch_dei_info():
+    path = f"C:\\Users\\ejujo\\Downloads\\companyfacts\\"
+    files = os.listdir(path)
+    qtr_obj = []
+
+    
+
+
+    # for file in files[:3:]:
+    for file in files:
+        cik_integer = int(file[:-5].lstrip("CIK").lstrip("0"))
+        ticker=fetch_ticker(db,cik_integer)
+        if ticker:
+            with open(path + file) as f:
+                item = json.loads(f.read())
+
+
+
+        # Iterate through items in the dataset
+            if item and 'entityName' in item and 'facts' in item and 'dei' in item['facts'] and 'cik' in item:
+                outstanding_shares_map = {}
+                if 'dei' in item['facts']:
+                    if 'EntityCommonStockSharesOutstanding' in item['facts']['dei']:
+                        outstanding_data = item['facts']['dei']['EntityCommonStockSharesOutstanding']
+                        if 'shares' in outstanding_data['units']:
+                            for share in outstanding_data['units']['shares']:
+                                endDate=datetime.strptime(share['end'],'%Y-%m-%d')
+                                if share['form']=='10-Q' and (endDate.year>2022):
+                                    qtr_obj.append({
+                                    'ticker':ticker,
+                                    'metric':'outstandingShares',
+                                    'value':share['val'],
+                                    'date':share['end'],
+                                    'form':share['form'],
+                                    'fp':share.get('fp',None),
+                                    'frame':share.get('frame',None),
+                                    })
+
+
+                                    
+    return qtr_obj
+
+
+def push_QStockData(db, objects, collection):
     load_dotenv()
     try:
         stock_collection = db[collection]
@@ -106,6 +167,7 @@ def pullAllStockData(db,skip,limit_size=10000,collection='QtrStockData'):
     QStockData = QStockData_Collection.aggregate([
  {
         '$match': {
+            # 'ticker':{'$in':['CVS','MSFT']},
             'metric': {
                 '$in': [
                     'Revenues', 'RevenueFromContractWithCustomerExcludingAssessedTax'
@@ -146,7 +208,7 @@ def pullAllStockData(db,skip,limit_size=10000,collection='QtrStockData'):
     return QStockData
 
 
-def pushMergedRevenueGrowthQtrStockData(db, MergedJsonResponseRevenueGrowthQtrStockData, collection='QtrStockRevTrend'):
+def pushMergedRevenueGrowthQtrStockData(db, MergedJsonResponseRevenueGrowthQtrStockData, collection):
     try:
         QtrStockRevTrend_Collection = db[collection]
         result = QtrStockRevTrend_Collection.insert_many(MergedJsonResponseRevenueGrowthQtrStockData)
@@ -249,15 +311,19 @@ if __name__=="__main__":
     collectionSize=CountAggRecordPipeline(db)
     limit_size=10000
     skip=0
-    # # Flow to update stock info from json files
+    # # Flow to update stock info from json files  (GAAP)
     object=fetch_Stock_Info()
-    # push_QStockData(db,object)
-
+    push_QStockData(db,object,collection='QtrStockData')
+    # # Flow to update stock info from json files (DEI)
+    # object=fetch_dei_info()
+    # push_QStockData(db,object,collection='QtrDeiStockData')
+    
+    # print(object)
     
     # print("Main function to update revenue trends in DB")
    
-    for skip in range((collectionSize//limit_size)+1):
-        print(skip,collectionSize)
-        response =PullProcessMergeRevenueGrowthQtrStockData(db,skip,limit_size)
-        # pushMergedRevenueGrowthQtrStockData(db,response)
+    # for skip in range((collectionSize//limit_size)+1):
+    #     print(skip,collectionSize)
+    #     response =PullProcessMergeRevenueGrowthQtrStockData(db,skip,limit_size)
+    #     pushMergedRevenueGrowthQtrStockData(db,response,collection='QtrStockRevTrend')
     

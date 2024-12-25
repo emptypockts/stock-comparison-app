@@ -1,81 +1,99 @@
 <template>
   <h1>Charts</h1>
+  <div>
+    <button @click="toggleView">
+      {{ isYearlyView ? "Switch to Quartetly View" : "Switch to Yearly View" }}
 
+    </button>
+  </div>
   <div>
     <!-- Display the company names based on the tickers -->
-      <div v-if="tickers.length" class="chart-container">
-
-        <!-- Stock Price (Last 5 Years) -->
-        <div class="chart-box">
-          <h2>Stock Price (Last 5 Years)</h2>
-          <apexcharts v-if="stockPriceSeries.length" type="line" :options="chartOptions" :series="stockPriceSeries"></apexcharts>
-          <p>This chart shows the stock price movements over the last 5 years.</p>
-        </div>
-
-        <!-- Revenue and Assets -->
-        <div class="chart-box">
-          <h2>Revenue and Assets</h2>
-          <apexcharts v-if="revenueAssetsSeries(tickers).length" type="line" :options="chartOptions" :series="revenueAssetsSeries(tickers)"></apexcharts>
-          <p>If assets grow faster than revenue, it could mean that inventory is growing fast. It could be a sales forecast warning.</p>
-        </div>
-
-        <!-- Cash and Liabilities -->
-        <div class="chart-box">
-          <h2>Cash and Liabilities</h2>
-          <apexcharts v-if="cashLiabilitiesSeries(tickers).length" type="line" :options="chartOptions" :series="cashLiabilitiesSeries(tickers)"></apexcharts>
-          <p>Gap between these two could be an indicator of trouble.</p>
-        </div>
-
-        <!-- Cash and Net Income -->
-        <div class="chart-box">
-          <h2>Cash and Net Income</h2>
-          <apexcharts v-if="cashNetIncomeSeries(tickers).length" type="line" :options="chartOptions" :series="cashNetIncomeSeries(tickers)"></apexcharts>
-          <p>Lower cash flow than net income in high amounts could signal old inventory pile-up or bad debts impacting.</p>
-        </div>
-
-        <!-- R&D and Revenue -->
-        <div class="chart-box">
-          <h2>R&D and Revenue</h2>
-          <apexcharts v-if="rdRevenueSeries(tickers).length" type="line" :options="chartOptions" :series="rdRevenueSeries(tickers)"></apexcharts>
-          <p>R&D as a percentage of Sales/Revenue.</p>
-        </div>
-
-        <!-- Other Expenses -->
-        <div class="chart-box">
-          <h2>Other Expenses</h2>
-          <apexcharts v-if="otherExpensesSeries(tickers).length" type="line" :options="chartOptions" :series="otherExpensesSeries(tickers)"></apexcharts>
-          <p>These types of expenses should be non-recurring.</p>
-        </div>
-
-        <!-- FCF and Net Income Growth Ratio -->
-        <div class="chart-box">
-          <h2>FCF and Net Income Growth Ratio</h2>
-          <apexcharts v-if="fcfNetIncomeGrowthSeries(tickers).length" type="line" :options="percentageChartOptions" :series="fcfNetIncomeGrowthSeries(tickers)"></apexcharts>
-          <p>When not moving at a fairly even pace, this could indicate that net income is not as muscular as it appears.</p>
-        </div>
-
-        <!-- Net Income and Basic EPS -->
-        <div class="chart-box">
-          <h2>Basic EPS</h2>
-          <apexcharts v-if="netIncomeEPSSeries(tickers).length" type="line" :options="chartOptions" :series="netIncomeEPSSeries(tickers)"></apexcharts>
-          <p>EPS diluted takes into account stock options issued to managers but not yet exercised. It also figures in bonds, preferred shares, and stock warrants that can be converted to common stock causing an EPS drop.</p>
-        </div>
-
-        <!-- Return on Average Assets -->
-        <div class="chart-box">
-          <h2>Return on Average Assets</h2>
-          <apexcharts v-if="returnOnAssetsSeries(tickers).length" type="line" :options="percentageChartOptions" :series="returnOnAssetsSeries(tickers)"></apexcharts>
-          <p>ROA connects the balance sheet to the income statement. Higher than 5% is a healthy figure.</p>
-        </div>
-
-        <!-- Cash Dividends Paid Total -->
-        <div class="chart-box">
-          <h2>Cash Dividends Paid Total</h2>
-          <apexcharts v-if="dividendsPaidSeries(tickers).length" type="line" :options="chartOptions" :series="dividendsPaidSeries(tickers)"></apexcharts>
-          <p>Dividends should be continuous for the last 5 years.</p>
-        </div>
+    <div v-if="tickers.length" class="chart-container">
+      <!-- Stock Price (Last 5 Years) -->
+      <div class="chart-box">
+        <h2>{{isYearlyView? "Stock Price (Last 5 Years)":"Stock Price (Last 4 Quarters)"}}</h2>
+        <apexcharts v-if="pickStockPriceSeries.length" type="line" :options="chartOptions" :series="pickStockPriceSeries">
+        </apexcharts>
+        <p>This chart shows the stock price movements over the last 5 years.</p>
       </div>
-      <div v-else>
+
+      <!-- Revenue and Assets -->
+      <div class="chart-box">
+        <h2>{{isYearlyView? "Revenue and Assets (Last 5 Years)":"Revenue and Assets (Last 4 Quarters)"}}</h2>
+        <apexcharts v-if="pickRevenueAssetsSeries.length" type="line" :options="chartOptions"
+          :series="pickRevenueAssetsSeries"></apexcharts>
+        <p>If assets grow faster than revenue, it could mean that inventory is growing fast. It could be a sales
+          forecast warning.</p>
+      </div>
+
+      <!-- Cash and Liabilities -->
+      <div class="chart-box">
+        <h2>{{isYearlyView? "Cash and Liabilities (Last 5 Years)":"Cash and Liabilities (Last 4 Quarters)"}}</h2>
+        <apexcharts v-if="pickCashLiabilitiesSeries.length" type="line" :options="chartOptions"
+          :series="pickCashLiabilitiesSeries"></apexcharts>
+        <p>Gap between these two could be an indicator of trouble.</p>
+      </div>
+
+      <!-- Cash and Net Income -->
+      <div class="chart-box">
+        <h2>{{isYearlyView? "Cash and Net Income (Last 5 Years)":"Cash and Net Income (Last 4 Quarters)"}}</h2>
+        <apexcharts v-if="pickCashNetIncomeSeries.length" type="line" :options="chartOptions"
+          :series="pickCashNetIncomeSeries"></apexcharts>
+        <p>Lower cash flow than net income in high amounts could signal old inventory pile-up or bad debts impacting.
+        </p>
+      </div>
+
+      <!-- R&D and Revenue -->
+      <div class="chart-box">
+        <h2>{{isYearlyView? "R&D and Revenue (Last 5 Years)":"R&D and Revenue (Last 4 Quarters)"}}</h2>
+        <apexcharts v-if="pickRdRevenueSeries.length" type="line" :options="chartOptions"
+          :series="pickRdRevenueSeries"></apexcharts>
+        <p>R&D as a percentage of Sales/Revenue.</p>
+      </div>
+
+      <!-- Other Expenses -->
+      <div class="chart-box">
+        <h2>{{isYearlyView?"Other Expenses (Last 5 Years)":"Other Non Current Liabilities (Last q Quarters)"}}</h2>
+        <apexcharts v-if="pickOtherExpensesSeries.length" type="line" :options="chartOptions"
+          :series="pickOtherExpensesSeries"></apexcharts>
+        <p>These types of expenses should be non-recurring.</p>
+      </div>
+
+      <!-- FCF and Net Income Growth Ratio -->
+      <div class="chart-box">
+        <h2>{{isYearlyView? "FCF Net Income Growth % (Last 5 Years)":"FCF Net Income Growth % (Last 4 Quarters)"}} </h2>
+        <apexcharts v-if="pickFcfNetIncomeGrowthSeries.length" type="line" :options="percentageChartOptions"
+          :series="pickFcfNetIncomeGrowthSeries"></apexcharts>
+        <p>When not moving at a fairly even pace, this could indicate that net income is not as muscular as it appears.
+        </p>
+      </div>
+
+      <!-- Basic EPS -->
+      <div class="chart-box">
+        <h2>{{isYearlyView? "Basic EPS (Last 5 Years)":"Basic EPS (Last 4 Quarters)"}}</h2>
+        <apexcharts v-if="PickEPSSeries.length" type="line" :options="chartOptions"
+          :series="PickEPSSeries"></apexcharts>
+        <p>EPS diluted takes into account stock options issued to managers but not yet exercised. It also figures in
+          bonds, preferred shares, and stock warrants that can be converted to common stock causing an EPS drop.</p>
+      </div>
+
+      <!-- Return on Average Assets -->
+      <div class="chart-box">
+        <h2>{{isYearlyView? "Return on Average Assets (Last 5 Years)":"Return on Average Assets (Last 4 Quarters)"}}</h2>
+        <apexcharts v-if="pickReturnOnAssetsSeries.length" type="line" :options="percentageChartOptions"
+          :series="pickReturnOnAssetsSeries"></apexcharts>
+        <p>ROA connects the balance sheet to the income statement. Higher than 5% is a healthy figure.</p>
+      </div>
+
+      <!-- Cash Dividends Paid Total -->
+      <div class="chart-box">
+        <h2>{{isYearlyView?"Cash Dividends Paid Total (Last 5 Years)":"Cash Dividen Paid Total (Last 4 Quarters)"}}</h2>
+        <apexcharts v-if="pickDividendsPaidSeries.length" type="line" :options="chartOptions"
+          :series="pickDividendsPaidSeries"></apexcharts>
+        <p>Dividends should be continuous for the last 5 years.</p>
+      </div>
+    </div>
+    <div v-else>
       <p class="error-message"> {{ errorMessage }}</p>
     </div>
   </div>
@@ -101,12 +119,16 @@ export default {
       stockPriceData: [], // Array for stock price data
       chartOptions: null,
       percentageChartOptions: null,
-      netIncomeEPSChartOptions:null,
-      errorMessage: ''
-    };
+      EPSChartOptions: null,
+      errorMessage: '',
+      isYearlyView: true,
+      financialDataQtr: {},
+      stockPriceDataQtr:[]
+
+    }; 
   },
-  created(){
-    this.netIncomeEPSChartOptions = {
+  created() {
+    this.EPSChartOptions = {
       chart: {
         type: 'line',
         height: 350,
@@ -152,64 +174,85 @@ export default {
     };
 
     this.chartOptions = {
-    chart: {
-      type: 'line',
-      height: 350,
-      zoom: {
-        enabled: true,
-      },
-    },
-    xaxis: {
-      type: 'datetime',
-      min: this.chartMinDate,
-      max: this.chartMaxDate,
-
-
-    },
-    yaxis: {
-      labels: {
-        formatter: (val) => {
-          if (val === null || val === undefined) return '';
-          if (Math.abs(val) >= 1e9) return `$${(val / 1e9).toFixed(2)}B`;
-          if (Math.abs(val) >= 1e6) return `$${(val / 1e6).toFixed(2)}M`;
-          return `$${val.toFixed(2)}`;
+      chart: {
+        type: 'line',
+        height: 350,
+        zoom: {
+          enabled: true,
         },
       },
-    },
-    stroke: {
-      width: '2',
-    },
-    
-  };
-  
-  this.percentageChartOptions = {
-    chart: {
-      type: 'line',
-      height: 350,
-      zoom: {
-        enabled: true,
+      xaxis: {
+        type: 'datetime',
+        min: this.chartMinDate,
+        max: this.chartMaxDate,
+
+
       },
-    },
-    xaxis: {
-      type: 'datetime',
-      min: this.chartMinDate,
-      max: this.chartMaxDate,
-    },
-    yaxis: {
-      labels: {
-        formatter: (val) => {
-          if (val === null || val === undefined) return '';
-          return `${parseFloat(val).toFixed(2)}%`;
+      yaxis: {
+        labels: {
+          formatter: (val) => {
+            if (val === null || val === undefined) return '';
+            if (Math.abs(val) >= 1e9) return `$${(val / 1e9).toFixed(2)}B`;
+            if (Math.abs(val) >= 1e6) return `$${(val / 1e6).toFixed(2)}M`;
+            return `$${val.toFixed(2)}`;
+          },
         },
       },
-    },
-    stroke: {
-      width: '2',
-    },
-  };
-},
-
-       
+      stroke: {
+        width: '2',
+      },
+    };
+    this.percentageChartOptions = {
+      chart: {
+        type: 'line',
+        height: 350,
+        zoom: {
+          enabled: true,
+        },
+      },
+      xaxis: {
+        type: 'datetime',
+        min: this.chartMinDate,
+        max: this.chartMaxDate,
+      },
+      yaxis: {
+        labels: {
+          formatter: (val) => {
+            if (val === null || val === undefined) return '';
+            return `${parseFloat(val).toFixed(2)}%`;
+          },
+        },
+      },
+      stroke: {
+        width: '2',
+      },
+    };
+    this.ratioChartOptions = {
+      chart: {
+        type: 'line',
+        height: 350,
+        zoom: {
+          enabled: true,
+        },
+      },
+      xaxis: {
+        type: 'datetime',
+        min: this.chartMinDate,
+        max: this.chartMaxDate,
+      },
+      yaxis: {
+        labels: {
+          formatter: (val) => {
+            if (val === null || val === undefined) return '';
+            return `${parseFloat(val).toFixed(2)}`;
+          },
+        },
+      },
+      stroke: {
+        width: '2',
+      },
+    };
+  },
   watch: {
     tickers: {
       immediate: true,
@@ -221,19 +264,59 @@ export default {
     },
   },
   computed: {
-  stockPriceSeries() {
-    return this.stockPriceData;
-  }
-},
+    
+    pickStockPriceSeries() {
+      return this.isYearlyView ? this.stockPriceData : this.stockPriceDataQtr;  
+    },
+    pickRevenueAssetsSeries() {
+      return this.isYearlyView ? this.revenueAssetsSeries() : this.revenueAssetsSeriesQtr();
+    },
+    pickCashLiabilitiesSeries() {
+      return this.isYearlyView ? this.cashLiabilitiesSeries() : this.cashLiabilitiesSeriesQtr();
+    },
+    pickCashNetIncomeSeries() {
+      return this.isYearlyView ? this.cashNetIncomeSeries() : this.cashNetIncomeSeriesQtr();
+    },
+    pickRdRevenueSeries() {
+      return this.isYearlyView ? this.rdRevenueSeries() : this.rdRevenueSeriesQtr();
+    },
+    pickOtherExpensesSeries() {
+      return this.isYearlyView ? this.otherExpensesSeries() : this.OtherNonCurrentLiabilities();
+    },
+    pickFcfNetIncomeGrowthSeries() {
+      return this.isYearlyView ? this.fcfNetIncomeGrowthSeries() : this.fcfNetIncomeGrowthSeriesQtr();
+    },
+    PickEPSSeries() {
+      return this.isYearlyView ? this.EPSSeries() : this.EPSSeriesQtr();
+    },
+    pickReturnOnAssetsSeries() {
+      return this.isYearlyView ? this.returnOnAssetsSeries() : this.returnOnAssetsSeriesQtr();
+    },
+    pickDividendsPaidSeries() {
+      return this.isYearlyView ? this.dividendsPaidSeries() : this.dividendsPaidSeriesQtr();
+    },
+
+  },
+
 
   methods: {
-    
+    toggleView(){
+    this.isYearlyView= !this.isYearlyView;
+    },
     async fetchCompanyData(tickers) {
       try {
         if (!tickers.length) {
-          this.errorMessage.value = 'Please enter at least one stock ticker.';
+          this.errorMessage = 'Please enter at least one stock ticker.';
           return this.errorMessage;
         }
+
+
+        const financialResponseQtr = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/financial_data_qtr`, {
+          params: tickers.reduce((acc, ticker, index) => {
+            acc[`ticker${index + 1}`] = ticker;
+            return acc;
+          }, {}),
+        });
 
         const financialResponse = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/financial_data`, {
           params: tickers.reduce((acc, ticker, index) => {
@@ -243,7 +326,8 @@ export default {
         });
 
         this.financialData = financialResponse.data.financial_data;
-        
+        this.financialDataQtr=financialResponseQtr;
+
 
         const stockPriceResponse = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/stock_price`, {
           params: tickers.reduce((acc, ticker, index) => {
@@ -251,173 +335,319 @@ export default {
             return acc;
           }, {}),
         });
+        const currentDate = new Date(); 
+      const twelveMonthsAgo = new Date();
+      twelveMonthsAgo.setFullYear(currentDate.getFullYear() - 1); // Set to 12 months ago
 
-        this.stockPriceData = Object.keys(stockPriceResponse.data).map(ticker => {
-        const datePricePairs = stockPriceResponse.data[ticker];
-        return {
-          name: `${ticker}`,
-          data: Object.entries(datePricePairs).map(([date, price]) => ({
-            x: new Date(date).toISOString(), // Convert the date to ISO string format
-            y: parseFloat(price) // Ensure the price is a float
+      this.stockPriceDataQtr = Object.keys(stockPriceResponse.data).map(ticker => {
+          const datePricePairs = stockPriceResponse.data[ticker];
+          return {
+            name: `${ticker}`,
+            data: Object.entries(datePricePairs)
+            .filter(([date])=>new Date(date)>=twelveMonthsAgo)
+            .map(([date, price]) => ({
+              x: new Date(date).toISOString(), // Convert the date to ISO string format
+              y: parseFloat(price) // Ensure the price is a float
             }))
           }
-        });console.log("this is the price object",this.datePricePairs)
-        console.log("this is how the financial data object looks like:",this.financialData)
+        }); console.log("this is the price object last 4 qtr", this.datePricePairs)
+
+        this.stockPriceData = Object.keys(stockPriceResponse.data).map(ticker => {
+          const datePricePairs = stockPriceResponse.data[ticker];
+          return {
+            name: `${ticker}`,
+            data: Object.entries(datePricePairs).map(([date, price]) => ({
+              x: new Date(date).toISOString(), // Convert the date to ISO string format
+              y: parseFloat(price) // Ensure the price is a float
+            }))
+          }
+        }); console.log("this is the price object", this.datePricePairs)
+        console.log("this is how the financial data object looks like:", this.financialData)
 
       } catch (error) {
         this.errorMessage = error.response ? error.response.data : error.message; // Update here
         console.error('Error fetching data:', error.response ? error.response.data : error.message);
       }
       
+
     },
-      
     // Functions to handle up to 3 tickers dynamically
+    revenueAssetsSeriesQtr() {
+      return this.tickers.map(ticker => {
+        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{};
+        const assets = financialData["Assets"] || {};
+        const totalRevenue = financialData["total_revenue"] || {};
+        console.log("revenue Qtr function",financialData)
+        return [
+          {
+            name: `${ticker} Total Revenue`,
+            data: Object.entries(totalRevenue).map(([date, value]) => ({x:date,y:value})),
+          },
+          {
+            name: `${ticker} Assets`,
+            data: Object.entries(assets).map(([date, value])=> ({x:date,y:value})),
+          }
+        ];
+      }).flat(); // Flatten to combine series from all tickers into one array
+    },
     revenueAssetsSeries() {
-    return this.tickers.map(ticker => {
-      const data = this.financialData[ticker] || [];
-      return [
-        {
-          name: `${ticker} Revenue`,
-          data: data.map(item => ({ x: item.date, y: item.revenue })),
-        },
-        {
-          name: `${ticker} Assets`,
-          data: data.map(item => ({ x: item.date, y: item.assets })),
-        }
-      ];
-    }).flat(); // Flatten to combine series from all tickers into one array
-  },
-
-  cashLiabilitiesSeries() {
-    return this.tickers.map(ticker => {
-      const data = this.financialData[ticker] || [];
-      return [
-        {
-          name: `${ticker} Cash`,
-          data: data.map(item => ({ x: item.date, y: item.cash })),
-        },
-        {
-          name: `${ticker} Liabilities`,
-          data: data.map(item => ({ x: item.date, y: item.liabilities })),
-        }
-      ];
-    }).flat(); // Flatten to combine series from all tickers into one array
-  },
-
-
-  cashNetIncomeSeries() {
-    return this.tickers.map(ticker => {
-      const data = this.financialData[ticker] || [];
-      return [
-        {
-          name: `${ticker} Cash`,
-          data: data.map(item => ({ x: item.date, y: item.cash })),
-        },
-        {
-          name: `${ticker} Net Income`,
-          data: data.map(item => ({ x: item.date, y: item.net_income })),
-        }
-      ];
-    }).flat(); // Flatten to combine series from all tickers into one array
-  },
-
-
-  rdRevenueSeries() {
-    return this.tickers.map(ticker => {
-      const data = this.financialData[ticker] || [];
-      return [
-        {
-          name: `${ticker} R&D`,
-          data: data.map(item => ({ x: item.date, y: item.rd })),
-        },
-        {
-          name: `${ticker} Revenue`,
-          data: data.map(item => ({ x: item.date, y: item.revenue })),
-        }
-      ];
-    }).flat(); // Flatten to combine series from all tickers into one array
-  },
-
-  otherExpensesSeries() {
-    return this.tickers.map(ticker => {
-      const data = this.financialData[ticker] || [];
-      return [
-        {
-          name: `${ticker} Other Expenses`,
-          data: data.map(item => ({ x: item.date, y: item.other_expenses })),
-        }
-      ];
-    }).flat(); // Flatten to combine series from all tickers into one array
-  },
-
-  fcfNetIncomeGrowthSeries() {
-    return this.tickers.map(ticker => {
-      const data = this.financialData[ticker] || [];
-      return [
-        {
-          name: `${ticker} FCF Growth Ratio`,
-          data: data.map((item, index, arr) => ({
-            x: item.date,
-            y: index > 0 ? (item.fcf - arr[index - 1].fcf) / arr[index - 1].fcf : null,
-          })),
-        },
-        {
-          name: `${ticker} Net Income Growth Ratio`,
-          data: data.map((item, index, arr) => ({
-            x: item.date,
-            y: index > 0 ? (item.net_income - arr[index - 1].net_income) / arr[index - 1].net_income : null,
-          })),
-        }
-      ];
-    }).flat(); // Flatten to combine series from all tickers into one array
-  },
-
-  netIncomeEPSSeries() {
-    return this.tickers.map(ticker => {
-      const data = this.financialData[ticker] || [];
-      return [
-        // removed because it is already plotted in another chart.
-        // {
-        //   name: `${ticker} Net Income`,
-        //   data: data.map(item => ({ x: item.date, y: item.net_income })),
-        // },
-        {
-          name: `${ticker} Basic EPS`,
-          data: data.map(item => ({ x: item.date, y: item['Basic EPS'] })),
-        }
-      ];
-    }).flat(); // Flatten to combine series from all tickers into one array
-  },
-  returnOnAssetsSeries() {
-    return this.tickers.map(ticker => {
-      const data = this.financialData[ticker] || [];
-      return [
-        {
-          name: `${ticker} Return on Assets`,
-          data: data.map(item => ({ x: item.date, y: item.return_on_assets })),
-        }
-      ];
-    }).flat(); // Flatten to combine series from all tickers into one array
-  },
-
-  dividendsPaidSeries() {
-    return this.tickers.map(ticker => {
-      const data = this.financialData[ticker] || [];
-      return [
-        {
-          name: `${ticker} Dividends Paid`,
-          data: data.map(item => ({ x: item.date, y: item.dividends_paid })),
-        }
-      ];
-    }).flat(); // Flatten to combine series from all tickers into one array
-  },
+      return this.tickers.map(ticker => {
+        const data = this.financialData[ticker] || [];
+        return [
+          {
+            name: `${ticker} Revenue`,
+            data: data.map(item => ({ x: item.date, y: item.revenue })),
+          },
+          {
+            name: `${ticker} Assets`,
+            data: data.map(item => ({ x: item.date, y: item.assets })),
+          }
+        ];
+      }).flat(); // Flatten to combine series from all tickers into one array
+    },
+    cashLiabilitiesSeriesQtr(){
+      return this.tickers.map(ticker => {
+        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{};
+        const cash = financialData["CashAndCashEquivalentsAtCarryingValue"] || {};
+        const liabilities = financialData["Liabilities"] || {};
+        return [
+          {
+            name: `${ticker} Cash`,
+            data: Object.entries(cash).map(([date, value]) => ({x:date,y:value})),
+          },
+          {
+            name: `${ticker} Liabilities`,
+            data: Object.entries(liabilities).map(([date, value])=> ({x:date,y:value})),
+          }
+        ];
+      }).flat(); // Flatten to combine series from all tickers into one array
+    },
+    cashLiabilitiesSeries() {
+      return this.tickers.map(ticker => {
+        const data = this.financialData[ticker] || [];
+        return [
+          {
+            name: `${ticker} Cash`,
+            data: data.map(item => ({ x: item.date, y: item.cash })),
+          },
+          {
+            name: `${ticker} Liabilities`,
+            data: data.map(item => ({ x: item.date, y: item.liabilities })),
+          }
+        ];
+      }).flat(); // Flatten to combine series from all tickers into one array
+    },
+    cashNetIncomeSeriesQtr(){
+      return this.tickers.map(ticker => {
+        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{};
+        const cash = financialData["CashAndCashEquivalentsAtCarryingValue"] || {};
+        const NetIncomeLoss = financialData["NetIncomeLoss"] || {};
+        return [
+          {
+            name: `${ticker} Cash`,
+            data: Object.entries(cash).map(([date, value]) => ({x:date,y:value})),
+          },
+          {
+            name: `${ticker} Net Income Loss`,
+            data: Object.entries(NetIncomeLoss).map(([date, value])=> ({x:date,y:value})),
+          }
+        ];
+      }).flat(); // Flatten to combine series from all tickers into one array
+    },
+    cashNetIncomeSeries() {
+      return this.tickers.map(ticker => {
+        const data = this.financialData[ticker] || [];
+        return [
+          {
+            name: `${ticker} Cash`,
+            data: data.map(item => ({ x: item.date, y: item.cash })),
+          },
+          {
+            name: `${ticker} Net Income`,
+            data: data.map(item => ({ x: item.date, y: item.net_income })),
+          }
+        ];
+      }).flat(); // Flatten to combine series from all tickers into one array
+    },
+    rdRevenueSeriesQtr(){
+      return this.tickers.map(ticker => {
+        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{};
+        const rD = financialData["ResearchAndDevelopmentExpense"] || {};
+        const totalRevenue = financialData["total_revenue"] || {};
+        return [
+          {
+            name: `${ticker} R&D`,
+            data: Object.entries(rD).map(([date, value]) => ({x:date,y:value})),
+          },
+          {
+            name: `${ticker} Revenue`,
+            data: Object.entries(totalRevenue).map(([date, value])=> ({x:date,y:value})),
+          }
+        ];
+      }).flat(); // Flatten to combine series from all tickers into one array
+    },
+    rdRevenueSeries() {
+      return this.tickers.map(ticker => {
+        const data = this.financialData[ticker] || [];
+        return [
+          {
+            name: `${ticker} R&D`,
+            data: data.map(item => ({ x: item.date, y: item.rd })),
+          },
+          {
+            name: `${ticker} Revenue`,
+            data: data.map(item => ({ x: item.date, y: item.revenue })),
+          }
+        ];
+      }).flat(); // Flatten to combine series from all tickers into one array
+    },
+    OtherNonCurrentLiabilities(){
+      return this.tickers.map(ticker => {
+        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{};
+        const OtherLiabilitiesNoncurrent = financialData["OtherLiabilitiesNoncurrent"] || {};
+        return [
+          {
+            name: `${ticker} Other Non Current Liabilities`,
+            data: Object.entries(OtherLiabilitiesNoncurrent).map(([date, value]) => ({x:date,y:value})),
+          },
+        ];
+      }).flat(); // Flatten to combine series from all tickers into one array
+    },
+    otherExpensesSeries() {
+      return this.tickers.map(ticker => {
+        const data = this.financialData[ticker] || [];
+        return [
+          {
+            name: `${ticker} Other Expenses`,
+            data: data.map(item => ({ x: item.date, y: item.other_expenses })),
+          }
+        ];
+      }).flat(); // Flatten to combine series from all tickers into one array
+    },
+    fcfNetIncomeGrowthSeriesQtr(){
+      return this.tickers.map(ticker => {
+        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{};
+        const fcf = financialData["fcf"] || {};
+        const NetIncomeLoss = financialData["NetIncomeLoss"] || {};
+        return [
+          {
+            name:`${ticker} FCF Growth Ratio`,
+            data:Object.keys(fcf).map((date,index,arr)=>({
+            x:date,
+            y:index > 0 ? (fcf[date] - fcf[arr[index - 1]]) / fcf[arr[index - 1]] : null
+          })).flat(),
+ 
+          },
+          {
+            name:`${ticker} Net Income Growth Ratio`,
+            data:Object.keys(NetIncomeLoss).map((date,index,arr)=>({
+              x:date,
+            y:index > 0 ? (NetIncomeLoss[date] - NetIncomeLoss[arr[index - 1]]) / NetIncomeLoss[arr[index - 1]] : null
+          })).flat(),
+          }
+        ];
+      }).flat(); // Flatten to combine series from all tickers into one array
+    },
+    fcfNetIncomeGrowthSeries() {
+      return this.tickers.map(ticker => {
+        const data = this.financialData[ticker] || [];
+        return [
+          {
+            name: `${ticker} FCF Growth Ratio`,
+            data: data.map((item, index, arr) => ({
+              x: item.date,
+              y: index > 0 ? (item.fcf - arr[index - 1].fcf) / arr[index - 1].fcf : null,
+            })),
+          },
+          {
+            name: `${ticker} Net Income Growth Ratio`,
+            data: data.map((item, index, arr) => ({
+              x: item.date,
+              y: index > 0 ? (item.net_income - arr[index - 1].net_income) / arr[index - 1].net_income : null,
+            })),
+          }
+        ];
+      }).flat(); // Flatten to combine series from all tickers into one array
+    },
+    EPSSeriesQtr(){
+      return this.tickers.map(ticker => {
+        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{};
+        const EarningsPerShareBasic = financialData["EarningsPerShareBasic"] || {};
+        return [
+          {
+            name: `${ticker} EarningsPerShareBasic`,
+            data: Object.entries(EarningsPerShareBasic).map(([date, value]) => ({x:date,y:value})),
+          },
+        ];
+      }).flat(); // Flatten to combine series from all tickers into one array
+    },
+    EPSSeries() {
+      return this.tickers.map(ticker => {
+        const data = this.financialData[ticker] || [];
+        return [
+          // removed because it is already plotted in another chart.
+          // {
+          //   name: `${ticker} Net Income`,
+          //   data: data.map(item => ({ x: item.date, y: item.net_income })),
+          // },
+          {
+            name: `${ticker} Basic EPS`,
+            data: data.map(item => ({ x: item.date, y: item['Basic EPS'] })),
+          }
+        ];
+      }).flat(); // Flatten to combine series from all tickers into one array
+    },
+    returnOnAssetsSeriesQtr(){
+      return this.tickers.map(ticker => {
+        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{};
+        const return_on_assets = financialData["return_on_assets"] || {};
+        return [
+          {
+            name: `${ticker} return_on_assets`,
+            data: Object.entries(return_on_assets).map(([date, value]) => ({x:date,y:value})),
+          },
+        ];
+      }).flat(); // Flatten to combine series from all tickers into one array
+    },
+    returnOnAssetsSeries() {
+      return this.tickers.map(ticker => {
+        const data = this.financialData[ticker] || [];
+        return [
+          {
+            name: `${ticker} Return on Assets`,
+            data: data.map(item => ({ x: item.date, y: item.return_on_assets })),
+          }
+        ];
+      }).flat(); // Flatten to combine series from all tickers into one array
+    },
+    dividendsPaidSeriesQtr(){
+      return this.tickers.map(ticker => {
+        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{};
+        const PaymentsOfDividends = financialData["PaymentsOfDividends"] || {};
+        return [
+          {
+            name: `${ticker} PaymentsOfDividends`,
+            data: Object.entries(PaymentsOfDividends).map(([date, value]) => ({x:date,y:value})),
+          },
+        ];
+      }).flat(); // Flatten to combine series from all tickers into one array
+    },
+    dividendsPaidSeries() {
+      return this.tickers.map(ticker => {
+        const data = this.financialData[ticker] || [];
+        return [
+          {
+            name: `${ticker} Dividends Paid`,
+            data: data.map(item => ({ x: item.date, y: item.dividends_paid })),
+          }
+        ];
+      }).flat(); // Flatten to combine series from all tickers into one array
+    },
   },
 };
 </script>
 <style scoped>
-
-char
-.error-message {
+char .error-message {
   color: red;
   margin-top: 10px;
 }
@@ -438,7 +668,7 @@ p {
 
 .chart-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px,10%));
+  grid-template-columns: repeat(auto-fit, minmax(350px, 10%));
   gap: 10px;
   background-color: transparent;
 }
@@ -467,6 +697,7 @@ p {
   }
 
 }
+
 button {
   width: auto;
   justify-content: auto;

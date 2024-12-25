@@ -61,7 +61,7 @@ def fetch_financials(ticker):
 # Example function call
 if __name__ == "__main__":
     all_data = []
-    tickers = ['smci']  # Example ticker
+    tickers = ['ROST']  # Example ticker
     for ticker in tickers:
         try:
             data= fetch_financials(ticker)

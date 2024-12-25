@@ -21,7 +21,7 @@ from fetchStockfromdB import stockFetch
 from QStockScore import pull_QStockData,pullAllStockData,RevenueGrowthQtrStockData,PullQtrStockRevenueTrends
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
-from fetch4qtrData import fetch_4qtr_data
+from stockPlotDataQtr import fetch_4qtr_data
 
 uri = os.getenv('MONGODB_URI')
 client = MongoClient(uri, server_api=ServerApi('1'))
@@ -282,32 +282,21 @@ def AllQtrStockRevTrend():
         print(f"Error: {e}")
         return jsonify({'error': str(e)}), 400
     
-@app.route('/api/4qtr_data', methods=['GET'])
+@app.route('/api/financial_data_qtr', methods=['GET'])
 def fetch_4qtr_financial_data():
     tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
     if not tickers:
         return jsonify({'error': 'No tickers provided'}), 400
-    all_data = []
-    for ticker in tickers:
-        try:
-            data = fetch_4qtr_data(ticker)
-            all_data.append(data)
-        except Exception as e:
-            print(f"Cannot fetch stock {ticker}: {e}")
-            all_data.append(None)
+
+    all_data={
+    ticker:{
+        'financial_data_qtr':fetch_4qtr_data(ticker)
+        }
+        for ticker in tickers
+    }
     if not all_data:
         return jsonify({"error": "Failed to fetch any qtr data"}), 500
-    try:
-        combined_data = pd.concat(all_data, ignore_index=False)
-    except:
-        return jsonify({"error": "Failed to fetch any data"}), 500
-    
-    combined_data.reset_index(inplace=True) 
-    # Convert DataFrame to JSON serializable format
-    result = combined_data.to_dict(orient='records')
-
-    return jsonify(result),200
-
+    return jsonify(all_data),200
 
 if __name__ == '__main__':
     app.run(debug=True)
