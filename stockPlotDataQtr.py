@@ -37,12 +37,12 @@ def db_4qtr_data_fetch(db,ticker,collection='QtrStockData'):
     {
         '$match': {
             'ticker': ticker.upper(), 
-            # 'frame': {
-            #     '$ne': None, 
-            #     # '$not': {
-            #     #     '$regex': 'I$'
-            #     # }
-            # }
+            'frame': {
+                '$ne': None, 
+                # '$not': {
+                #     '$regex': 'I$'
+                # }
+            }
         }
     }, {
         '$sort': {
@@ -152,7 +152,7 @@ def fetch_4qtr_data(ticker):
 # Example function call
 if __name__ == "__main__":
     
-    tickers = ['intc']  # Replace with your desired ticker
+    tickers = ['ROST']  # Replace with your desired ticker
     all_data = []
     
 
