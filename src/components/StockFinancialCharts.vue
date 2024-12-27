@@ -374,9 +374,9 @@ export default {
     // Functions to handle up to 3 tickers dynamically
     revenueAssetsSeriesQtr() {
       return this.tickers.map(ticker => {
-        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{};
-        const assets = financialData["Assets"] || {};
-        const totalRevenue = financialData["total_revenue"] || {};
+        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{x:'1900-01-01',y:0};
+        const assets = financialData["Assets"] ||{x:'1900-01-01',y:0};
+        const totalRevenue = financialData["total_revenue"] ||{x:'1900-01-01',y:0};
         console.log("revenue Qtr function",financialData)
         return [
           {
@@ -407,9 +407,9 @@ export default {
     },
     cashLiabilitiesSeriesQtr(){
       return this.tickers.map(ticker => {
-        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{};
-        const cash = financialData["CashAndCashEquivalentsAtCarryingValue"] || {};
-        const liabilities = financialData["Liabilities"] || {};
+        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{x:'1900-01-01',y:0};
+        const cash = financialData["CashAndCashEquivalentsAtCarryingValue"] || {x:'1900-01-01',y:0};
+        const liabilities = financialData["Liabilities"] || {x:'1900-01-01',y:0};
         return [
           {
             name: `${ticker} Cash`,
@@ -439,9 +439,9 @@ export default {
     },
     cashNetIncomeSeriesQtr(){
       return this.tickers.map(ticker => {
-        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{};
-        const cash = financialData["CashAndCashEquivalentsAtCarryingValue"] || {};
-        const NetIncomeLoss = financialData["NetIncomeLoss"] || {};
+        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{x:'1900-01-01',y:0};
+        const cash = financialData["CashAndCashEquivalentsAtCarryingValue"] ||{x:'1900-01-01',y:0};
+        const NetIncomeLoss = financialData["NetIncomeLoss"] ||{x:'1900-01-01',y:0};
         return [
           {
             name: `${ticker} Cash`,
@@ -471,9 +471,9 @@ export default {
     },
     rdRevenueSeriesQtr(){
       return this.tickers.map(ticker => {
-        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{};
-        const rD = financialData["ResearchAndDevelopmentExpense"] || {};
-        const totalRevenue = financialData["total_revenue"] || {};
+        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{x:'1900-01-01',y:0};
+        const rD = financialData["ResearchAndDevelopmentExpense"] ||{x:'1900-01-01',y:0};
+        const totalRevenue = financialData["total_revenue"] ||{x:'1900-01-01',y:0};
         return [
           {
             name: `${ticker} R&D`,
@@ -503,8 +503,8 @@ export default {
     },
     OtherNonCurrentLiabilities(){
       return this.tickers.map(ticker => {
-        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{};
-        const OtherLiabilitiesNoncurrent = financialData["OtherLiabilitiesNoncurrent"] || {};
+        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{x:'1900-01-01',y:0};
+        const OtherLiabilitiesNoncurrent = financialData["OtherLiabilitiesNoncurrent"] ||{x:'1900-01-01',y:0};
         return [
           {
             name: `${ticker} Other Non Current Liabilities`,
@@ -526,9 +526,9 @@ export default {
     },
     fcfNetIncomeGrowthSeriesQtr(){
       return this.tickers.map(ticker => {
-        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{};
-        const fcf = financialData["fcf"] || {};
-        const NetIncomeLoss = financialData["NetIncomeLoss"] || {};
+        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{x:'1900-01-01',y:0};
+        const fcf = financialData["fcf"] ||{x:'1900-01-01',y:0};
+        const NetIncomeLoss = financialData["NetIncomeLoss"] ||{x:'1900-01-01',y:0};
         return [
           {
             name:`${ticker} FCF Growth Ratio`,
@@ -571,8 +571,8 @@ export default {
     },
     EPSSeriesQtr(){
       return this.tickers.map(ticker => {
-        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{};
-        const EarningsPerShareBasic = financialData["EarningsPerShareBasic"] || {};
+        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{x:'1900-01-01',y:0};
+        const EarningsPerShareBasic = financialData["EarningsPerShareBasic"] ||{x:'1900-01-01',y:0};
         return [
           {
             name: `${ticker} EarningsPerShareBasic`,
@@ -599,8 +599,8 @@ export default {
     },
     returnOnAssetsSeriesQtr(){
       return this.tickers.map(ticker => {
-        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{};
-        const return_on_assets = financialData["return_on_assets"] || {};
+        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{x:'1900-01-01',y:0};
+        const return_on_assets = financialData["return_on_assets"] ||{x:'1900-01-01',y:0};
         return [
           {
             name: `${ticker} return_on_assets`,
@@ -622,8 +622,8 @@ export default {
     },
     dividendsPaidSeriesQtr(){
       return this.tickers.map(ticker => {
-        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{};
-        const PaymentsOfDividends = financialData["PaymentsOfDividends"] || {};
+        const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{x:'1900-01-01',y:0};
+        const PaymentsOfDividends = financialData["PaymentsOfDividends"] ||{x:'1900-01-01',y:0};
         return [
           {
             name: `${ticker} PaymentsOfDividends`,
