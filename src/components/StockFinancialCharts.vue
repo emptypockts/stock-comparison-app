@@ -86,7 +86,7 @@
 
       <!-- Cash Dividends Paid Total -->
       <div class="chart-box">
-        <h2>{{isYearlyView?"Cash Dividends Paid Total (Last 5 Years)":"Cash Dividen Paid Total (Last 4 Quarters)"}}</h2>
+        <h2>{{isYearlyView?"Cash Dividends Paid Total (Last 5 Years)":"Cash Dividend Paid Total (Last 4 Quarters)"}}</h2>
         <apexcharts v-if="pickDividendsPaidSeries.length" type="line" :options="chartOptions"
           :series="pickDividendsPaidSeries"></apexcharts>
         <p>Dividends should be continuous for the last 5 years.</p>
