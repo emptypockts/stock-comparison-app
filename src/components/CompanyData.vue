@@ -1,5 +1,6 @@
 <template>
-  <h1>Ticker Data </h1>
+  <h1>Ticker Data 
+  </h1>
   <div class="input-container">
     <input v-model="ticker1" placeholder="Try:intc" id="ticker 1" />
     <input v-model="ticker2" placeholder="Try:axp" id="ticker 2" />
@@ -11,8 +12,8 @@
   <!-- Error message display -->
   <div v-if="errorMessage" class="error-message">
     <p>{{ errorMessage }}</p>
-
   </div>
+    
   <div>
     <div v-if="companyData">
       <ul class="list-container">
@@ -21,7 +22,7 @@
             Last Filing :</strong> {{ name['last_filing_date'] }}<br><br>
         </li>
       </ul>
-    </div>
+      </div>
   </div>
 </template>
 
@@ -91,12 +92,15 @@ export default {
 
         companyData.value = response.data;
         console.log("Company Data Object:", companyData.value)
-        if (!companyData.value || Object.keys(companyData.value).length === 0 || tickers.length!==Object.keys(companyData.value).length) {
-          errorMessage.value = "One or more ticker symbols are invalid. Please check your input."
-          console.log("error is ", errorMessage.value)
-          
-          emit('loading', false); // Emit loading status as false to stop loading
-          return errorMessage; // Stop further processing
+        if (!companyData.value || Object.keys(companyData.value).length === 0) {
+          errorMessage.value = 'No data found for the entered tickers.';
+        } else {
+          const missingTickers = tickers.filter(
+            ticker => !Object.keys(companyData.value).includes(ticker)
+          );
+          if (missingTickers.length > 0) {
+            errorMessage.value = `Data for the following tickers is missing: ${missingTickers.join(', ')}.`;
+          }
         }
 
 

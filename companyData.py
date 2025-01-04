@@ -95,16 +95,16 @@ def compile_stockData(tickers):
             except Exception as e:
                 logger.error(f"Error fetching general stock data for {ticker}: {e}")
             
-            # # Safely attempt to fetch quarterly earnings
-            # try:
-            #     qtrStockData = get_qtr_earnings(ticker)
-            # except Exception as e:
-            #     logger.error(f"Error fetching quarterly earnings for {ticker}: {e}")
+            # Safely attempt to fetch quarterly earnings
+            try:
+                qtrStockData = get_qtr_earnings(ticker)
+            except Exception as e:
+                logger.error(f"Error fetching quarterly earnings for {ticker}: {e}")
             
-            # # Skip ticker if data is incomplete
-            # if not gStockData or not qtrStockData:
-            #     logger.warning(f"Skipping {ticker} due to incomplete data.")
-            #     continue
+            # Skip ticker if data is incomplete
+            if not gStockData or not qtrStockData:
+                logger.warning(f"Skipping {ticker} due to incomplete data.")
+                continue
 
             stockInfo[ticker] = {
                 "gStockData": gStockData,
@@ -130,7 +130,7 @@ def compile_stockData(tickers):
 
 # Example function call
 if __name__ == "__main__":
-    tickers= ['eric']
+    tickers= ['sqsp']
     stockInfo = compile_stockData(tickers)
     
     print(stockInfo)
