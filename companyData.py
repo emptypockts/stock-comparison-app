@@ -78,38 +78,59 @@ def get_qtr_earnings(ticker):
 
 
 def compile_stockData(tickers):
-    try:
-        stockInfo = {}
-        for ticker in tickers:
-            gStockData = get_StockInfo(ticker)
-            qtrStockData = get_qtr_earnings(ticker)
+    if not isinstance(tickers, list):
+        logger.error("Input `tickers` must be a list.")
+        return {}
+
+    stockInfo = {}
+    
+    for ticker in tickers:
+        try:
+            gStockData = None
+            qtrStockData = None
+
+            # Safely attempt to fetch stock data
+            try:
+                gStockData = get_StockInfo(ticker)
+            except Exception as e:
+                logger.error(f"Error fetching general stock data for {ticker}: {e}")
             
-            if not gStockData or not qtrStockData:
-                logger.warning(f"Skipping incomplete data for {ticker}")
-                continue
+            # # Safely attempt to fetch quarterly earnings
+            # try:
+            #     qtrStockData = get_qtr_earnings(ticker)
+            # except Exception as e:
+            #     logger.error(f"Error fetching quarterly earnings for {ticker}: {e}")
             
+            # # Skip ticker if data is incomplete
+            # if not gStockData or not qtrStockData:
+            #     logger.warning(f"Skipping {ticker} due to incomplete data.")
+            #     continue
+
             stockInfo[ticker] = {
                 "gStockData": gStockData,
-                "qtrStockData": qtrStockData
+                "qtrStockData": qtrStockData,
             }
 
-            # Safely access the first quarterly data
-            if qtrStockData and 'filing_date' in qtrStockData[0]:
-                stockInfo[ticker]['last_filing_date'] = qtrStockData[0]['filing_date']
-            else:
+            # Safely extract the last filing date
+            try:
+                stockInfo[ticker]['last_filing_date'] = (
+                    qtrStockData[0]['filing_date'] if qtrStockData and 'filing_date' in qtrStockData[0] else None
+                )
+            except Exception as e:
+                logger.error(f"Error processing last filing date for {ticker}: {e}")
                 stockInfo[ticker]['last_filing_date'] = None
         
-        return stockInfo
+        except Exception as e:
+            logger.error(f"Unexpected error processing {ticker}: {e}")
+    
+    return stockInfo
 
-    except Exception as e:
-        logger.error(f"Unexpected error in compile_stockData: {e}")
-        return None
 
 
 
 # Example function call
 if __name__ == "__main__":
-    tickers= ['msft','cnc']
+    tickers= ['eric']
     stockInfo = compile_stockData(tickers)
     
     print(stockInfo)

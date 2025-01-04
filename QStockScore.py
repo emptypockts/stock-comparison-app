@@ -14,32 +14,6 @@ def fetch_Stock_Info():
     files = os.listdir(path)
     qtr_obj = []
 
-    
-    # Define the metrics to process and their corresponding keys
-    
-
-    metric_keys = {
-        'RevenueFromContractWithCustomerExcludingAssessedTax': 'revenue',#revenue
-        'Revenues': 'revenue', #revenue
-        'Assets': 'assets',#assets
-        'CashAndCashEquivalentsAtCarryingValue':'end_cash_postion', #cash
-        'Liabilities':'liabilities', #total liabilities
-        'NetIncomeLoss':'netIncome', #net_income #return on assets = net_income / assets
-        'ResearchAndDevelopmentExpense':'R&D', #rd
-        'NetCashProvidedByUsedInOperatingActivities':'operatingCashFlow', #fcf =NetCashProvidedByUsedInOperatingActivities- PaymentsToAcquirePropertyPlantAndEquipment
-        'PaymentsOfDividends':'dividends', #dividends
-        'EntityCommonStockSharesOutstanding':'OutstandingShares', #outstandingshares
-        'EarningsPerShareBasic':'EPS',
-        'EarningsPerShareDiluted':'EPS_diluted',
-        'CommercialPaper':'CommercialPaper',
-        'OtherLiabilitiesCurrent':'OtherLiabilitiesCurrent', #total debt = OtherLiabilitiesCurrent+ OtherLiabilitiesNonCurrent +LiabilitiesCurrent +LiabilitiesNoncurrent
-        'OtherLiabilitiesNoncurrent':'OtherLiabilitiesNoncurrent', #total debt = OtherLiabilitiesCurrent+ OtherLiabilitiesNonCurrent +LiabilitiesCurrent +LiabilitiesNoncurrent
-        'LiabilitiesCurrent':'LiabilitiesCurrent', #total debt = OtherLiabilitiesCurrent+ OtherLiabilitiesNonCurrent +LiabilitiesCurrent +LiabilitiesNoncurrent
-        'LiabilitiesNoncurrent':'LiabilitiesNoncurrent', #total debt = OtherLiabilitiesCurrent+ OtherLiabilitiesNonCurrent +LiabilitiesCurrent +LiabilitiesNoncurrent
-        'PaymentsToAcquirePropertyPlantAndEquipment':'capex',
-        'NetCashProvidedByUsedInInvestingActivities':'capex2'
-    }
-
     for file in files:
         # use to debug
     # for file in files[:3:]: 
@@ -52,34 +26,37 @@ def fetch_Stock_Info():
 
 
         # Iterate through items in the dataset
-            if item and 'entityName' in item and 'facts' in item and 'us-gaap' in item['facts'] and 'cik' in item:
-                # for metric_name, key_value in metric_keys.items():
-                #     # Check if the metric exists in the current item
-                #     if metric_name in item['facts']['us-gaap']:
-                #         if 'USD' in item['facts']['us-gaap'][metric_name]['units'] or 'USD/shares' in item['facts']['us-gaap'][metric_name]['units']:
-                #             if metric_name=='EarningsPerShareBasic' or metric_name=='EarningsPerShareDiluted':
-                #                 metrics = item['facts']['us-gaap'][metric_name]['units']['USD/shares']
-                #             else:
-                #                 metrics = item['facts']['us-gaap'][metric_name]['units']['USD']
-                #             for metric in metrics:
-                #                 # Process only 10-Q forms with a frame
-                #                 endDate=datetime.strptime(metric['end'],'%Y-%m-%d')
-                #                 if metric['form'] == '10-Q' and (endDate.year>2022)  :
-                                    qtr_obj.append({
-                                            'ticker':ticker,
-                                            # 'metric':metric_name,
-                                            # 'value':metric['val'],
-                                            # 'date':metric['end'],
-                                            # 'form':metric['form'],
-                                            # 'fp':metric.get('fp',None),
-                                            # 'frame':metric.get('frame',None)
-                                            'financialData':item
-                                            })
+            if item and 'entityName' in item and 'facts' in item and 'cik' in item:
+                if item['entityName']!="":
+                    for keyLevel1,valueLevel1 in item['facts'].items():
+                        for keyLevel2,valueLevel2 in valueLevel1.items():
+                             for keyLevel3,valueLevel3 in valueLevel2.items():   
+                                if keyLevel3 =='units':
+                                    for keyLevel4,valueLevel4 in valueLevel3.items():
+                                        # Process only 10-Q forms with a frame
+                                        # Process only 10-Q forms with a frame
+                                        for valueLevel5 in valueLevel4:
+                                            endDate=datetime.strptime(valueLevel5['end'],'%Y-%m-%d')
+                                            if endDate.year>2022  :
+                                                qtr_obj.append({
+                                                        'fact':keyLevel1,
+                                                        'ticker':ticker,
+                                                        'metric':keyLevel2,
+                                                        'value':valueLevel5['val'],
+                                                        'date':valueLevel5['end'],
+                                                        'form':valueLevel5['form'],
+                                                        'fp':valueLevel5.get('fp',None),
+                                                        'frame':valueLevel5.get('frame',None),
+                                                        'currency':keyLevel4
+                                                        })
+                                                # print(ticker)
+                                                push_QStockData(db,qtr_obj,collection='QtrStockData')
+                                                qtr_obj.clear()
 
 
                                     
     # Convert the deduplicated frames into a list
-    return qtr_obj
+    # return qtr_obj
 
 
 def fetch_dei_info():
@@ -312,8 +289,10 @@ if __name__=="__main__":
     limit_size=10000
     skip=0
     # # Flow to update stock info from json files  (GAAP)
-    object=fetch_Stock_Info()
-    push_QStockData(db,object,collection='QtrStockData')
+    fetch_Stock_Info()
+    # push_QStockData(db,object,collection='QtrStockData')
+    #Flow to update stock info from json files (IFRS)
+    
     # # Flow to update stock info from json files (DEI)
     # object=fetch_dei_info()
     # push_QStockData(db,object,collection='QtrDeiStockData')

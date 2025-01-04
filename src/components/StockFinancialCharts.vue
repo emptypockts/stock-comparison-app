@@ -14,14 +14,13 @@
         <h2>{{isYearlyView? "Stock Price (Last 5 Years)":"Stock Price (Last 4 Quarters)"}}</h2>
         <apexcharts v-if="pickStockPriceSeries.length" type="line" :options="chartOptions" :series="pickStockPriceSeries">
         </apexcharts>
-        <p>This chart shows the stock price movements over the last 5 years.</p>
+        <p>This chart shows the stock price movements.</p>
       </div>
 
       <!-- Revenue and Assets -->
       <div class="chart-box">
         <h2>{{isYearlyView? "Revenue and Assets (Last 5 Years)":"Revenue and Assets (Last 4 Quarters)"}}</h2>
-        <apexcharts v-if="pickRevenueAssetsSeries.length" type="line" :options="chartOptions"
-          :series="pickRevenueAssetsSeries"></apexcharts>
+        <apexcharts v-if="pickRevenueAssetsSeries.length" type="line" :options="chartOptions" :series="pickRevenueAssetsSeries"></apexcharts>
         <p>If assets grow faster than revenue, it could mean that inventory is growing fast. It could be a sales
           forecast warning.</p>
       </div>
@@ -185,9 +184,10 @@ export default {
         type: 'datetime',
         min: this.chartMinDate,
         max: this.chartMaxDate,
-
+      
 
       },
+
       yaxis: {
         labels: {
           formatter: (val) => {
@@ -333,7 +333,7 @@ export default {
           params: tickers.reduce((acc, ticker, index) => {
             acc[`ticker${index + 1}`] = ticker;
             return acc;
-          }, {}),
+          }, {}), 
         });
         const currentDate = new Date(); 
       const twelveMonthsAgo = new Date();
