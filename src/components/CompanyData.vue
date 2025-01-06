@@ -13,7 +13,7 @@
       <div v-if="loading" class="loading-overlay">
       <div class="loading-throbber">
         <div class="spinner"></div>
-        <p>Getting cmpany names...</p>
+        <p>Getting company names...</p>
       </div>
     </div>
   <!-- Error message display -->
