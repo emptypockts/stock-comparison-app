@@ -30,7 +30,7 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router'; // Import useRouter for navigation
-// import { nextTick } from 'vue';
+import debounce from 'lodash.debounce';
 
 export default {
   emits: ['tickers-updated', 'loading'], // Declare the custom events
@@ -67,7 +67,7 @@ export default {
         return false;
       }
     };
-    const fetchCompanyData = async () => {
+    const fetchCompanyData = debounce(async () => {
       const tickers = [ticker1, ticker2, ticker3].map(tickerRef => tickerRef.value).filter(Boolean);
       if (tickers.length === 0) {
         errorMessage.value = "Please enter at least one stock ticker."
@@ -118,7 +118,7 @@ export default {
         emit('loading', false);
 
       }
-    };
+    },600);
     // Wrapper function to verify the token before fetching company names
     const verifyAndFetchCompanyData = async () => {
       const isTokenValid = await verifyToken();

@@ -371,8 +371,16 @@ th span {
 .sorted {
   background-color: #f1f1f1; /* Light background for sorted column */
 }
-.pagination-controls{
-  width: 90%;
+.pagination-controls {
+  position: fixed; /* Keeps it fixed on the screen */
+  bottom: 10px;    /* Position it 10px from the bottom */
+  left: 45%;       /* Center horizontally */
+  transform: translateX(-50%); /* Centering adjustment */
+  background-color: #fff; /* Optional: Background color */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Optional: Add some shadow */
+  padding: 10px; /* Padding for better appearance */
+  z-index: 1000; /* Ensure it appears above other elements */
+  border-radius: 8px; /* Optional: Rounded corners */
 }
 
 </style>
