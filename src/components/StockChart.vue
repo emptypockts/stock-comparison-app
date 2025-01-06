@@ -92,7 +92,7 @@
       <div v-if="loading" class="loading-overlay">
         <div class="loading-throbber">
           <div class="spinner"></div>
-          <p>Fetching data... Please wait.</p>
+          <p>getting annual score data...</p>
         </div>
       </div>
     </div>

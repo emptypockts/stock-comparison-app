@@ -8,7 +8,7 @@
       <div v-if="localIsProcessing" class="loading-overlay">
         <div class="loading-throbber">
           <div class="spinner"></div>
-          <p>Analyzing reports please wait...</p>
+          <p>Creating Rittenhouse analysis...</p>
         </div>
       </div>
       <!-- Legend for Sentiment Polarity and Subjectivity -->

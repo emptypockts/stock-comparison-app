@@ -10,7 +10,7 @@
   <div>
     <div >
       <div v-if="paginatedRecords.length" class="table-container">
-        <button @click="toggleCollapse">Click to expand or collapse</button>
+        <!-- <button @click="toggleCollapse">Click to expand or collapse</button> -->
         <div class="table-scroll">
           <table class="copyable-table">
             <thead>
@@ -46,7 +46,7 @@
       <div v-if="loading" class="loading-overlay">
         <div class="loading-throbber">
           <div class="spinner"></div>
-          <p>Fetching data... Please wait.</p>
+          <p>Getting quarterly data...</p>
         </div>
       </div>
     </div>

@@ -9,6 +9,13 @@
   <div>
     <button @click="verifyAndFetchCompanyData">Analyse</button>
   </div>
+      <!-- Loading Throbber -->
+      <div v-if="loading" class="loading-overlay">
+      <div class="loading-throbber">
+        <div class="spinner"></div>
+        <p>Getting cmpany names...</p>
+      </div>
+    </div>
   <!-- Error message display -->
   <div v-if="errorMessage" class="error-message">
     <p>{{ errorMessage }}</p>
@@ -33,12 +40,13 @@ import { useRouter } from 'vue-router'; // Import useRouter for navigation
 import debounce from 'lodash.debounce';
 
 export default {
-  emits: ['tickers-updated', 'loading'], // Declare the custom events
+  emits: ['tickers-updated'], // Declare the custom events
   setup(props, { emit }) {
     const errorMessage = ref('');
     const ticker1 = ref('');
     const ticker2 = ref('');
     const ticker3 = ref('');
+    const loading = ref(false);
     const companyData = ref({});
     const router = useRouter(); // Use Vue Router for navigation
     const verifyToken = async () => {
@@ -76,8 +84,8 @@ export default {
       }
       // Emit loading status as true to indicate loading has started
       errorMessage.value = ""
-      emit('loading', true);
-
+      // emit('loading', true);
+      loading.value=true;
       console.log("tickers:", tickers)
       // Function to verify the token before fetching company names
 
@@ -109,13 +117,15 @@ export default {
       } catch (error) {
         errorMessage.value = "One or more ticker symbols are invalid. Please check your input."
         console.log("error is ", errorMessage.value)
-        emit('loading', false);
+        // emit('loading', false);
+        loading.value=false;
         return errorMessage;
       }
 
       finally {
         // Emit loading status as false to stop loading after the request is complete
         emit('loading', false);
+        loading.value=false
 
       }
     },600);
@@ -141,7 +151,8 @@ export default {
       fetchCompanyData,
       companyData,
       verifyAndFetchCompanyData,
-      errorMessage
+      errorMessage,
+      loading
     };
   },
 };

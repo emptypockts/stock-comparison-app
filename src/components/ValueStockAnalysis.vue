@@ -1,7 +1,7 @@
 <template>
   <div>
     <div v-if="loading" class="loading-screen">
-      <p>Loading Value Stock Analysis...</p>
+      <p>Loading value stock analysis...</p>
     </div>
     <div v-else>
       <h1>Value Stock Analysis</h1>

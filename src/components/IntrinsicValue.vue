@@ -39,7 +39,7 @@
     <div v-if="loading" class="loading-overlay">
       <div class="loading-throbber">
         <div class="spinner"></div>
-        <p>Fetching data... Please wait.</p>
+        <p>Calculating intrinsic values...</p>
       </div>
     </div>
 
