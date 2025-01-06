@@ -22,7 +22,7 @@
       <div v-if="loading" class="loading-overlay">
         <div class="loading-throbber">
           <div class="spinner"></div>
-          <p1>Getting eonomy data...</p1>
+          <p1>Getting economy data...</p1>
         </div>
       </div>
     </div>
