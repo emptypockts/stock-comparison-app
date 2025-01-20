@@ -11,12 +11,12 @@
   
   <script>
   import { ref, onMounted } from 'vue';
-  import { useRoute } from 'vue-router';
+  import { useRouter } from 'vue-router';
   
   export default {
     setup() {
       const cookieAccepted = ref(false);
-      const router=useRoute()
+      const router=useRouter()
       onMounted(() => {
       // Check if cookies have been accepted or declined
       const isAccepted = localStorage.getItem('cookieAccepted');
