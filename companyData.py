@@ -6,6 +6,16 @@ import requests
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger()
 
+def alpha_get_market_cap(symbol):
+    api_key  = os.getenv('ALPHA_VANTAGE_API_KEY')
+    url = f"https://www.alphavantage.co/query?function=OVERVIEW&symbol={symbol}&apikey={api_key}"
+    response = requests.get(url)
+    data = response.json()
+    if 'MarketCapitalization' in data:
+        return int(data['MarketCapitalization'])
+    else:
+       return 0
+
 def get_StockInfo(ticker):
     try:
         dotenv.load_dotenv()
@@ -17,17 +27,17 @@ def get_StockInfo(ticker):
         url = f"https://api.polygon.io/v3/reference/tickers/{ticker.upper()}?apiKey={API}"
         response = requests.get(url)
         response.raise_for_status()  # Raise an HTTPError for bad responses (4xx or 5xx)
-        
+        market_cap= alpha_get_market_cap(ticker)
+      
         jsonObj = response.json()
         if 'results' not in jsonObj or not jsonObj['results']:
             raise ValueError(f"No results found for ticker: {ticker}")
-        
         stockData = {
             'symbol': jsonObj['results']['ticker'],
             'name': jsonObj['results']['name'],
             'share_class_shares_outstanding': jsonObj['results']['share_class_shares_outstanding'],
-            'market_cap': jsonObj['results']['market_cap'],
-            'current_price': round(jsonObj['results']['market_cap'] / jsonObj['results']['share_class_shares_outstanding'],2)
+            'market_cap': market_cap,
+            'current_price': round(market_cap / jsonObj['results']['share_class_shares_outstanding'],2)
         }
         return stockData
 
@@ -55,6 +65,7 @@ def get_qtr_earnings(ticker):
         response.raise_for_status()
         
         jsonObj = response.json()
+
         if 'results' not in jsonObj or not jsonObj['results']:
             raise ValueError(f"No quarterly earnings found for ticker: {ticker}")
         
@@ -130,7 +141,7 @@ def compile_stockData(tickers):
 
 # Example function call
 if __name__ == "__main__":
-    tickers= ['sqsp']
+    tickers= ['intc']
     stockInfo = compile_stockData(tickers)
     
     print(stockInfo)
