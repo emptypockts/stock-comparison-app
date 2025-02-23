@@ -27,13 +27,16 @@ def calculate_historical_growth_rate(ticker):
     start_value = fcf.iloc[-1]
     end_value = fcf.iloc[0]
     num_years = len(fcf) - 1
-    
+
     if start_value <= 0 or end_value <= 0:
         logging.info("Invalid FCF values for growth rate calculation. returning default 5%")
         return 5.0
+    if 'growth' in stock.earnings_estimate:
+        cagr=stock.earnings_estimate['growth'].iloc[-1]
+    else:
+        cagr = (end_value / start_value) ** (1 / num_years) - 1
     
-    cagr = (end_value / start_value) ** (1 / num_years) - 1
-    cagr=stock.earnings_estimate['growth'].iloc[-1]
+
     return cagr * 100  # Convert to percentage
 
 def convert_to_usd(amount, currency):
@@ -247,7 +250,7 @@ def getAllIntrinsicValues(ticker, growth_rate=5.0, discount_rate=10.0, terminal_
 # Example usage
 if __name__ == "__main__":
 
-    ticker_symbols = ['HCI']
+    ticker_symbols = ['mov']
     data=[]
     for ticker in ticker_symbols:
         result = getAllIntrinsicValues(ticker,growth_rate=5.0, discount_rate=10.0, terminal_growth_rate=2.0, projection_years=5)
