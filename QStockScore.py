@@ -10,53 +10,69 @@ import numpy as np
 from datetime import datetime
 
 def fetch_Stock_Info():
-    path = f"C:\\Users\\ejujo\\Downloads\\companyfacts\\"
+    path = r"C:\\Users\\ejujo\\Downloads\\companyfacts\\"
     files = os.listdir(path)
     qtr_obj = []
-
+    nasdaq =pd.read_csv(r"C:\\Users\ejujo\\coding\\nasdaq.csv")
+    metric_keys = {
+    'RevenueFromContractWithCustomerExcludingAssessedTax': 'revenue',#revenue
+    'RevenueFromContractWithCustomerIncludingAssessedTax':'revenue', #revenue
+    'Revenues': 'revenue', #revenue
+    'Assets': 'assets',#assets
+    'CashAndCashEquivalentsAtCarryingValue':'end_cash_postion', #cash
+    'Liabilities':'liabilities', #total liabilities
+    'NetIncomeLoss':'netIncome', #net_income #return on assets = net_income / assets
+    'ResearchAndDevelopmentExpense':'R&D', #rd
+    'NetCashProvidedByUsedInOperatingActivities':'operatingCashFlow', #fcf =NetCashProvidedByUsedInOperatingActivities- PaymentsToAcquirePropertyPlantAndEquipment
+    'PaymentsOfDividends':'dividends', #dividends
+    'EntityCommonStockSharesOutstanding':'OutstandingShares', #outstandingshares
+    'EarningsPerShareBasic':'EPS',
+    'EarningsPerShareDiluted':'EPS_diluted',
+    'CommercialPaper':'CommercialPaper',
+    'OtherLiabilitiesCurrent':'OtherLiabilitiesCurrent', #total debt = OtherLiabilitiesCurrent+ OtherLiabilitiesNonCurrent +LiabilitiesCurrent +LiabilitiesNoncurrent
+    'OtherLiabilitiesNoncurrent':'OtherLiabilitiesNoncurrent', #total debt = OtherLiabilitiesCurrent+ OtherLiabilitiesNonCurrent +LiabilitiesCurrent +LiabilitiesNoncurrent
+    'LiabilitiesCurrent':'LiabilitiesCurrent', #total debt = OtherLiabilitiesCurrent+ OtherLiabilitiesNonCurrent +LiabilitiesCurrent +LiabilitiesNoncurrent
+    'LiabilitiesNoncurrent':'LiabilitiesNoncurrent', #total debt = OtherLiabilitiesCurrent+ OtherLiabilitiesNonCurrent +LiabilitiesCurrent +LiabilitiesNoncurrent
+    'PaymentsToAcquirePropertyPlantAndEquipment':'capex',
+    'NetCashProvidedByUsedInInvestingActivities':'capex2'
+    }
     for file in files:
         # use to debug
     # for file in files[:3:]: 
         cik_integer = int(file[:-5].lstrip("CIK").lstrip("0"))
         ticker=fetch_ticker(db,cik_integer)
-        if ticker:
+        if ticker and ticker in nasdaq['ticker'].values:
             with open(path + file) as f:
                 item = json.loads(f.read())
 
-
-
         # Iterate through items in the dataset
-            if item and 'entityName' in item and 'facts' in item and 'cik' in item:
-                if item['entityName']!="":
-                    for keyLevel1,valueLevel1 in item['facts'].items():
-                        for keyLevel2,valueLevel2 in valueLevel1.items():
-                             for keyLevel3,valueLevel3 in valueLevel2.items():   
-                                if keyLevel3 =='units':
-                                    for keyLevel4,valueLevel4 in valueLevel3.items():
-                                        # Process only 10-Q forms with a frame
-                                        # Process only 10-Q forms with a frame
-                                        for valueLevel5 in valueLevel4:
-                                            endDate=datetime.strptime(valueLevel5['end'],'%Y-%m-%d')
-                                            if endDate.year>2022  :
-                                                qtr_obj.append({
-                                                        'fact':keyLevel1,
-                                                        'ticker':ticker,
-                                                        'metric':keyLevel2,
-                                                        'value':valueLevel5['val'],
-                                                        'date':valueLevel5['end'],
-                                                        'form':valueLevel5['form'],
-                                                        'fp':valueLevel5.get('fp',None),
-                                                        'frame':valueLevel5.get('frame',None),
-                                                        'currency':keyLevel4
-                                                        })
-                                                # print(ticker)
-                                                push_QStockData(db,qtr_obj,collection='QtrStockData')
-                                                qtr_obj.clear()
+                if item and 'entityName' in item and 'facts' in item and 'us-gaap' in item['facts'] and 'cik' in item:
+                    for metric_name, key_value in metric_keys.items():
+                        # Check if the metric exists in the current item
+                        if metric_name in item['facts']['us-gaap']:
+                            if 'USD' in item['facts']['us-gaap'][metric_name]['units'] or 'USD/shares' in item['facts']['us-gaap'][metric_name]['units']:
+                                if metric_name=='EarningsPerShareBasic' or metric_name=='EarningsPerShareDiluted':
+                                    metrics = item['facts']['us-gaap'][metric_name]['units']['USD/shares']
+                                else:
+                                    metrics = item['facts']['us-gaap'][metric_name]['units']['USD']
+                                for metric in metrics:
+                                    # Process only 10-Q forms with a frame
+                                    endDate=datetime.strptime(metric['end'],'%Y-%m-%d')
+                                    if metric['form'] == '10-Q' and (endDate.year>2023)  :
+                                        qtr_obj.append({
+                                                'ticker':ticker,
+                                                'metric':metric_name,
+                                                'value':metric['val'],
+                                                'date':metric['end'],
+                                                'form':metric['form'],
+                                                'fp':metric.get('fp',None),
+                                                'frame':metric.get('frame',None)
+                                                })
 
 
                                     
     # Convert the deduplicated frames into a list
-    # return qtr_obj
+    return qtr_obj
 
 
 def fetch_dei_info():
@@ -87,6 +103,7 @@ def fetch_dei_info():
                             for share in outstanding_data['units']['shares']:
                                 endDate=datetime.strptime(share['end'],'%Y-%m-%d')
                                 if share['form']=='10-Q' and (endDate.year>2022):
+                                    print(ticker)
                                     qtr_obj.append({
                                     'ticker':ticker,
                                     'metric':'outstandingShares',
@@ -131,7 +148,7 @@ def RevenueGrowthQtrStockData (df):
         return pd.Series([0.0] * len(df), index=df.index)
     x = np.arange(len(df))
     y=df['maxRev'].apply(lambda x:x['output']/1e9)
-    if len(x) < 4 or len(set(y)) == 1:  
+    if len(x) < 3 or len(set(y)) == 1:  
         return pd.Series([0.0] * len(df), index=df.index)
     slope = np.polyfit(x,y,1)[0]
     trend = degrees(atan(slope))
@@ -147,7 +164,9 @@ def pullAllStockData(db,skip,limit_size=10000,collection='QtrStockData'):
             # 'ticker':{'$in':['CVS','MSFT']},
             'metric': {
                 '$in': [
-                    'Revenues', 'RevenueFromContractWithCustomerExcludingAssessedTax'
+                    'Revenues', 
+                    'RevenueFromContractWithCustomerExcludingAssessedTax',
+                    'RevenueFromContractWithCustomerIncludingAssessedTax'
                 ]
             },
             'frame':{'$ne':None},
@@ -182,6 +201,7 @@ def pullAllStockData(db,skip,limit_size=10000,collection='QtrStockData'):
         }
     }
 ])
+    
     return QStockData
 
 
@@ -203,6 +223,9 @@ def PullProcessMergeRevenueGrowthQtrStockData(db,skip,limit_size):
 
     ResponsePullAllStockData = pullAllStockData(db,skip,limit_size)
     DfResponseRevenueGrowthQtrStockData= pd.DataFrame(ResponsePullAllStockData)
+    if DfResponseRevenueGrowthQtrStockData.empty:
+        print('object is empty')
+        return None
     DfResponseRevenueGrowthQtrStockData['filed']=pd.to_datetime(DfResponseRevenueGrowthQtrStockData['date'])    
     DfResponseRevenueGrowthQtrStockData= DfResponseRevenueGrowthQtrStockData.sort_values(by=['ticker','date']).groupby('ticker').tail(4).reset_index(level=0,drop=True)
     DfResponseRevenueGrowthQtrStockData['trend']=round(DfResponseRevenueGrowthQtrStockData.groupby(["ticker"],sort=False).apply(lambda group: RevenueGrowthQtrStockData(group)).reset_index(level=0, drop=True),1)
@@ -289,7 +312,7 @@ if __name__=="__main__":
     limit_size=10000
     skip=0
     # # Flow to update stock info from json files  (GAAP)
-    fetch_Stock_Info()
+    # object = fetch_Stock_Info()
     # push_QStockData(db,object,collection='QtrStockData')
     #Flow to update stock info from json files (IFRS)
     
@@ -301,8 +324,9 @@ if __name__=="__main__":
     
     # print("Main function to update revenue trends in DB")
    
-    # for skip in range((collectionSize//limit_size)+1):
-    #     print(skip,collectionSize)
-    #     response =PullProcessMergeRevenueGrowthQtrStockData(db,skip,limit_size)
-    #     pushMergedRevenueGrowthQtrStockData(db,response,collection='QtrStockRevTrend')
+    for skip in range((collectionSize//limit_size)+1):
+        print(skip,collectionSize)
+        response =PullProcessMergeRevenueGrowthQtrStockData(db,skip,limit_size)
+        print(response)
+        pushMergedRevenueGrowthQtrStockData(db,response,collection='QtrStockRevTrend')
     
