@@ -34,7 +34,7 @@ DOWNLOAD_DIR = 'sec_filings'
 @app.route('/api/economy_index', methods=['GET'])
 def fetch_economy_index():
     all_data = {}
-    indexList= ["STLFSI4","SP500","HOUST1F","UNRATE","SOFR","DRCLACBS","WTREGEN"]
+    indexList= ["STLFSI4","SP500","HOUST1F","UNRATE","SOFR","DRCLACBS","WTREGEN","DCOILWTICO","WTISPLC","POILBREUSDM","PNGASEUUSDM","PNGASUSUSDM","MNGLCP"]
     for myIndex in indexList:
       indexData = EconomyStats.getEconomicIndex(myIndex)
       all_data[myIndex] = indexData

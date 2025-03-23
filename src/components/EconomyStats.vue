@@ -64,7 +64,7 @@ export default {
   },
   methods: {
     async fetchEconomicData() {
-      const indexIDs = ["STLFSI4", "SP500", "HOUST1F", "UNRATE", "SOFR","DRCLACBS","WTREGEN"];
+     
       const descriptions = {
         "STLFSI4": "Financial Stress Index measures market stress financial system",
         "SP500": "S&P 500 Composite Index represents the U.S. stock market.",
@@ -73,6 +73,12 @@ export default {
         "SOFR": "SOFR represents the cost of borrowing between banks. high values mean low level of trust between banks. It was high in 2005 when things began to heat",
         "DRCLACBS":" Delinquency Rate on Consumer Loans, All Commercial Banks. Recession predecesor and An increase signals rising consumer financial stress, potential economic downturns, higher credit risk for banks, and broader economic impacts due to reduced spending and tighter lending conditions",
         "WTREGEN":"Liabilities: Deposits with F.R. Banks, Other Than Reserve Balances.An increase in Liabilities: Deposits with Federal Reserve Banks, Other Than Reserve Balances indicates banks are holding more funds with the Fed instead of lending. This may signal financial stress or uncertainty, leading to reduced lending, potential economic slowdown, and heightened risk aversion in the financial system",
+        "DCOILWTICO": "Crude Oil Prices: West Texas Intermediate (WTI) - Cushing, Oklahoma. Measures the daily spot price of WTI crude oil, a benchmark for U.S. oil prices. Significant fluctuations can impact inflation, consumer prices, and economic activity.",
+        "WTISPLC": "Spot Crude Oil Price: West Texas Intermediate (WTI). Reflects the immediate market price of WTI crude oil. Trends, volatility, and price movements can signal changes in supply-demand dynamics, global events, and economic health. High volatility may indicate instability, while consistent price rises or falls can signal shifts in market conditions or geopolitical factors.",
+        "POILBREUSDM": "Global price of Brent Crude. Represents the monthly average price per barrel of Brent Crude oil, a major global benchmark for oil prices, as determined by the International Monetary Fund. Prices are in nominal U.S. dollars and can indicate global supply-demand dynamics and economic conditions.",
+        "PNGASEUUSDM": "Natural Gas Prices in Europe (USD per MMBtu). Represents the price of natural gas in Europe, quoted in U.S. dollars per Million British Thermal Units (MMBtu), providing insights into energy market trends, weather effects, and geopolitical factors that impact supply and demand for natural gas.",
+        "PNGASUSUSDM": "Natural Gas Prices in the U.S. (USD per MMBtu). Reflects the price of natural gas in the United States, quoted in U.S. dollars per Million British Thermal Units (MMBtu). This price trend can influence energy consumption, inflation, and the cost of living in the U.S.",
+        "MNGLCP": "U.S. Natural Gas Liquid Composite Price. Measures the average price of natural gas liquids (NGLs) in the U.S. NGL",
       };
       this.loading = true;
       try {

@@ -44,7 +44,7 @@ def getEconomicIndex(indexID):
 
 
 if __name__ == "__main__":
-    indexList= ["STLFSI4","SP500","HOUST1F","UNRATE","SOFR"]
+    indexList= ["STLFSI4","SP500","HOUST1F","UNRATE","SOFR","DCOILWTICO"]
     for myIndex in indexList:
         print(f"index data for index:{myIndex} \n{getEconomicIndex(myIndex)}")
 

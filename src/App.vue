@@ -115,7 +115,7 @@ export default {
     });
 
     const verifyLoginAlert = computed(() => {
-      showLoginAlert = localStorage.getItem('loginAlert')
+      showLoginAlert.value = localStorage.getItem('loginAlert')
       console.log("Login Alert", showLoginAlert.value)
       return showLoginAlert
     });
