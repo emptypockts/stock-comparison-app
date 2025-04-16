@@ -79,6 +79,7 @@ export default {
         "PNGASEUUSDM": "Natural Gas Prices in Europe (USD per MMBtu). Represents the price of natural gas in Europe, quoted in U.S. dollars per Million British Thermal Units (MMBtu), providing insights into energy market trends, weather effects, and geopolitical factors that impact supply and demand for natural gas.",
         "PNGASUSUSDM": "Natural Gas Prices in the U.S. (USD per MMBtu). Reflects the price of natural gas in the United States, quoted in U.S. dollars per Million British Thermal Units (MMBtu). This price trend can influence energy consumption, inflation, and the cost of living in the U.S.",
         "MNGLCP": "U.S. Natural Gas Liquid Composite Price. Measures the average price of natural gas liquids (NGLs) in the U.S. NGL",
+        "RRPONTSYD": "high value indicates excess liquidity where institutions prefer the safety of parking cash, so check for supportive central bank policies, lower alternative yields, and market caution. Conversely, a low value suggests limited excess cash or redirection to higher-yielding investments; monitor repo rates, broader liquidity metrics, and relevant economic indicators for potential funding stress."
       };
       this.loading = true;
       try {
