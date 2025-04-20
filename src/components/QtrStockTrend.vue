@@ -4,7 +4,7 @@
     </h1>
     <h2>Message</h2>
     <td>
-        The trend is the angle of the line following the trend. above 0 trending up, below 0 trending down. Ideal is 90 degrees
+        the growth comparison in % is same q last year
     </td>
     <Navigation/>
   <div>
@@ -17,14 +17,14 @@
               <tr>
                 <th @click="sortTable('ticker')">Symbol<span :class="sortClass"></span></th>
                 <th @click="sortTable('value')">Value in $ Billions <span :class="sortClass"></span></th>
-                <th @click="sortTable('trend')">Angle of the trend line<span :class="sortClass"></span></th>
+                <th @click="sortTable('trend')">last year q comparison in %<span :class="sortClass"></span></th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="(record, index) in paginatedRecords" :key="index">
                 <td>{{ record['ticker'] }}</td>
                 <td>{{ record['value'] }}</td>
-                <td>{{ record['trend'] }}</td>
+                <td>{{ record['trend'] }}%</td>
               </tr>
             </tbody>
           </table>

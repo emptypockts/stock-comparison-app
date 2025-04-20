@@ -145,16 +145,25 @@ def pull_QStockData(db, ticker, collection='QtrStockData'):
 def RevenueGrowthQtrStockData (df):
     if df.empty:
         print("Empty dataFrame")
-        return pd.Series([0.0] * len(df), index=df.index)
-    x = np.arange(len(df))
-    y=df['maxRev'].apply(lambda x:x['output']/1e9)
-    if len(x) < 3 or len(set(y)) == 1:  
-        return pd.Series([0.0] * len(df), index=df.index)
-    slope = np.polyfit(x,y,1)[0]
-    trend = degrees(atan(slope))
+        return None
     
-    return pd.Series([trend] * len(df), index=df.index) 
 
+        
+    x = np.arange(len(df))
+    y=df['maxRev'].apply(lambda x:x['output'])
+    if len(x) < 3 or len(set(y)) == 1: 
+        return None
+        
+    else:
+        refQ= y.iloc[0].item()
+        lastQ = y[-1:].item()
+        percentIncrease=0
+        if refQ>0:
+            percentIncrease = ((lastQ-refQ)/refQ)*100
+
+        return pd.Series([percentIncrease] * len(df), index=df.index) 
+    
+        
 
 def pullAllStockData(db,skip,limit_size=10000,collection='QtrStockData'):
     QStockData_Collection = db[collection]
