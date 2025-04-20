@@ -16,7 +16,7 @@
             <thead>
               <tr>
                 <th @click="sortTable('ticker')">Symbol<span :class="sortClass"></span></th>
-                <th @click="sortTable('value')">Value in $ Billions <span :class="sortClass"></span></th>
+                <th @click="sortTable('value')">Value in $ millions <span :class="sortClass"></span></th>
                 <th @click="sortTable('trend')">last year q comparison in %<span :class="sortClass"></span></th>
               </tr>
             </thead>
