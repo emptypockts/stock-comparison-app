@@ -39,8 +39,6 @@ def fetch_economy_index():
       indexData = EconomyStats.getEconomicIndex(myIndex)
       all_data[myIndex] = indexData
     return jsonify(all_data)
-
-
 #fetch company names, price and earnings day
 @app.route('/api/company_data', methods=['GET'])
 def fetch_company_data():
@@ -199,7 +197,6 @@ def verify_token():
         return jsonify({'success': False, 'message': 'Token has expired'}), 401
     except jwt.InvalidTokenError:
         return jsonify({'success': False, 'message': 'Invalid token'}), 401
-
 @app.route('/api/chat', methods=['POST'])
 def messageBot():
     data = request.json
@@ -211,7 +208,6 @@ def messageBot():
             }),200
     except:
         return jsonify({'error':response}),400
-
 @app.route('/api/fetchStockfromDB', methods=['GET'])
 def MongoFetchStock():
     try:
@@ -235,7 +231,6 @@ def MongoFetchStock():
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({'error': str(e)}), 400
-
 @app.route('/api/QStockScore', methods=['GET'])
 def QtrStockScore ():
     stockData=[]
@@ -255,7 +250,6 @@ def QtrStockScore ():
             print(f"Error: {e}")
             return jsonify({'error': str(e)}), 400
     return jsonify(stockData)
-    
 @app.route('/api/AllQStockTrend',methods=['GET'])
 def AllQtrStockRevTrend():
     try:
@@ -280,8 +274,7 @@ def AllQtrStockRevTrend():
             }), 200
     except Exception as e:
         print(f"Error: {e}")
-        return jsonify({'error': str(e)}), 400
-    
+        return jsonify({'error': str(e)}), 400   
 @app.route('/api/financial_data_qtr', methods=['GET'])
 def fetch_4qtr_financial_data():
     tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
@@ -297,6 +290,5 @@ def fetch_4qtr_financial_data():
     if not all_data:
         return jsonify({"error": "Failed to fetch any qtr data"}), 500
     return jsonify(all_data),200
-
 if __name__ == '__main__':
     app.run(debug=True)

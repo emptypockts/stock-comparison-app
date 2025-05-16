@@ -18,6 +18,7 @@
                 <th @click="sortTable('ticker')">Symbol<span :class="sortClass"></span></th>
                 <th @click="sortTable('value')">Value in $ millions <span :class="sortClass"></span></th>
                 <th @click="sortTable('trend')">last year q comparison in %<span :class="sortClass"></span></th>
+                <th @click="sortTable('valueScore')">valued stock score max 6<span :class="sortClass"></span></th>
               </tr>
             </thead>
             <tbody>
@@ -25,6 +26,7 @@
                 <td>{{ record['ticker'] }}</td>
                 <td>{{ record['value'] }}</td>
                 <td>{{ record['trend'] }}%</td>
+                <td>{{ record['valueScore'] }}</td>
               </tr>
             </tbody>
           </table>

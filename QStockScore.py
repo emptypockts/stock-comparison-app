@@ -253,6 +253,77 @@ def PullQtrStockRevenueTrends(db, page=1,items_per_page=100,collection='QtrStock
     # Fetch records with pagination
     stocks = QtrStockRevTrendCollection.aggregate([
         {
+        '$lookup': {
+            'from': 'StockScore', 
+            'localField': 'ticker', 
+            'foreignField': 'Symbol', 
+            'let': {
+                'tickerSymbol': '$ticker'
+            }, 
+            'pipeline': [
+                {
+                    '$match': {
+                        '$expr': {
+                            '$eq': [
+                                '$Symbol', '$$tickerSymbol'
+                            ]
+                        }
+                    },
+                    
+                },
+                {'$limit':1},
+                  {
+                    '$project': {
+                        '_id': 0, 
+                        'totalScore': '$Total Score'
+                    }
+                }
+            ], 
+            'as': 'result'
+        }
+    }, {
+        '$addFields': {
+            'scoreList': {
+                '$map': {
+                    'input': '$result', 
+                    'as': 'element', 
+                    'in': {
+                        '$toString': '$$element.totalScore'
+                    }
+                }
+            }
+        }
+    }, {
+        '$addFields': {
+            'valueScore': {
+                '$reduce': {
+                    'input': '$scoreList', 
+                    'initialValue': '', 
+                    'in': {
+                        '$cond': [
+                            {
+                                '$eq': [
+                                    '$$value', ''
+                                ]
+                            }, '$$this', {
+                                '$concat': [
+                                    '$$value', ',', '$$this'
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }, {
+        '$project': {
+            'ticker': 1, 
+            'value': 1, 
+            'valueScore': 1, 
+            'trend': 1
+        }
+    },
+        {
         '$sort' :{'trend':-1}
         },{
         
@@ -325,8 +396,8 @@ if __name__=="__main__":
     # # Flow to update stock info from json files  (GAAP)
     # object = fetch_Stock_Info()
     # push_QStockData(db,object,collection='QtrStockData')
-    #Flow to update stock info from json files (IFRS)
     
+    # Flow to update stock info from json files (IFRS)
     # # Flow to update stock info from json files (DEI)
     # object=fetch_dei_info()
     # push_QStockData(db,object,collection='QtrDeiStockData')
@@ -335,9 +406,13 @@ if __name__=="__main__":
     
     # print("Main function to update revenue trends in DB")
    
-    for skip in range((collectionSize//limit_size)+1):
-        print(skip,collectionSize)
-        response =PullProcessMergeRevenueGrowthQtrStockData(db,skip,limit_size)
-        print(response)
-        pushMergedRevenueGrowthQtrStockData(db,response,collection='QtrStockRevTrend')
+    # for skip in range((collectionSize//limit_size)+1):
+    #     # print(skip,collectionSize)
+    #     response =PullProcessMergeRevenueGrowthQtrStockData(db,skip,limit_size)
+    #     # print(response)
+    #     pushMergedRevenueGrowthQtrStockData(db,response,collection='QtrStockRevTrend')
     
+    # test PullQtrStockRevenueTrends
+    # grouped_stocks,total_symbols = PullQtrStockRevenueTrends(db,1,100)
+    # print(grouped_stocks)
+    # print(total_symbols)
