@@ -1,13 +1,55 @@
 from dotenv import load_dotenv
 import os
 from pymongo.server_api import ServerApi
-from pymongo import MongoClient, errors
+from pymongo import MongoClient, errors,UpdateOne
 import json
 import pandas as pd
 from CIKTickerUpdate import fetch_cik,fetch_ticker
 from math import atan, degrees
 import numpy as np
 from datetime import datetime
+
+# join qtr rev trend table with stock score 
+def aggregateScoreToQtrRevTrend(db,collection='QtrStockRevTrend'):
+    QtrStockRevTrendCollection=db[collection]
+    stocks = QtrStockRevTrendCollection.aggregate([
+    {
+        '$lookup':{
+            'from':'StockScore',
+            'localField':'ticker',
+            'foreignField':'Symbol',
+            'let':{'tickerSymbol':'$ticker'},
+            'pipeline':[
+                {
+                    '$match':{
+                        '$expr':{'$eq':['$Symbol','$$tickerSymbol']}
+                    }
+                },
+                {
+                    '$project':{
+                        '_id':0,
+                        'totalScore':'$Total Score'
+                    }
+                }
+            ],
+            'as':'result'
+        }
+    }
+
+    ])
+    
+    jsonObject=[]
+    for item in stocks:
+        jsonObject.append(
+            UpdateOne(
+            {"ticker":item["ticker"]},
+            {"$set":{"score":(',').join(str(score["totalScore"]) for score in item["result"])}},
+            upsert=False
+        )
+        )
+    if jsonObject:
+        QtrStockRevTrendCollection.bulk_write(jsonObject)
+        print('push completed successfully')
 
 def fetch_Stock_Info():
     path = r"C:\\Users\\ejujo\\Downloads\\companyfacts\\"
@@ -74,7 +116,6 @@ def fetch_Stock_Info():
     # Convert the deduplicated frames into a list
     return qtr_obj
 
-
 def fetch_dei_info():
     path = f"C:\\Users\\ejujo\\Downloads\\companyfacts\\"
     files = os.listdir(path)
@@ -118,7 +159,6 @@ def fetch_dei_info():
                                     
     return qtr_obj
 
-
 def push_QStockData(db, objects, collection):
     load_dotenv()
     try:
@@ -134,7 +174,6 @@ def push_QStockData(db, objects, collection):
         print(f"Operation failure: {ofe}")
     except Exception as e:
         print(f"An error occurred: {e}")
-
 
 def pull_QStockData(db, ticker, collection='QtrStockData'):
     QStockData_Collection = db[collection]
@@ -165,8 +204,6 @@ def RevenueGrowthQtrStockData (df):
 
         return pd.Series([percentIncrease] * len(df), index=df.index) 
     
-        
-
 def pullAllStockData(db,skip,limit_size=10000,collection='QtrStockData'):
     QStockData_Collection = db[collection]
     QStockData = QStockData_Collection.aggregate([
@@ -214,7 +251,6 @@ def pullAllStockData(db,skip,limit_size=10000,collection='QtrStockData'):
 ])
     
     return QStockData
-
 
 def pushMergedRevenueGrowthQtrStockData(db, MergedJsonResponseRevenueGrowthQtrStockData, collection):
     try:
@@ -336,10 +372,14 @@ if __name__=="__main__":
     
     # print("Main function to update revenue trends in DB")
    
-    for skip in range((collectionSize//limit_size)+1):
-        # print(skip,collectionSize)
-        response =PullProcessMergeRevenueGrowthQtrStockData(db,skip,limit_size)
-        # print(response)
-        pushMergedRevenueGrowthQtrStockData(db,response,collection='QtrStockRevTrend')
+    # for skip in range((collectionSize//limit_size)+1):
+    #     # print(skip,collectionSize)
+    #     response =PullProcessMergeRevenueGrowthQtrStockData(db,skip,limit_size)
+    #     # print(response)
+    #     pushMergedRevenueGrowthQtrStockData(db,response,collection='QtrStockRevTrend')
     
+    #join the qtr stock rev trend with the stock value score
+    aggregateScoreToQtrRevTrend(db)
+    
+        
     
