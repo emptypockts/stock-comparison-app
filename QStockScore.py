@@ -145,14 +145,16 @@ def pull_QStockData(db, ticker, collection='QtrStockData'):
 def RevenueGrowthQtrStockData (df):
     if df.empty:
         print("Empty dataFrame")
-        return None
+        return pd.Series([0.0] * len(df), index=df.index)
+
     
 
         
     x = np.arange(len(df))
     y=df['maxRev'].apply(lambda x:x['output'])
     if len(x) < 3 or len(set(y)) == 1: 
-        return None
+        return pd.Series([0.0] * len(df), index=df.index)
+
         
     else:
         refQ= y.iloc[0].item()
@@ -334,13 +336,10 @@ if __name__=="__main__":
     
     # print("Main function to update revenue trends in DB")
    
-    # for skip in range((collectionSize//limit_size)+1):
-    #     # print(skip,collectionSize)
-    #     response =PullProcessMergeRevenueGrowthQtrStockData(db,skip,limit_size)
-    #     # print(response)
-    #     pushMergedRevenueGrowthQtrStockData(db,response,collection='QtrStockRevTrend')
+    for skip in range((collectionSize//limit_size)+1):
+        # print(skip,collectionSize)
+        response =PullProcessMergeRevenueGrowthQtrStockData(db,skip,limit_size)
+        # print(response)
+        pushMergedRevenueGrowthQtrStockData(db,response,collection='QtrStockRevTrend')
     
-    # test PullQtrStockRevenueTrends
-    # grouped_stocks,total_symbols = PullQtrStockRevenueTrends(db,1,100)
-    # print(grouped_stocks)
-    # print(total_symbols)
+    
