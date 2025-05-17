@@ -250,77 +250,7 @@ def PullQtrStockRevenueTrends(db, page=1,items_per_page=100,collection='QtrStock
 # 
     # Fetch records with pagination
     stocks = QtrStockRevTrendCollection.aggregate([
-        {
-        '$lookup': {
-            'from': 'StockScore', 
-            'localField': 'ticker', 
-            'foreignField': 'Symbol', 
-            'let': {
-                'tickerSymbol': '$ticker'
-            }, 
-            'pipeline': [
-                {
-                    '$match': {
-                        '$expr': {
-                            '$eq': [
-                                '$Symbol', '$$tickerSymbol'
-                            ]
-                        }
-                    },
-                    
-                },
-                {'$limit':1},
-                  {
-                    '$project': {
-                        '_id': 0, 
-                        'totalScore': '$Total Score'
-                    }
-                }
-            ], 
-            'as': 'result'
-        }
-    }, {
-        '$addFields': {
-            'scoreList': {
-                '$map': {
-                    'input': '$result', 
-                    'as': 'element', 
-                    'in': {
-                        '$toString': '$$element.totalScore'
-                    }
-                }
-            }
-        }
-    }, {
-        '$addFields': {
-            'valueScore': {
-                '$reduce': {
-                    'input': '$scoreList', 
-                    'initialValue': '', 
-                    'in': {
-                        '$cond': [
-                            {
-                                '$eq': [
-                                    '$$value', ''
-                                ]
-                            }, '$$this', {
-                                '$concat': [
-                                    '$$value', ',', '$$this'
-                                ]
-                            }
-                        ]
-                    }
-                }
-            }
-        }
-    }, {
-        '$project': {
-            'ticker': 1, 
-            'value': 1, 
-            'valueScore': 1, 
-            'trend': 1
-        }
-    },
+
         {
         '$sort' :{'trend':-1}
         },{
