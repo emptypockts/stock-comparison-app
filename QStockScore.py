@@ -145,14 +145,14 @@ def pull_QStockData(db, ticker, collection='QtrStockData'):
 def RevenueGrowthQtrStockData (df):
     if df.empty:
         print("Empty dataFrame")
-        return pd.Series([0.0] * len(df), index=df.index)
+        return None
     
 
         
     x = np.arange(len(df))
     y=df['maxRev'].apply(lambda x:x['output'])
     if len(x) < 3 or len(set(y)) == 1: 
-        return pd.Series([0.0] * len(df), index=df.index)
+        return None
         
     else:
         refQ= y.iloc[0].item()
@@ -238,11 +238,9 @@ def PullProcessMergeRevenueGrowthQtrStockData(db,skip,limit_size):
     DfResponseRevenueGrowthQtrStockData['filed']=pd.to_datetime(DfResponseRevenueGrowthQtrStockData['date'])    
     DfResponseRevenueGrowthQtrStockData= DfResponseRevenueGrowthQtrStockData.sort_values(by=['ticker','date']).groupby('ticker').tail(4).reset_index(level=0,drop=True)
     DfResponseRevenueGrowthQtrStockData['trend']=round(DfResponseRevenueGrowthQtrStockData.groupby(["ticker"],sort=False).apply(lambda group: RevenueGrowthQtrStockData(group)).reset_index(level=0, drop=True),1)
-    DfResponseRevenueGrowthQtrStockData['value']=round((DfResponseRevenueGrowthQtrStockData['maxRev'].apply(lambda x:x['output']/1e6)),2)
-    MergedDfResponseRevenueGrowthQtrStockData=DfResponseRevenueGrowthQtrStockData.groupby('ticker').filter(lambda group:group['value'].sum()!=0)
-    MergedDfResponseRevenueGrowthQtrStockData = MergedDfResponseRevenueGrowthQtrStockData.groupby('ticker').agg({ 'value': lambda x: ','.join(map(str, x)), 'trend': 'first' }).reset_index()
+    DfResponseRevenueGrowthQtrStockData['value']=round((DfResponseRevenueGrowthQtrStockData['maxRev'].apply(lambda x:x['output']/1e9)),2)
+    MergedDfResponseRevenueGrowthQtrStockData = DfResponseRevenueGrowthQtrStockData.groupby('ticker').agg({ 'value': lambda x: ','.join(map(str, x)), 'trend': 'first' }).reset_index()
     MergedJsonResponseRevenueGrowthQtrStockData=MergedDfResponseRevenueGrowthQtrStockData.to_dict(orient='records')
-
     return MergedJsonResponseRevenueGrowthQtrStockData
 
 def PullQtrStockRevenueTrends(db, page=1,items_per_page=100,collection='QtrStockRevTrend'):
