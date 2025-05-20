@@ -229,39 +229,4 @@ input[type="submit"]:hover, button[type="submit"]:hover {
   margin-bottom: 20px;
 }
 
-/* Loading overlay styles */
-.loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-
-.loading-throbber {
-  text-align: center;
-  color: white;
-}
-
-.spinner {
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: white;
-  width: 50px;
-  height: 50px;
-  animation: spin 1s ease-in-out infinite;
-  margin: 0 auto;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 </style>

@@ -13,11 +13,11 @@
           <table class="copyable-table">
             <thead>
               <tr>
-                <th @click="sortTable('Symbol')">Symbol<span :class="sortClass"></span></th>
-                <th @click="sortTable('Date')">Date<span :class="sortClass"></span></th>
-                <th @click="sortTable('Name')">Name<span :class="sortClass"></span></th>
-                <th @click="sortTable('Total Score')">Total Score<span :class="sortClass"></span></th>
-                <th @click="sortTable('Growth')">E_Growth 1Y<span :class="sortClass"></span></th>
+                <th @click="sortTable('Symbol')">Symbol<span class="sortClass"></span></th>
+                <th @click="sortTable('Date')">Date<span class="sortClass"></span></th>
+                <th @click="sortTable('Name')">Name<span class="sortClass"></span></th>
+                <th @click="sortTable('Total Score')">Total Score<span class="sortClass"></span></th>
+                <th @click="sortTable('Growth')">E_Growth 1Y<span class="sortClass"></span></th>
                 <th v-if="!collapsed">Basic Average Shares</th>
                 <th v-if="!collapsed">Basic EPS</th>
                 <th v-if="!collapsed">Diluted EPS</th>
@@ -368,7 +368,7 @@ th span {
   right: 8px;
 }
 
-.sorted {
+.sortClass {
   background-color: #f1f1f1; /* Light background for sorted column */
 }
 .pagination-controls {

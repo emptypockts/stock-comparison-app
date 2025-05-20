@@ -15,10 +15,10 @@
           <table class="copyable-table">
             <thead>
               <tr>
-                <th @click="sortTable('ticker')">Symbol<span :class="sortClass"></span></th>
-                <th @click="sortTable('value')">Value in $ Billions <span :class="sortClass"></span></th>
-                <th @click="sortTable('trend')">last year q comparison in %<span :class="sortClass"></span></th>
-                <th @click="sortTable('score')">last 5 years stock score<span :class="sortClass"></span></th>
+                <th @click="sortTable('ticker')">Symbol<span class="sortClass"></span></th>
+                <th @click="sortTable('value')">Value in $ Billions <span class="sortClass"></span></th>
+                <th @click="sortTable('trend')">last year q comparison in %<span class="sortClass"></span></th>
+                <th @click="sortTable('score')">last 5 years stock score<span class="sortClass"></span></th>
               </tr>
             </thead>
             <tbody>
@@ -305,7 +305,7 @@ th span {
   right: 8px;
 }
 
-.sorted {
+.sortClass {
   background-color: #f1f1f1; /* Light background for sorted column */
 }
 .pagination-controls {

@@ -70,8 +70,7 @@
   export default {
     props: {
       tickers: {
-        type: Array,
-        required: true,
+        type: Array
       },
       // companies: {
       //   type: Object,
@@ -282,12 +281,6 @@ button {
 button:hover {
   background-color: #468eda;
 }
-.loading-overlay {
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
+
 
   </style>

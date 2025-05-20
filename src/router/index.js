@@ -43,6 +43,11 @@ const routes = [
     name:'qtrTrend',
     component:QtrStockTrend
   },
+  {
+  path: '/:catchAll(.*)',
+  name: 'NotFound',
+  component: () => import('@/components/NotFound.vue'), // Add a 404 page component if you have one
+  }
 ];
 
 
@@ -56,12 +61,8 @@ router.beforeEach((to, from, next) => {
   const isAuthenticated = localStorage.getItem('token'); // Example auth check
   if ((to.name !== 'Auth' && to.name !== 'RegisterUser') && !isAuthenticated) (next({ name: 'Auth' }),console.log("Token is not valid"));
   else next();
-}),
+})
 
-{
-  path: '/:catchAll(.*)',
-  name: 'NotFound',
-  component: () => import('@/components/NotFound.vue'), // Add a 404 page component if you have one
-};
+
 
 export default router;

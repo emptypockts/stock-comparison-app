@@ -14,16 +14,16 @@
           <CompanyData @tickers-updated="updateTickers" />
         </div>
         <div>
-          <ValueStockAnalysis :tickers="tickers" :loading="loading" />
+          <ValueStockAnalysis :tickers="tickers"/>
         </div>
         <div>
-          <StockFinancialCharts :tickers="tickers":loading="loading" />
+          <StockFinancialCharts :tickers="tickers" />
         </div>
         <div>
-          <IntrinsicValue :tickers="tickers" :loading="loading" />
+          <IntrinsicValue :tickers="tickers"  />
         </div>
         <div>
-          <RittenhouseAnalysis Analyis :tickers="tickers" :loading="loading" />
+          <RittenhouseAnalysis Analyis :tickers="tickers"  />
         </div>
       </div>
       <div v-else>
@@ -58,21 +58,18 @@ export default {
     Navigation,
     RittenhouseAnalysis
   },
+
   setup() {
     const showLoginAlert = ref();
     const tickers = ref([]);
-    const loading = ref(false);
     const isAuthenticated = ref(false);
     const router = useRouter();
     const updateTickers = (newTickers) => {
       tickers.value = newTickers;
-      localStorage.setItem('ticker', newTickers[0])
-      loading.value = false; // Data is ready, stop loading
+      localStorage.setItem('ticker', newTickers[0]);
 
     };
-    const setLoading = (status) => {
-      loading.value = status; // Set loading status based on the passed value
-    };
+
     const clearLocalStorage = () => {
       localStorage.clear()
     };
@@ -119,14 +116,12 @@ export default {
       console.log("Login Alert", showLoginAlert.value)
       return showLoginAlert
     });
-
+    
 
     return {
       tickers,
-      loading,
       isAuthenticated,
       updateTickers,
-      setLoading,
       showLoginAlert,
       containerClass,
       verifyLoginAlert,
@@ -178,7 +173,8 @@ h2 {
 
 /* Loading overlay styles */
 .loading-overlay {
-  position: fixed;
+position: fixed;
+  backdrop-filter: blur(10px);
   top: 0;
   left: 0;
   right: 0;
@@ -188,6 +184,11 @@ h2 {
   align-items: center;
   justify-content: center;
   z-index: 9999;
+}
+.disabled-content{
+  pointer-events: none;
+  opacity: .5;
+  filter: blur(5px);
 }
 
 .loading-throbber {

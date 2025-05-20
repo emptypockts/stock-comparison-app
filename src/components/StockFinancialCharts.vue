@@ -1,6 +1,12 @@
 <template>
   <h1>Charts</h1>
   <div>
+            <!-- Loading Throbber -->
+      <div v-if="isLoading" class="loading-overlay">
+      <div class="loading-throbber">
+        <div class="spinner"></div>
+      </div>
+    </div>
     <button @click="toggleView">
       {{ isYearlyView ? "Switch to Quartetly View" : "Switch to Yearly View" }}
 
@@ -108,8 +114,7 @@ export default {
   },
   props: {
     tickers: {
-      type: Array,
-      required: true,
+      type: Array
     },
   },
   data() {

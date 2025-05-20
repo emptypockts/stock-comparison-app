@@ -1,6 +1,12 @@
 <template>
 
     <h1>Intrinsic Value Analysis</h1>
+        <!-- Loading Throbber -->
+    <div v-if="loading" class="loading-overlay">
+      <div class="loading-throbber">
+        <div class="spinner"></div>
+      </div>
+    </div>
     <div v-if="tickers.length">
     <button class="button-calculate" @click="calculateIntrinsicValue">Calculate new value</button>
   </div>
@@ -35,13 +41,7 @@
 
     
 
-    <!-- Loading Throbber -->
-    <div v-if="loading" class="loading-overlay">
-      <div class="loading-throbber">
-        <div class="spinner"></div>
-        <p>Calculating intrinsic values...</p>
-      </div>
-    </div>
+
 
     <!-- Error Message Display -->
     <div v-if="errorMessage" class="error-message">
@@ -97,7 +97,6 @@ export default {
   props: {
     tickers: {
       type: Array,
-      required: true,
     },
   },
   setup(props) {

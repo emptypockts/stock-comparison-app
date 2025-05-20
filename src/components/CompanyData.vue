@@ -1,6 +1,13 @@
 <template>
   <h1>Ticker Data 
   </h1>
+        <!-- Loading Throbber -->
+      <div v-if="isLoading" class="loading-overlay">
+      <div class="loading-throbber">
+        <div class="spinner"></div>
+      </div>
+    </div>
+    
   <div class="input-container">
     <input v-model="ticker1" placeholder="Try:intc" id="ticker 1" />
     <input v-model="ticker2" placeholder="Try:axp" id="ticker 2" />
@@ -9,13 +16,6 @@
   <div>
     <button @click="verifyAndFetchCompanyData">Analyse</button>
   </div>
-      <!-- Loading Throbber -->
-      <div v-if="loading" class="loading-overlay">
-      <div class="loading-throbber">
-        <div class="spinner"></div>
-        <p>Getting company names...</p>
-      </div>
-    </div>
   <!-- Error message display -->
   <div v-if="errorMessage" class="error-message">
     <p>{{ errorMessage }}</p>
@@ -46,7 +46,7 @@ export default {
     const ticker1 = ref('');
     const ticker2 = ref('');
     const ticker3 = ref('');
-    const loading = ref(false);
+    const isLoading = ref(false);
     const companyData = ref({});
     const router = useRouter(); // Use Vue Router for navigation
     const verifyToken = async () => {
@@ -82,13 +82,11 @@ export default {
         console.log("error is ", errorMessage.value)
         return errorMessage;
       }
-      // Emit loading status as true to indicate loading has started
       errorMessage.value = ""
-      // emit('loading', true);
-      loading.value=true;
-      console.log("tickers:", tickers)
-      // Function to verify the token before fetching company names
 
+      
+      console.log("tickers:", tickers)
+      isLoading.value=true;
       try {
         const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/company_data`, {
           params: tickers.reduce((acc, ticker, index) => {
@@ -112,20 +110,16 @@ export default {
         }
 
 
-        // Emit the tickers and company names to the parent component
         emit('tickers-updated', tickers);
       } catch (error) {
         errorMessage.value = "One or more ticker symbols are invalid. Please check your input."
         console.log("error is ", errorMessage.value)
-        // emit('loading', false);
-        loading.value=false;
         return errorMessage;
       }
 
       finally {
-        // Emit loading status as false to stop loading after the request is complete
-        emit('loading', false);
-        loading.value=false
+
+        isLoading.value=false
 
       }
     },600);
@@ -152,7 +146,7 @@ export default {
       companyData,
       verifyAndFetchCompanyData,
       errorMessage,
-      loading
+      isLoading
     };
   },
 };
