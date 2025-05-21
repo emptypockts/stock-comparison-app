@@ -30,7 +30,7 @@
 
 <script setup>
 import { ref, watch } from 'vue';
-import Navigation from './Navigation.vue';
+import Navigation from '@/components/Navigation.vue';
 // import { useRouter } from 'vue-router';
 import axios from 'axios';
 const analysisDone = ref(false);

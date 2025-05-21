@@ -1,11 +1,5 @@
 <template>
-
   <div>
-              <!-- Loading Throbber -->
-  <div v-if="isLoading" class="loading-overlay">
-    <div class="loading-throbber">
-      <div class="spinner"></div>
-    </div>
     <h1>Value Stock Analysis</h1>
     <!-- Error message display -->
     <div v-if="errorMessage" class="error-message">
@@ -76,7 +70,6 @@
           </tbody>
         </table>
       </div>
-    </div>
     <!-- <div v-else>
         <p>No financial data available. Please try fetching data for different tickers.</p>
       </div> -->
@@ -87,7 +80,7 @@
 <script>
 import { ref, watch, onMounted } from 'vue';
 import axios from 'axios';
-
+import { useLoadingStore } from '@/stores/loadingStore';
 export default {
   emits: ['tickers-updated'], // Declare the custom events
   props: {
@@ -96,6 +89,7 @@ export default {
     },
   },
   setup(props, { emit }) {
+    const loading = useLoadingStore();
     const financialData = ref([]); // This will hold the data fetched from the backend
     const collapsed = ref(true); // Controls the visibility of extra columns
     const errorMessage = ref(''); // Variable to store error messages
@@ -103,7 +97,6 @@ export default {
     const toggleCollapse = () => {
       collapsed.value = !collapsed.value;
     };
-    const isLoading = ref(false);
 
     const fetch5YearData = async (tickers) => {
       // Check if the tickers array is empty
@@ -116,7 +109,7 @@ export default {
 
       errorMessage.value = '';
 
-      isLoading.value = true;
+      loading.startLoading();
       try {
         const params = new URLSearchParams();
         tickers.forEach((ticker, index) => params.append(`ticker${index + 1}`, ticker));
@@ -128,7 +121,7 @@ export default {
       } catch (error) {
         console.error('Error fetching 5-year financial data:', error);
       } finally {
-        isLoading.value = false;
+        loading.stopLoading();
       }
     };
 
@@ -153,7 +146,6 @@ export default {
       toggleCollapse,
       errorMessage,// Return errorMessage for use in the template
       fetch5YearData,
-      isLoading
     };
   },
 };

@@ -1,11 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import AuthPage from '../components/AuthPage.vue';
-import RegisterUser from '../components/RegisterUser.vue';
-import AI from '../components/AI.vue';
-import EconomyStats from '@/components/EconomyStats.vue';
-import StockChart from '@/components/StockChart.vue';
+import AuthPage from '@/views/AuthPage.vue';
+import RegisterUser from '@/views/RegisterUser.vue';
+import AI from '@/views/AI.vue';
+import EconomyStats from '@/views/EconomyStats.vue';
+import StockChart from '@/views/StockChart.vue';
 import App from '@/App.vue';
-import QtrStockTrend from '@/components/QtrStockTrend.vue';
+import QtrStockTrend from '@/views/QtrStockTrend.vue';
 
 const routes = [
   {
@@ -51,18 +51,17 @@ const routes = [
 ];
 
 
-
 const router = createRouter({
   history: createWebHistory(),
-  routes,
+  routes:routes
 });
 
-router.beforeEach((to, from, next) => {
-  const isAuthenticated = localStorage.getItem('token'); // Example auth check
-  if ((to.name !== 'Auth' && to.name !== 'RegisterUser') && !isAuthenticated) (next({ name: 'Auth' }),console.log("Token is not valid"));
-  else next();
-})
-
+router.beforeEach(async (to, from) => {
+  const isAuthenticated = localStorage.getItem('token');
+  if (to.name !== 'Auth' && to.name !== 'RegisterUser'&&!isAuthenticated){ 
+    return {name:'Auth'}
+    }
+});
 
 
 export default router;

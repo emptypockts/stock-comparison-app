@@ -60,7 +60,7 @@
 
 import axios from 'axios';
 import {ref,watch,onMounted,computed} from 'vue';
-import Navigation from './Navigation.vue';
+import Navigation from '@/components/Navigation.vue';
 export default{
     props:{
         isAuthenticated: Boolean, // Define isAuthenticated as a prop

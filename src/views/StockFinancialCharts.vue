@@ -1,12 +1,6 @@
 <template>
   <h1>Charts</h1>
   <div>
-            <!-- Loading Throbber -->
-      <div v-if="isLoading" class="loading-overlay">
-      <div class="loading-throbber">
-        <div class="spinner"></div>
-      </div>
-    </div>
     <button @click="toggleView">
       {{ isYearlyView ? "Switch to Quartetly View" : "Switch to Yearly View" }}
 
@@ -107,8 +101,9 @@
 <script>
 import axios from 'axios';
 import VueApexCharts from "vue3-apexcharts";
-
+import { useLoadingStore } from '@/stores/loadingStore';
 export default {
+  
   components: {
     apexcharts: VueApexCharts,
   },
@@ -118,6 +113,7 @@ export default {
     },
   },
   data() {
+    const loading = useLoadingStore();
     return {
       financialData: {}, // Object to store multiple tickers' data
       stockPriceData: [], // Array for stock price data
@@ -127,7 +123,8 @@ export default {
       errorMessage: '',
       isYearlyView: true,
       financialDataQtr: {},
-      stockPriceDataQtr:[]
+      stockPriceDataQtr:[],
+      loading
 
     }; 
   },
@@ -302,20 +299,18 @@ export default {
     },
 
   },
-
-
   methods: {
+    
     toggleView(){
     this.isYearlyView= !this.isYearlyView;
     },
     async fetchCompanyData(tickers) {
+      this.loading.startLoading();
       try {
         if (!tickers.length) {
           this.errorMessage = 'Please enter at least one stock ticker.';
           return this.errorMessage;
         }
-
-
         const financialResponseQtr = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/financial_data_qtr`, {
           params: tickers.reduce((acc, ticker, index) => {
             acc[`ticker${index + 1}`] = ticker;
@@ -373,8 +368,9 @@ export default {
         this.errorMessage = error.response ? error.response.data : error.message; // Update here
         console.error('Error fetching data:', error.response ? error.response.data : error.message);
       }
-      
-
+      finally{
+        this.loading.stopLoading();
+      }
     },
     // Functions to handle up to 3 tickers dynamically
     revenueAssetsSeriesQtr() {

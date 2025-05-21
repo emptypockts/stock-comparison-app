@@ -4,13 +4,6 @@
       <button @click="fetchAnalysisReports" :disabled="localIsProcessing">
         Make Rittenhouse Analysis
       </button>
-      <!-- Loading Throbber -->
-      <div v-if="localIsProcessing" class="loading-overlay">
-        <div class="loading-throbber">
-          <div class="spinner"></div>
-   
-        </div>
-      </div>
       <!-- Legend for Sentiment Polarity and Subjectivity -->
       <div>
         <p><strong>Sentiment Polarity:</strong> Indicates the overall sentiment of the text, ranging from -1 (very negative) to 1 (very positive).</p>
@@ -66,7 +59,8 @@
   <script>
   import axios from 'axios';
   import { ref } from 'vue';
-  
+  import { useLoadingStore } from '@/stores/loadingStore';
+
   export default {
     props: {
       tickers: {
@@ -82,16 +76,13 @@
       const analysisReports = ref([]);
       const collapsed = ref({});
       const localIsProcessing = ref(props.isProcessing);
-  
+      const loading=useLoadingStore();
       const toggleCollapse = (fileType) => {
         collapsed.value[fileType] = !collapsed.value[fileType];
       };
   
       const fetchAnalysisReports = async () => {
-        if (localIsProcessing.value === false) {
-          localIsProcessing.value = true;
-          emit('update:isProcessing', true); // Notify parent to set isProcessing to true
-  
+        loading.startLoading();
           try {
             const params = props.tickers.reduce((acc, ticker, index) => {
               acc[`ticker${index + 1}`] = ticker;
@@ -108,13 +99,10 @@
           } catch (error) {
             console.error('Error fetching Rittenhouse analysis reports:', error);
           } finally {
-            localIsProcessing.value = false;
-            emit('update:isProcessing', false); // Notify parent to set isProcessing to false
+            loading.stopLoading();
             console.log("Rittenhouse Analysis completed, turning off the flag");
           }
-        } else {
-          console.log("Button clicked but flag is still:", localIsProcessing.value);
-        }
+        
       };
   
       const getFileTypes = () => {

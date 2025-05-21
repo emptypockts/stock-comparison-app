@@ -1,6 +1,12 @@
 <template>
   <meta name="viewport" content="width=device-width, initial-scale=0.5">
   <div id="app">
+      <div v-if="isLoading" class="loading-overlay">
+    <div class="loading-throbber">
+      <div class="spinner">
+      </div>
+    </div>
+    </div>
     <!-- Navigation visible on all pages -->
     <!-- Main Area -->
       <div v-if="isAuthenticated">
@@ -36,15 +42,19 @@
 import CookieBanner from "./components/CookieBanner.vue";
 import LoginAlert from "./components/LoginAlert.vue";
 import { ref, computed, onMounted } from 'vue';
-import IntrinsicValue from './components/IntrinsicValue.vue';
-import CompanyData from './components/CompanyData.vue';
-import StockFinancialCharts from './components/StockFinancialCharts.vue';
-import ValueStockAnalysis from './components/ValueStockAnalysis.vue';
+import IntrinsicValue from './views/IntrinsicValue.vue';
+import CompanyData from './views/CompanyData.vue';
+import StockFinancialCharts from './views/StockFinancialCharts.vue';
+import ValueStockAnalysis from './views/ValueStockAnalysis.vue';
 import axios from 'axios'; // Import Axios for HTTP requests
 import { useRouter } from 'vue-router';
-import StockChart from "./components/StockChart.vue";
+import StockChart from "./views/StockChart.vue";
 import Navigation from "./components/Navigation.vue";
-import RittenhouseAnalysis from "./components/RittenhouseAnalysis.vue";
+import RittenhouseAnalysis from "./views/RittenhouseAnalysis.vue";
+import { useLoadingStore } from "./stores/loadingStore";
+
+
+
 export default {
   name: 'App',
   components: {
@@ -60,6 +70,7 @@ export default {
   },
 
   setup() {
+    const loadingStore = useLoadingStore();
     const showLoginAlert = ref();
     const tickers = ref([]);
     const isAuthenticated = ref(false);
@@ -90,7 +101,7 @@ export default {
         } else {
           console.log('Token verification failed:', response.data.message);
           clearLocalStorage();
-          router.push('/');
+          router.push('/Auth');
           return false;
         }
       } catch (error) {
@@ -117,6 +128,7 @@ export default {
       return showLoginAlert
     });
     
+    const isLoading=computed(()=>loadingStore.isLoading)
 
     return {
       tickers,
@@ -125,6 +137,7 @@ export default {
       showLoginAlert,
       containerClass,
       verifyLoginAlert,
+      isLoading
     };
   },
 };

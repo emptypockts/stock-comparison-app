@@ -1,13 +1,6 @@
 <template>
   <h1>Ticker Data 
-  </h1>
-        <!-- Loading Throbber -->
-      <div v-if="isLoading" class="loading-overlay">
-      <div class="loading-throbber">
-        <div class="spinner"></div>
-      </div>
-    </div>
-    
+  </h1>    
   <div class="input-container">
     <input v-model="ticker1" placeholder="Try:intc" id="ticker 1" />
     <input v-model="ticker2" placeholder="Try:axp" id="ticker 2" />
@@ -38,6 +31,7 @@ import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router'; // Import useRouter for navigation
 import debounce from 'lodash.debounce';
+import { useLoadingStore } from '@/stores/loadingStore';
 
 export default {
   emits: ['tickers-updated'], // Declare the custom events
@@ -46,7 +40,7 @@ export default {
     const ticker1 = ref('');
     const ticker2 = ref('');
     const ticker3 = ref('');
-    const isLoading = ref(false);
+    const loading = useLoadingStore();
     const companyData = ref({});
     const router = useRouter(); // Use Vue Router for navigation
     const verifyToken = async () => {
@@ -86,7 +80,7 @@ export default {
 
       
       console.log("tickers:", tickers)
-      isLoading.value=true;
+      loading.startLoading();
       try {
         const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/company_data`, {
           params: tickers.reduce((acc, ticker, index) => {
@@ -119,7 +113,7 @@ export default {
 
       finally {
 
-        isLoading.value=false
+        loading.stopLoading();
 
       }
     },600);
@@ -146,7 +140,6 @@ export default {
       companyData,
       verifyAndFetchCompanyData,
       errorMessage,
-      isLoading
     };
   },
 };

@@ -32,7 +32,7 @@
 <script>
 import axios from 'axios';
 import VueApexCharts from "vue3-apexcharts";
-import Navigation from './Navigation.vue';
+import Navigation from '@/components/Navigation.vue';
 
 
 export default {

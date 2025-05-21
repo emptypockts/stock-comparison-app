@@ -1,16 +1,9 @@
 <template>
 
     <h1>Intrinsic Value Analysis</h1>
-        <!-- Loading Throbber -->
-    <div v-if="loading" class="loading-overlay">
-      <div class="loading-throbber">
-        <div class="spinner"></div>
-      </div>
-    </div>
     <div v-if="tickers.length">
     <button class="button-calculate" @click="calculateIntrinsicValue">Calculate new value</button>
   </div>
-    
     <div>
     <!-- Input fields for each ticker -->
     <div v-for="(ticker, index) in tickers" :key="index" class="input-container">
@@ -92,7 +85,7 @@
 <script>
 import { ref, reactive, onMounted, watch } from 'vue';
 import axios from 'axios';
-
+import { useLoadingStore } from '@/stores/loadingStore';
 export default {
   props: {
     tickers: {
@@ -102,7 +95,7 @@ export default {
   setup(props) {
     const intrinsicData = ref([]);
     const collapsed = ref(true);
-    const loading = ref(false);
+    const loading = useLoadingStore();
     const intrinsicParams = reactive({});
     const errorMessage = ref(''); // Variable to store error messages
     const firstLogin = ref(true);
@@ -144,7 +137,7 @@ export default {
         return ;
       }
 
-      loading.value = true; // Start loading
+      loading.startLoading();
       errorMessage.value = ''; // Reset error message
 
       try {
@@ -168,7 +161,7 @@ export default {
         console.error('Error fetching intrinsic value data:', error);
         errorMessage.value = `Failed to fetch intrinsic value data: ${error.response ? error.response.data : error.message}`;
       } finally {
-        loading.value = false; // End loading
+        loading.stopLoading();
       }
     };
 
