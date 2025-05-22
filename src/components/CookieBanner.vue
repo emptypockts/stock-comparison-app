@@ -1,5 +1,7 @@
 <template>
+  <meta name="viewport" content="width=device-width, initial-scale=0.5">
     <div v-if="!cookieAccepted" class="cookie-banner">
+      
       <p>
         We use cookies to improve your experience on our site. By using our site, you consent to our use of cookies.
       </p>

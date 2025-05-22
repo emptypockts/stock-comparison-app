@@ -1,12 +1,10 @@
 <template>
-      <div v-if="isAuthenticated" class="navigation">
     <Logout />
     <BotLogo />
     <economyIdxLogo />
     <GoBack />
     <StockChartLogo />
     <QtrStockChartLogo />
-  </div>
     </template>
 
     <script>
@@ -26,14 +24,8 @@ import QtrStockChartLogo from "./QtrStockChartLogo.vue";
             StockChartLogo,
             QtrStockChartLogo
         },
-    setup (){
-    const isAuthenticated = localStorage.getItem('isAuthenticated');
-    return {
-        isAuthenticated,
+    }
 
-    }
-}
-    }
 </script>
 <style scoped>
 .navigation {

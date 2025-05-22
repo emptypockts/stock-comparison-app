@@ -1,4 +1,5 @@
 <template>
+  <meta name="viewport" content="width=device-width, initial-scale=0.5">
   <div v-if="showAlert" class="modal">
     <div class="modal-content">
       <h2>Important Notice</h2>

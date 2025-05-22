@@ -13,8 +13,10 @@
 <script setup>
 import { useRouter } from 'vue-router';
 const router = useRouter();
+
 function goToIdx(){
-    router.replace('/economyidx');
+    console.log('routing to economy charts');
+    router.push('/economyidx');
 
 }
 </script>

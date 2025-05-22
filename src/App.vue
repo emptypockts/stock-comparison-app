@@ -9,6 +9,7 @@
     </div>
     <!-- Navigation visible on all pages -->
     <!-- Main Area -->
+       <router-view />
       <div v-if="isAuthenticated">
         <Navigation/>
         <div>
@@ -32,9 +33,6 @@
           <RittenhouseAnalysis Analyis :tickers="tickers"  />
         </div>
       </div>
-      <div v-else>
-        <router-view />
-      </div>
     </div>
 </template>
 
@@ -52,7 +50,7 @@ import StockChart from "./views/StockChart.vue";
 import Navigation from "./components/Navigation.vue";
 import RittenhouseAnalysis from "./views/RittenhouseAnalysis.vue";
 import { useLoadingStore } from "./stores/loadingStore";
-
+import {verifyToken} from '@/utils/auth'
 
 
 export default {
@@ -73,7 +71,7 @@ export default {
     const loadingStore = useLoadingStore();
     const showLoginAlert = ref();
     const tickers = ref([]);
-    const isAuthenticated = ref(false);
+    const isAuthenticated = ref();
     const router = useRouter();
     const updateTickers = (newTickers) => {
       tickers.value = newTickers;
@@ -85,37 +83,12 @@ export default {
       localStorage.clear()
     };
 
-    const verifyToken = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) return false;
-      try {
-        const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/verify`, null, {
-          headers: {
-            'token': token,
-          },
-        });
-        if (response.data.success) {
-          console.log('Token is valid');
-          localStorage.setItem('isAuthenticated','true')
-          return true;
-        } else {
-          console.log('Token verification failed:', response.data.message);
-          clearLocalStorage();
-          router.push('/Auth');
-          return false;
-        }
-      } catch (error) {
-        console.log('Error verifying token ', error)
-        clearLocalStorage();
-        router.push('/');
-        return false;
-      }
-    };
+    
 
-    onMounted(() => {
-      verifyToken().then(result => {
-        isAuthenticated.value = result; // Reactive update when token is verified
-      });
+    onMounted(async () => {
+      
+      isAuthenticated.value = await verifyToken();
+      
     });
 
     const containerClass = computed(() => {

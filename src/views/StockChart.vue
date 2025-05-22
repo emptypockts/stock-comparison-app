@@ -106,7 +106,6 @@ import { ref, watch, onMounted, computed } from 'vue';
 import Navigation from '@/components/Navigation.vue';
 export default {
   props: {
-    isAuthenticated: Boolean, // Define isAuthenticated as a prop
     itemsPerPage: {
       type: Number,
       default: 100,
@@ -167,12 +166,7 @@ export default {
       return sortedRecords.value.slice(0, 100); //Start and end is constant to 100 records 
     });
 
-    // You can also watch isAuthenticated for changes
-    watch(
-      () => props.isAuthenticated,
-      (newValue) => {
-        console.log("isAuthenticated changed to:", newValue);
-      });
+    
 
     // Watch for changes in currentPage and fetch data for the new page
     watch(currentPage, (newPage) => {
@@ -232,6 +226,7 @@ export default {
     };
 
     onMounted(() => {
+      console.log('hello from stock charts')
       fetchData();
 
 

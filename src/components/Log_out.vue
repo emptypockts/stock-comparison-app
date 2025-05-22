@@ -15,27 +15,14 @@ import {ref} from 'vue';
 export default {
     setup() {
         const router = useRouter();
-        const isAuthenticated = ref(false); // Ensure isAuthenticated is reactive if you need to use it elsewhere
-
-
         function logout() {
-            // Clear token from localStorage
-            localStorage.removeItem('token');
-            localStorage.removeItem('tokenExpiration');
-            localStorage.removeItem('cookieAccepted');
-            localStorage.removeItem('cookieAcceptedTimestamp');
-            localStorage.removeItem('cookieDeclined');
-            localStorage.removeItem('ticker');
             localStorage.clear()
             console.log("Logout successful, routing to the login app");
             // Redirect to login page
             router.push('/');
-            isAuthenticated.value=false;
-
         }
         return {
             logout,
-            isAuthenticated,
         };
     },
 };
