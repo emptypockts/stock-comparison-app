@@ -32,7 +32,7 @@ import axios from 'axios';
 import { useRouter } from 'vue-router'; // Import useRouter for navigation
 import debounce from 'lodash.debounce';
 import { useLoadingStore } from '@/stores/loadingStore';
-
+import { verifyToken } from '@/utils/auth';
 export default {
   emits: ['tickers-updated'], // Declare the custom events
   setup(props, { emit }) {
@@ -42,34 +42,10 @@ export default {
     const ticker3 = ref('');
     const loading = useLoadingStore();
     const companyData = ref({});
-    const router = useRouter(); // Use Vue Router for navigation
-    const verifyToken = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        alert('Token not available in local storage. Please refresh the page and login again');
-        return false;
-      }
-
-      try {
-        const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/verify`, null, {
-          headers: { token },
-        });
-
-        return response.data.success;
-         
-    
-      } catch (error) {
-        console.error('Error verifying token:',error.response.data.message);
-        localStorage.removeItem('token');
-        localStorage.removeItem('tokenExpiration')
-        localStorage.removeItem('cookieAccepted')
-        localStorage.removeItem('cookieAcceptedTimestamp')
-        localStorage.removeItem('cookieDeclined')
-        router.push('/')
-        return false;
-      }
-    };
+    const router = useRouter();
+  
     const fetchCompanyData = debounce(async () => {
+
       const tickers = [ticker1, ticker2, ticker3].map(tickerRef => tickerRef.value).filter(Boolean);
       if (tickers.length === 0) {
         errorMessage.value = "Please enter at least one stock ticker."
@@ -125,6 +101,7 @@ export default {
         fetchCompanyData();
       } else {
         console.log("Pushing to login")
+        localStorage.clear()
         router.push('/').then(() => {
           console.log('Navigation successful');
         }).catch((error) => {

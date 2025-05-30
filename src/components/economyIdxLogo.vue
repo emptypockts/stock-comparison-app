@@ -12,12 +12,19 @@
 
 <script setup>
 import { useRouter } from 'vue-router';
+import { verifyToken } from '@/utils/auth';
 const router = useRouter();
 
-function goToIdx(){
+async function goToIdx(){
+        const isAuthenticated= await verifyToken();
+    if (!isAuthenticated){
+        localStorage.clear();
+        router.push('/');
+    }
+    else{
     console.log('routing to economy charts');
     router.push('/economyidx');
-
+    }
 }
 </script>
 

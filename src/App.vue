@@ -88,6 +88,10 @@ export default {
     onMounted(async () => {
       
       isAuthenticated.value = await verifyToken();
+      if (!isAuthenticated.value){
+        localStorage.clear();
+        router.push('/')
+      }
       
     });
 

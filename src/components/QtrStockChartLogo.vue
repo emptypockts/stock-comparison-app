@@ -13,11 +13,18 @@
 
 <script setup>
 import { useRouter } from 'vue-router';
+import { verifyToken } from '@/utils/auth';
 const router = useRouter();
-function gotoTable(){
+async function gotoTable(){
+    const isAuthenticated= await verifyToken();
+    if (!isAuthenticated){
+        localStorage.clear();
+        router.push('/');
+    }
+    else{
     console.log("routing to the Stock Chart")
     router.push('/qtrtrend');
-
+    }
 }
 </script>
 
