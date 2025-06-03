@@ -5,7 +5,7 @@ import requests
 load_dotenv()
 API_KEY = os.getenv('GEMINI_API')
 
-url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 querystring = {"key":API_KEY}
 
 def chatQuery(query):
