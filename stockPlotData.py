@@ -1,7 +1,7 @@
 import pandas as pd
 import yfinance as yf
 
-def fetch_financials(ticker):
+def fetch_financials(ticker)->list:
     stock = yf.Ticker(ticker)
     financial_data = []
 
