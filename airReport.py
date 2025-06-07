@@ -140,24 +140,35 @@ def get_company_intrinsic_value_agent(tickers):
     """
 def get_full_report_agent(tickers):
     return f"""
-    you are an expert financial agent and you will analyse the reports provided here and provide a final report ready to be processed
-    into a pdf document. do not include difficult characters for pdfs
-    # Investment Report - today's date
+    you are an expert financial agent and you will analyse the reports provided here and provide a final report ready to be processed.
+    analysis expected: 
 
-    ## Executive Summary
+    ## 1. Executive Summary
     This report reviews the financial health, performance trends, and valuation insights for the following companies: {tickers}.
 
-    ## 1. Financial Trends Analysis (Annual)
+    ## 2. Financial Trends Analysis (Annual)
     [Insert AI-generated insights about annual trends, revenue, ROA, FCF, etc.]
 
-    ## 2. Quarterly Performance Review
+    ## 3. Quarterly Performance Review
     [Insert quarterly data analysis for {tickers}.]
 
-    ## 3. Intrinsic Value Analysis
+    ## 4. Intrinsic Value Analysis
     [Insert DCF & Graham valuation summaries for {tickers}.]
 
     ## Conclusion
     [Comparison and wrap-up.]
+
+    
+    the format of the report has to be a json object with the following schema:
+
+    type: title
+    content: string
+    
+    type: paragraph
+    content: string
+
+    type: bullets
+    content: [bullet1, bullet2, ... bulletn]
     """
 
 API_KEY = os.getenv("GEMINI_API")
@@ -250,6 +261,7 @@ if __name__ == "__main__":
     #final report
     full_report_agent =get_full_report_agent(tickers) 
     r6 =get_full_report(full_report_agent,r1,r2,r3,r4,r5)
+    print(r6)
 
     
 

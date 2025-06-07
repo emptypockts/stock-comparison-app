@@ -6,4 +6,5 @@ __pycache__
 .vercel
 .notes
 sec_filings/
+ai_reports/
 /venv/
