@@ -75,7 +75,7 @@ export default {
     const router = useRouter();
     const updateTickers = (newTickers) => {
       tickers.value = newTickers;
-      localStorage.setItem('tickers', tickers);
+      localStorage.setItem('ticker', newTickers[0]);
 
     };
 

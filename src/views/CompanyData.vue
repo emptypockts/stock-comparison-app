@@ -54,8 +54,6 @@ export default {
       }
       errorMessage.value = ""
 
-      
-      console.log("tickers:", tickers)
       loading.startLoading();
       try {
         const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/company_data`, {

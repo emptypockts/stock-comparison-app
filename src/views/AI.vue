@@ -21,7 +21,7 @@
         <div v-if="loading" class="loading-overlay">
             <div class="loading-throbber">
                 <div class="spinner"></div>
-                <p>Sending query...Powered by google Gemini 1.5 flash Please wait...</p>
+                <p>Sending query...Powered by google Gemini flash Please wait...</p>
             </div>
         </div>
     </div>
@@ -31,27 +31,31 @@
 <script setup>
 import { ref, watch } from 'vue';
 import Navigation from '@/components/Navigation.vue';
-// import { useRouter } from 'vue-router';
 import axios from 'axios';
 const analysisDone = ref(false);
 const loading = ref(false);
 const userMessage = ref('');
-const tickers = ref([])
+const ticker = ref('');
+
+const props = defineProps({
+    tickers:{
+        type:Array
+    }
+})
 
 
-
-// const router = useRouter();
 const messages = ref([
     { text: 'I will conduct the 7power analysis for this ticker. If you want analysis for another, ticker just change the first ticker field in the main page. Hit send to start. ', isUser: false }
 ]);
 
 async function sendMessage() {
-    tickers.value = localStorage.getItem('tickers')
-    console.log('ai tickers',tickers)
+    console.log('ai props',props.tickers)
+    ticker.value = localStorage.getItem('ticker')
+    console.log('ai tickers',ticker)
     userMessage.value = `You are a financial expert that will conduct the 7power analysis framework from Hamilton Helmer about the company with ticker ${ticker.value}. Layout each of the 7 powers and your conclusion of each. Include any URL for reference.Make the analysis with the latest information and display those dates for any reference.
     You must include the urls used for this research.`;
 
-    if (userMessage.value.trim() && !analysisDone.value && tickers.value) {
+    if (userMessage.value.trim() && !analysisDone.value && ticker.value) {
         messages.value.push({ text: userMessage.value, isUser: true });
         try {
 
@@ -71,7 +75,7 @@ async function sendMessage() {
 
                 formattedResponse = formattedResponse.trim(); // Remove any leading new line or space
                 messages.value.push({ text: formattedResponse, isUser: false });
-                localStorage.removeItem('tickers')
+                localStorage.removeItem('ticker')
                 analysisDone.value = true;
             }, 1000);
 

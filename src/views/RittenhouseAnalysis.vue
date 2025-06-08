@@ -82,6 +82,7 @@
       };
   
       const fetchAnalysisReports = async () => {
+        console.log('rittenhouse tickers',props.tickers)
         loading.startLoading();
           try {
             const params = props.tickers.reduce((acc, ticker, index) => {
