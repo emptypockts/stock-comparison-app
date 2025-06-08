@@ -36,7 +36,7 @@ import axios from 'axios';
 const analysisDone = ref(false);
 const loading = ref(false);
 const userMessage = ref('');
-const ticker = ref('')
+const tickers = ref([])
 
 
 
@@ -46,10 +46,12 @@ const messages = ref([
 ]);
 
 async function sendMessage() {
-    ticker.value = localStorage.getItem('ticker')
+    tickers.value = localStorage.getItem('tickers')
+    console.log('ai tickers',tickers)
     userMessage.value = `You are a financial expert that will conduct the 7power analysis framework from Hamilton Helmer about the company with ticker ${ticker.value}. Layout each of the 7 powers and your conclusion of each. Include any URL for reference.Make the analysis with the latest information and display those dates for any reference.
     You must include the urls used for this research.`;
-    if (userMessage.value.trim() && !analysisDone.value && ticker.value) {
+
+    if (userMessage.value.trim() && !analysisDone.value && tickers.value) {
         messages.value.push({ text: userMessage.value, isUser: true });
         try {
 
@@ -69,7 +71,7 @@ async function sendMessage() {
 
                 formattedResponse = formattedResponse.trim(); // Remove any leading new line or space
                 messages.value.push({ text: formattedResponse, isUser: false });
-                localStorage.removeItem('ticker')
+                localStorage.removeItem('tickers')
                 analysisDone.value = true;
             }, 1000);
 

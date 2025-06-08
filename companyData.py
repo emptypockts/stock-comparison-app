@@ -35,9 +35,9 @@ def get_StockInfo(ticker):
         stockData = {
             'symbol': jsonObj['results']['ticker'],
             'name': jsonObj['results']['name'],
-            'share_class_shares_outstanding': jsonObj['results']['share_class_shares_outstanding'],
+            'share_class_shares_outstanding': jsonObj['results']['weighted_shares_outstanding'],
             'market_cap': market_cap,
-            'current_price': round(market_cap / jsonObj['results']['share_class_shares_outstanding'],2)
+            'current_price': round(market_cap / jsonObj['results']['weighted_shares_outstanding'],2)
         }
         return stockData
 

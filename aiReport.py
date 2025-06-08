@@ -14,7 +14,7 @@ load_dotenv()
 
 
 
-def get_company_data_agent(tickers):
+def get_company_data_agent(tickers)->str:
     return f"""
     You are a financial analysis AI assistant designed to generate concise, insightful feedback for investors.
 
@@ -32,7 +32,7 @@ def get_company_data_agent(tickers):
 
     Avoid financial advice (e.g., "Buy now"), but you can suggest whether a stock appears "worth further analysis" or "shows signs of risk."""
 
-def get_company_score_agent(tickers):
+def get_company_score_agent(tickers)->str:
     return f"""
     You are an AI assistant specialized in value investing, inspired by the principles of Benjamin Graham. Your job is to review a company's historical financials and determine how well it aligns with value investing standards.
 
@@ -66,7 +66,7 @@ def get_company_score_agent(tickers):
 
     Here is the historical data:
     """
-def get_company_financials_agent(tickers):
+def get_company_financials_agent(tickers)->str:
     return f"""
     You are a financial analysis assistant helping investors make informed decisions. You receive financial data for up to 3 stock tickers given here {tickers}, 
     each consisting of multiple years of key financial metrics (such as revenue, net income, free cash flow, assets, liabilities, EPS, and dividends).
@@ -81,7 +81,7 @@ def get_company_financials_agent(tickers):
     Do not speculate on stock prices. Focus only on the financial data provided.
     """
 
-def get_company_financials_qtr_agent(tickers):
+def get_company_financials_qtr_agent(tickers)->str:
     return f"""
     You are a financial analysis AI assistant that evaluates and compares companies based on their quarterly financial statements.
     You receive structured financial data for up to 3 stock tickers given here {tickers}, each with quarterly values for key metrics such as:
@@ -110,7 +110,7 @@ def get_company_financials_qtr_agent(tickers):
     Do not speculate on stock prices. Focus only on the financial data provided.
     """
 
-def get_company_intrinsic_value_agent(tickers):
+def get_company_intrinsic_value_agent(tickers)->str:
     return f"""
     You are a financial valuation assistant specializing in intrinsic value analysis using Discounted Cash Flow (DCF) and Graham valuation models.
     You are given structured data for up to 3 tickers given here {tickers}. For each, you receive:
@@ -138,7 +138,7 @@ def get_company_intrinsic_value_agent(tickers):
     Speak in plain language suitable for a retail investor audience
     Do not recommend buying or selling. Simply highlight valuation insights and risk indicators based on the data provided.
     """
-def get_full_report_agent(tickers):
+def get_full_report_agent(tickers)->str:
     return f"""
     you are an expert financial agent and you will analyse the reports provided here and provide a final report ready to be processed.
     analysis expected: 
@@ -177,7 +177,7 @@ url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:
 querystring = {"key": API_KEY}
 
 
-def chat_query(agent, data):
+def chat_query(agent, data)->str:
 
     payload = {
         "system_instruction": {"parts": [{"text": agent}]},
@@ -194,7 +194,7 @@ def chat_query(agent, data):
     response = response.json()
     return response["candidates"][0]["content"]["parts"][0]["text"]
 
-def get_full_report(agent,r1,r2,r3,r4,r5):
+def get_full_report(agent,r1,r2,r3,r4,r5)->str:
     payload = {
             "system_instruction": {"parts": [{"text": agent}]},
             "contents": [
@@ -213,55 +213,63 @@ def get_full_report(agent,r1,r2,r3,r4,r5):
     response = response.json()
     return response["candidates"][0]["content"]["parts"][0]["text"]
 
+def compile(tickers)->str:
+    try:
+        #ai agent that analyses company basic data such as revenue and stock price
+        company_data_agent = get_company_data_agent(tickers)
+        ai1 = compile_stockData(tickers)
+        
+        #ai agent that score companies based on the Benjamin G. valued investor analysis
+        ai2={
+            "ticker":[ticker for ticker in tickers],
+            "data":[fetch_5y_data(e).to_json() for e in tickers]
+        }
+        
+        company_score_agent = get_company_score_agent(tickers)
+        
+        #ai agent that analyses financials
+        company_financials_agent=get_company_financials_agent(tickers)
+        ai3 ={
+            "ticker":[ticker for ticker in tickers],
+            "data":[json.dumps(fetch_financials(e)) for e in tickers]
+        }
+
+        #ai agent that analyses financials per quarter
+        company_financials_qtr_agent = get_company_financials_qtr_agent(tickers)
+        ai4 = {
+            "ticker":[ticker for ticker in tickers],
+            "data":[json.dumps(fetch_4qtr_data(e)) for e in tickers]
+        }
+
+        #ai agent that analyses intrinsic value
+        company_intrinsic_value_agent = get_company_intrinsic_value_agent(tickers)
+        ai5 = {
+            "ticker":[ticker for ticker in tickers],
+            "data":[json.dumps(getAllIntrinsicValues(e))for e in tickers]
+        }
+
+
+        # trigger ai agents
+        r1 = chat_query(company_data_agent, ai1)
+        r2 = chat_query(company_score_agent,ai2)
+        r3 = chat_query(company_financials_agent,ai3)
+        r4 = chat_query(company_financials_qtr_agent,ai4)
+        r5 = chat_query(company_intrinsic_value_agent,ai5)
+
+        #final report
+        full_report_agent =get_full_report_agent(tickers) 
+        r6 =get_full_report(full_report_agent,r1,r2,r3,r4,r5)
+        
+        return r6
+    except Exception as e:
+        return e
+    
+
 if __name__ == "__main__":
-    tickers = ["pltr", "axp"]
-    response =[]
+    tickers = ["nvda", "meta"]
+
+    print(compile(tickers))
     
-    #ai agent that analyses company basic data such as revenue and stock price
-    company_data_agent = get_company_data_agent(tickers)
-    ai1 = compile_stockData(tickers)
-    
-    #ai agent that score companies based on the Benjamin G. valued investor analysis
-    ai2={
-        "ticker":[ticker for ticker in tickers],
-        "data":[fetch_5y_data(e).to_json() for e in tickers]
-    }
-    
-    company_score_agent = get_company_score_agent(tickers)
-    
-    #ai agent that analyses financials
-    company_financials_agent=get_company_financials_agent(tickers)
-    ai3 ={
-        "ticker":[ticker for ticker in tickers],
-        "data":[json.dumps(fetch_financials(e)) for e in tickers]
-    }
-
-    #ai agent that analyses financials per quarter
-    company_financials_qtr_agent = get_company_financials_qtr_agent(tickers)
-    ai4 = {
-        "ticker":[ticker for ticker in tickers],
-        "data":[json.dumps(fetch_4qtr_data(e)) for e in tickers]
-    }
-
-    #ai agent that analyses intrinsic value
-    company_intrinsic_value_agent = get_company_intrinsic_value_agent(tickers)
-    ai5 = {
-        "ticker":[ticker for ticker in tickers],
-        "data":[json.dumps(getAllIntrinsicValues(e))for e in tickers]
-    }
-
-
-    # trigger ai agents
-    r1 = chat_query(company_data_agent, ai1)
-    r2 = chat_query(company_score_agent,ai2)
-    r3 = chat_query(company_financials_agent,ai3)
-    r4 = chat_query(company_financials_qtr_agent,ai4)
-    r5 = chat_query(company_intrinsic_value_agent,ai5)
-
-    #final report
-    full_report_agent =get_full_report_agent(tickers) 
-    r6 =get_full_report(full_report_agent,r1,r2,r3,r4,r5)
-    print(r6)
 
     
 

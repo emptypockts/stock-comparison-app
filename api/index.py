@@ -1,4 +1,5 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request,send_file
+from aiReport import compile
 from flask_cors import CORS
 import pandas as pd
 import secDBFetch
@@ -22,7 +23,7 @@ from QStockScore import pull_QStockData,pullAllStockData,RevenueGrowthQtrStockDa
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 from stockPlotDataQtr import fetch_4qtr_data
-
+from PDFReport import PDFReport
 uri = os.getenv('MONGODB_URI')
 client = MongoClient(uri, server_api=ServerApi('1'))
 db = client["test"]
@@ -208,6 +209,36 @@ def messageBot():
             }),200
     except:
         return jsonify({'error':response}),400
+    
+@app.route('/api/v1/gemini',methods=['POST'])
+def gemini_post():
+    data=request.json
+    tickers = data.get('tickers')
+    try:
+        response = compile(tickers)
+        return jsonify({
+            'answer':response
+        }),200
+    except Exception as e:
+            return jsonify({'error':str(e)}),400
+@app.route('/api/v1/gemini',methods=['GET'])
+def gemini_generate_pdf():
+    data= request.json
+    text=data.get('ai_report')
+    try:
+        pdf_report = PDFReport(text)
+        pdf_buffer,today=pdf_report.generate()
+        return send_file(pdf_buffer,as_attachment=True,
+                         download_name=f"{today}.pdf",
+                         mimetype='application/pdf',
+                         ),200
+    except Exception as e:
+        return jsonify({
+            "error":str(e)
+        }),500
+
+
+
 @app.route('/api/fetchStockfromDB', methods=['GET'])
 def MongoFetchStock():
     try:
