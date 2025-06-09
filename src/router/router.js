@@ -69,7 +69,6 @@ router.beforeEach(async (to, from) => {
     return {name:'Auth'}
 
     }
-    console.log('router allowed!')
     return true;
 });
 

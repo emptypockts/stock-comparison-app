@@ -28,16 +28,13 @@
 import { ref, watch } from 'vue';
 import Navigation from '@/components/Navigation.vue';
 import axios from 'axios';
+import { useTickerStore } from '@/stores/tickerStore';
 const analysisDone = ref(false);
 const loading = ref(false);
 const userMessage = ref('');
 const ticker = ref('');
+const tickerStore=useTickerStore();
 
-const props = defineProps({
-    tickers:{
-        type:Array
-    }
-})
 
 
 const messages = ref([
@@ -45,13 +42,12 @@ const messages = ref([
 ]);
 
 async function sendMessage() {
-    console.log('ai props',props.tickers)
-    ticker.value = localStorage.getItem('ticker')
-    console.log('ai tickers',ticker)
-    userMessage.value = `You are a financial expert that will conduct the 7power analysis framework from Hamilton Helmer about the company with ticker ${ticker.value}. Layout each of the 7 powers and your conclusion of each. Include any URL for reference.Make the analysis with the latest information and display those dates for any reference.
+    const tickers =tickerStore.currentTickers
+    
+    userMessage.value = `You are a financial expert that will conduct the 7power analysis framework from Hamilton Helmer about the company with tickers ${tickers}. Layout each of the 7 powers and your conclusion of each. Include any URL for reference.Make the analysis with the latest information and display those dates for any reference.
     You must include the urls used for this research.`;
 
-    if (userMessage.value.trim() && !analysisDone.value && ticker.value) {
+    if (userMessage.value.trim() && !analysisDone.value && tickers) {
         messages.value.push({ text: userMessage.value, isUser: true });
         try {
 
@@ -71,7 +67,6 @@ async function sendMessage() {
 
                 formattedResponse = formattedResponse.trim(); // Remove any leading new line or space
                 messages.value.push({ text: formattedResponse, isUser: false });
-                localStorage.removeItem('ticker')
                 analysisDone.value = true;
             }, 1000);
 
@@ -84,9 +79,6 @@ async function sendMessage() {
         text: "<br>This ticker has been analysed already or the ticker field is empty. If you don't see any analysis done yet, try to update the ticker field and click the analyse button and then come back to this page.",
         isUser: false
     }))
-    return{
-        Navigation,
-    }
 }
 
 
