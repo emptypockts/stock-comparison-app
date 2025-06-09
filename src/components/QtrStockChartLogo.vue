@@ -23,7 +23,7 @@ async function gotoTable(){
     }
     else{
     console.log("routing to the Stock Chart")
-    router.push('/qtrtrend');
+    router.push('/dashboard/qtrtrend');
     }
 }
 </script>

@@ -22,5 +22,4 @@ if __name__ == "__main__":
     ticker='pltr'
     user_query=f"You are a financial expert that will conduct the 7power analysis framewrok from Hamilton Helmer about the company with ticker {ticker}. Layout each of the 7 powers and your conclusion of each. Include any URL for reference."
     response = chatQuery(user_query)
-    response = response["candidates"][0]["content"]["parts"][0]["text"]
     print(response)

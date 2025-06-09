@@ -4,10 +4,10 @@ import RegisterUser from '@/views/RegisterUser.vue';
 import AI from '@/views/AI.vue';
 import EconomyStats from '@/views/EconomyStats.vue';
 import StockChart from '@/views/StockChart.vue';
-import App from '@/App.vue';
+import MainLayout from '@/views/MainLayout.vue';
 import QtrStockTrend from '@/views/QtrStockTrend.vue';
 import { verifyToken } from '@/utils/auth';
-
+import App from '@/layouts/App.vue';
 
 
 const router = createRouter({
@@ -19,34 +19,40 @@ const router = createRouter({
     component: AuthPage,
   },
   {
-    path: '/app',
-    name: 'app',
+    path: '/dashboard',
     component: App,
+    children:[
+        {
+    path: 'ai',
+    name: 'AI',
+    component: AI,
+  },
+  {
+    path: 'economyidx',
+    name: 'EconomyStats',
+    component: EconomyStats,
+  },
+  {
+    path: 'stockchart',
+    name: 'StockChart',
+    component: StockChart,
+  },
+  {
+    path:'qtrtrend',
+    name:'qtrTrend',
+    component:QtrStockTrend
+  },
+  {
+    path:'',
+    name:'/dashboard',
+    component:()=> import('@/views/MainLayout.vue')
+  }
+    ]
   },
   {
     path: '/register',
     name: 'RegisterUser',
     component: RegisterUser,
-  },
-  {
-    path: '/ai',
-    name: 'AI',
-    component: AI,
-  },
-  {
-    path: '/economyidx',
-    name: 'EconomyStats',
-    component: EconomyStats,
-  },
-  {
-    path: '/stockchart',
-    name: 'StockChart',
-    component: StockChart,
-  },
-  {
-    path:'/qtrtrend',
-    name:'qtrTrend',
-    component:QtrStockTrend
   },
   {
   path: '/:catchAll(.*)',
@@ -58,10 +64,13 @@ const router = createRouter({
 
 router.beforeEach(async (to, from) => {
   const token = localStorage.getItem('token');
-  const isAuthenticated = verifyToken(token);
+  const isAuthenticated = await verifyToken(token);
   if (to.name !== 'Auth' && to.name !== 'RegisterUser'&&!isAuthenticated){ 
     return {name:'Auth'}
+
     }
+    console.log('router allowed!')
+    return true;
 });
 
 

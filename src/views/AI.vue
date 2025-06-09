@@ -9,10 +9,6 @@
                 v-html="message.text">
             </div>
         </div>
-
-        <!-- <textarea v-model="userMessage" @keyup.enter="sendMessage" placeholder="Type a message..." rows="2"
-                class="chatty-textarea" disabled>
-                </textarea> -->
         <button @click="sendMessage">Send</button>
 
         <div>

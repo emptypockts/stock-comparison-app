@@ -23,7 +23,7 @@ async function goToIdx(){
     }
     else{
     console.log('routing to economy charts');
-    router.push('/economyidx');
+    router.push('/dashboard/economyidx');
     }
 }
 </script>

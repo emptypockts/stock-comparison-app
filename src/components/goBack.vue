@@ -14,12 +14,11 @@
 
 <script setup>
 import { useRouter } from 'vue-router';
-import { NavigationFailureType, isNavigationFailure } from 'vue-router'
 const router = useRouter();
 
 function goBack(){
     console.log('routing back home')
-    router.push('\App')
+    router.push('/dashboard')
 }
 
 </script>

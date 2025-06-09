@@ -71,7 +71,7 @@ export default {
           localStorage.setItem('tokenExpiration', response.data.expiresAt);
           console.log("Login successful, routing to the main app")
           // Redirect to the main app
-          router.push('App');
+          router.push('/dashboard');
         } else {
           errorMessage.value = 'Invalid username or password.';
         }

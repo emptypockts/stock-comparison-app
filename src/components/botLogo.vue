@@ -13,19 +13,10 @@
 
 <script setup>
 import { useRouter } from 'vue-router';
-import { verifyToken } from '@/utils/auth';
 
 const router = useRouter();
 async function  botTalk(){
-    const isAuthenticated= await verifyToken();
-    if (!isAuthenticated){
-        localStorage.clear();
-        router.push('/');
-    }
-    else{
-    console.log("routing to the AI app")
-    router.push('/ai');
-    }
+    router.push('/dashboard/ai');
 }
 </script>
 
