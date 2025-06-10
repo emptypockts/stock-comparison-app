@@ -10,6 +10,9 @@ export const useTickerStore=defineStore('tickerStore',{
         updateTickers(newTickers){
             this.tickers=newTickers
         },
+        deleteTickers(){
+            this.tickers=[]
+        }
 
     }
 })

@@ -3,21 +3,24 @@
         <div>
             <h1>7power Analysis Framework from Helmer Hamilton.</h1>
         </div>
+        <div>
+            <CompanyData/>
+        </div>
 
         <div class="chat-messages">
             <div v-for="(message, index) in messages" :key="index" :class="{ 'user-message': message.isUser }"
                 v-html="message.text">
             </div>
         </div>
-        <button @click="sendMessage">Send</button>
-
+        <button @click="sendMessage">7powers</button>
+        <button @click="get7pPdf">get pdf</button>
         <div>
             <Navigation/>
         </div>
         <div v-if="loading" class="loading-overlay">
             <div class="loading-throbber">
                 <div class="spinner"></div>
-                <p>Sending query...Powered by google Gemini flash Please wait...</p>
+                <p>Sending query...powered by google gemini flash please wait...</p>
             </div>
         </div>
     </div>
@@ -29,10 +32,10 @@ import { ref, watch } from 'vue';
 import Navigation from '@/components/Navigation.vue';
 import axios from 'axios';
 import { useTickerStore } from '@/stores/tickerStore';
-const analysisDone = ref(false);
+import CompanyData from './CompanyData.vue';
 const loading = ref(false);
 const userMessage = ref('');
-const ticker = ref('');
+
 const tickerStore=useTickerStore();
 
 
@@ -44,19 +47,14 @@ const messages = ref([
 async function sendMessage() {
     const tickers =tickerStore.currentTickers
     
-    userMessage.value = `You are a financial expert that will conduct the 7power analysis framework from Hamilton Helmer about the company with tickers ${tickers}. Layout each of the 7 powers and your conclusion of each. Include any URL for reference.Make the analysis with the latest information and display those dates for any reference.
-    You must include the urls used for this research.`;
-
-    if (userMessage.value.trim() && !analysisDone.value && tickers) {
-        messages.value.push({ text: userMessage.value, isUser: true });
+    if ( tickers.length>0) {
         try {
 
-            console.log("Sending query")
-            console.log("loading status:", loading)
-            loading.value = true // Loading state for authentication
+            loading.value = true 
             const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/chat`, {
-                query: userMessage.value,
+                query: tickers
             });
+    
             setTimeout(() => {
                 let formattedResponse = response.data['assistant']
                     // .replace(/\* \*\*/g, '<br>')
@@ -66,8 +64,7 @@ async function sendMessage() {
                     .replace(/\n/g, '<br>');
 
                 formattedResponse = formattedResponse.trim(); // Remove any leading new line or space
-                messages.value.push({ text: formattedResponse, isUser: false });
-                analysisDone.value = true;
+                messages.value.push({ text: formattedResponse, isUser: true });
             }, 1000);
 
         }
@@ -75,11 +72,57 @@ async function sendMessage() {
             console.error('Error sending query', error);
         } loading.value = false;
     }
-    else (messages.value.push({
-        text: "<br>This ticker has been analysed already or the ticker field is empty. If you don't see any analysis done yet, try to update the ticker field and click the analyse button and then come back to this page.",
+    else {
+        console.error('no tickers found. add a ticker in the ticker field and hit analyse and then you will be able to use 7powers and pdf report buttons')
+        messages.value.push({
+        text: "no tickers found. add a ticker in the ticker field and hit analyse and then you will be able to use 7powers and pdf report buttons",
         isUser: false
-    }))
+    })}
 }
+const get7pPdf= async ()=>{
+    const finalReport=messages.value.filter(e=>e['isUser']===true)
+    if(finalReport.length>0){
+        const jsonMatch =finalReport[0].text.match(/```json\s*([\s\S]*?)```/)
+        loading.value=true; 
+        try{
+            const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/gemini/report`,{
+                ai_report:jsonMatch[1].replace(/<br>/g,'')
+            },
+            {
+                responseType:'blob'
+            })
+            const blob = new Blob([response.data],{
+                type:'application/pdf'
+            })
+            
+            const objectUrl= URL.createObjectURL(blob)
+            const link=document.createElement('a')
+            link.href=objectUrl
+            link.download=`${response.data.size}_${tickerStore.currentTickers.join('_')}.pdf`||'7_powers.pdf'
+            document.body.appendChild(link)
+            link.click()
+            URL.revokeObjectURL(objectUrl)
+            document.body.removeChild(link)
+        }catch(err){
+            console.error('error generating report ',err)
+            messages.value.push({
+                text:err,
+                isUser:false
+            })
+        }
+        finally{
+            loading.value=false;
+        }
+    }
+    else{
+        console.error('there is no analysis. please execute the analyisis to get a report')
+        messages.value.push({
+            text:'there is no analysis. please execute the analyisis to get a report',
+            isUser:false
+        })
+    }   
+}
+
 
 
 </script>
@@ -116,13 +159,17 @@ h2 {
 }
 
 button {
-    padding: 10px 20px;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    background-color: #8bb4e0;
-    margin-bottom: 20px;
+  position: relative;
+  width: auto;
+  justify-content: left;
+  padding: 8px;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 10px;
+  background-color: #8bb4e0;
+  margin-right: 10px;
 }
 
 button:hover {
@@ -157,7 +204,7 @@ button:hover {
 
     button {
         width: auto;
-        padding: 15px 30px;
+        padding: 8px;
     }
 }
 </style>

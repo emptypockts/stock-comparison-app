@@ -8,7 +8,7 @@ import MainLayout from '@/views/MainLayout.vue';
 import QtrStockTrend from '@/views/QtrStockTrend.vue';
 import { verifyToken } from '@/utils/auth';
 import App from '@/layouts/App.vue';
-
+import { useTickerStore } from '@/stores/tickerStore';
 
 const router = createRouter({
   history:createWebHistory(),
@@ -63,13 +63,16 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to, from) => {
+  const tickerStore=useTickerStore()
   const token = localStorage.getItem('token');
   const isAuthenticated = await verifyToken(token);
   if (to.name !== 'Auth' && to.name !== 'RegisterUser'&&!isAuthenticated){ 
     return {name:'Auth'}
 
     }
+    tickerStore.deleteTickers();
     return true;
+
 });
 
 

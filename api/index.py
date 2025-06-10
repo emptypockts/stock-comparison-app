@@ -221,7 +221,7 @@ def gemini_post():
         }),200
     except Exception as e:
             return jsonify({'error':str(e)}),400
-@app.route('/api/v1/gemini',methods=['GET'])
+@app.route('/api/v1/gemini/report',methods=['POST'])
 def gemini_generate_pdf():
     data= request.json
     text=data.get('ai_report')

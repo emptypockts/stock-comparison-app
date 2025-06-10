@@ -2,9 +2,9 @@
   <h1>Ticker Data 
   </h1>    
   <div class="input-container">
-    <input v-model="ticker1" placeholder="Try:intc" id="ticker 1" />
-    <input v-model="ticker2" placeholder="Try:axp" id="ticker 2" />
-    <input v-model="ticker3" placeholder="Try:nvda" id="ticker 3" />
+    <input v-model="ticker1" placeholder="@ticker1" id="ticker 1" />
+    <input v-model="ticker2" placeholder="@ticker2" id="ticker 2" />
+    <input v-model="ticker3" placeholder="@ticker3" id="ticker 3" />
   </div>
   <div>
     <button @click="verifyAndFetchCompanyData">Analyse</button>
