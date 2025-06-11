@@ -34,10 +34,22 @@ import axios from 'axios';
 import { useTickerStore } from '@/stores/tickerStore';
 import CompanyData from './CompanyData.vue';
 const loading = ref(false);
-const userMessage = ref('');
+const rawMessage = ref('');
 
 const tickerStore=useTickerStore();
 
+function cleanAndParseJson(rawString){
+    const cleaned = rawString
+    .replace(/^```json\s*/i,'')
+    .replace(/```$/,'')
+    .trim();
+    try{
+        return JSON.parse(cleaned)
+    }catch(err){
+        console.error('invalid json: ',err);
+        return null;
+    }
+}
 
 
 const messages = ref([
@@ -54,17 +66,26 @@ async function sendMessage() {
             const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/chat`, {
                 query: tickers
             });
-    
+            let formattedResponse = response.data['assistant'];
+                rawMessage.value=formattedResponse;
             setTimeout(() => {
-                let formattedResponse = response.data['assistant']
-                    // .replace(/\* \*\*/g, '<br>')
-                    // .replace(/\. \*\*/g, '<br>')
-                    // .replace(/\:\*\*/g, '<br><br>')
-                    // .replace(/\*\*/g, '<br><br>');
-                    .replace(/\n/g, '<br>');
+                
+                const jsonToTextResponse= formattedResponse.map(section=>
+                    {
+                        switch(section.type){
+                            case "title":
+                                return `<h2 class="text-xl font-bold mb-2">${section.content}</h2>`;
+                            case "paragraph":
+                                return `<p class="text-base mb 3">${section.content}</p>`;
+                            case "bullets":
+                                return `<ul class="mb-3">${section.content.map(e=>`<li>${e}</li>`).join('').trim()}</ul>`
+                            default:
+                                return '';
+                        }
+                    }
+                ).join('');
 
-                formattedResponse = formattedResponse.trim(); // Remove any leading new line or space
-                messages.value.push({ text: formattedResponse, isUser: true });
+                messages.value.push({ text: jsonToTextResponse, isUser: true});
             }, 1000);
 
         }
@@ -76,17 +97,18 @@ async function sendMessage() {
         console.error('no tickers found. add a ticker in the ticker field and hit analyse and then you will be able to use 7powers and pdf report buttons')
         messages.value.push({
         text: "no tickers found. add a ticker in the ticker field and hit analyse and then you will be able to use 7powers and pdf report buttons",
-        isUser: false
+        isUser: false,
+        type:"error"
     })}
 }
 const get7pPdf= async ()=>{
-    const finalReport=messages.value.filter(e=>e['isUser']===true)
-    if(finalReport.length>0){
-        const jsonMatch =finalReport[0].text.match(/```json\s*([\s\S]*?)```/)
+
+    console.log(rawMessage.value)
+    if(rawMessage.value.length>0){
         loading.value=true; 
         try{
             const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/gemini/report`,{
-                ai_report:jsonMatch[1].replace(/<br>/g,'')
+                ai_report:rawMessage.value
             },
             {
                 responseType:'blob'

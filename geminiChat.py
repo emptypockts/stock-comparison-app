@@ -2,6 +2,8 @@
 from dotenv import load_dotenv
 import os
 import requests
+from aiReport import get_json_validator,validate_json
+import json
 load_dotenv()
 API_KEY = os.getenv('GEMINI_API')
 
@@ -38,8 +40,12 @@ def chatQuery(query)->str:
     response = requests.request("POST", url, json=payload, headers=headers, params=querystring)
     response =response.json()
     print ("API Response ",response["candidates"][0]["content"]["parts"][0]["text"])
-    return response["candidates"][0]["content"]["parts"][0]["text"]
-
+    r1 = response["candidates"][0]["content"]["parts"][0]["text"]
+    #validate json object
+    json_validator_agent=get_json_validator()
+    r2 = validate_json(json_validator_agent,r1.replace("```","").replace("json","").strip().lower())
+    r3=json.loads(r2.replace("```json","").replace("```","").strip().lower())
+    return r3
 
 if __name__ == "__main__":
     ticker='pltr'

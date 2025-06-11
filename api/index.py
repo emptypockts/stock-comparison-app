@@ -207,8 +207,8 @@ def messageBot():
         return jsonify({
             'assistant':response,
             }),200
-    except:
-        return jsonify({'error':response}),400
+    except Exception as e:
+        return jsonify({'error':e}),400
     
 @app.route('/api/v1/gemini',methods=['POST'])
 def gemini_post():
