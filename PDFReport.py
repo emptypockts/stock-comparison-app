@@ -3,13 +3,18 @@ import json
 from io import BytesIO
 from datetime import datetime
 import re
+import os
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+print(BASE_DIR)
+FONT_PATH = os.path.join(BASE_DIR,'ai_reports','DejaVuSans.ttf')
+print(FONT_PATH)
 
 class PDFReport(FPDF):
     def __init__(self,ai_report):
         super().__init__()
         self.ai_report=ai_report
-        self.add_font('DejaVu','','./ai_reports/DejavuSans.ttf')
-        self.add_font('DejaVu', 'B', './ai_reports/DejaVuSans.ttf')
+        self.add_font('DejaVu','',FONT_PATH)
+        self.add_font('DejaVu', 'B', FONT_PATH)
 
     def header(self):
         self.set_font("DejaVu","B",20)
@@ -46,7 +51,7 @@ class PDFReport(FPDF):
     def footer(self):
         self.set_y(-20)
         logo_width=10
-        logo_path="public/assets/dahoncho.png"
+        logo_path=f"{BASE_DIR}/public/assets/dahoncho.png"
         x_pos =(210-logo_width)/2
         self.image(logo_path,x=x_pos,w=logo_width)
 
@@ -68,7 +73,7 @@ class PDFReport(FPDF):
       pdf_buffer= BytesIO()
       self.output(pdf_buffer)
       today= str(datetime.now()).replace(':','_')
-      self.output(f"ai_reports/{today}.pdf")
+      self.output(f"{BASE_DIR}/ai_reports/{today}.pdf")
       pdf_buffer.seek(0)
 
       return pdf_buffer,today
