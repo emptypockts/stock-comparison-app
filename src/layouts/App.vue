@@ -4,13 +4,11 @@
       <div v-if="isLoading" class="loading-overlay">
     <div class="loading-throbber">
       <div class="spinner">
+        .................
       </div>
     </div>
     </div>
        <router-view />
-        <Navigation/>
-          <CookieBanner />
-          <LoginAlert />
     </div>
 </template>
 
@@ -27,29 +25,6 @@ const isLoading=computed(()=>load_store.isLoading);
 
 
 
-<style scoped>
-
-
-tr {
-  background: transparent;
-}
-
-.navigation {
-  display: flex;
-  gap: 10px;
-  padding: 10px;
-  background: rgba(76, 114, 237, 0);
-}
-
-
-button {
-  background-color: #8bb4e0;
-}
-
-button:hover {
-  background-color: #468eda;
-}
-</style>
 
 <style>
 * {
@@ -120,5 +95,23 @@ position: fixed;
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+button {
+  position: relative;
+  width: auto;
+  justify-content: left;
+  padding: 8px;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 10px;
+  background-color: #8bb4e0;
+  margin-right: 10px;
+}
+
+button:hover {
+    background-color: #468eda;
 }
 </style>

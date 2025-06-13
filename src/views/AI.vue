@@ -13,6 +13,7 @@
             </div>
         </div>
         <button @click="sendMessage">7powers</button>
+        <small> ⚠️warning it takes around 30 sec per ticker <br></small>
         <button @click="get7pPdf">get pdf</button>
         <div>
             <Navigation/>
@@ -33,6 +34,8 @@ import Navigation from '@/components/Navigation.vue';
 import axios from 'axios';
 import { useTickerStore } from '@/stores/tickerStore';
 import CompanyData from './CompanyData.vue';
+import { downloadPdfReport } from '@/utils/downloadReport';
+downloadPdfReport
 const loading = ref(false);
 const rawMessage = ref('');
 
@@ -59,12 +62,12 @@ const messages = ref([
 async function sendMessage() {
     const tickers =tickerStore.currentTickers
     
-    if ( tickers.length>0) {
+    if ( tickers.length>0&& !rawMessage.value) {
         try {
 
             loading.value = true 
-            const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/chat`, {
-                query: tickers
+            const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/seven_p`, {
+                tickers: tickers
             });
             let formattedResponse = response.data['assistant'];
                 rawMessage.value=formattedResponse;
@@ -94,37 +97,18 @@ async function sendMessage() {
         } loading.value = false;
     }
     else {
-        console.error('no tickers found. add a ticker in the ticker field and hit analyse and then you will be able to use 7powers and pdf report buttons')
+        console.error('analysis already generated. please change the tickers and try again')
         messages.value.push({
-        text: "no tickers found. add a ticker in the ticker field and hit analyse and then you will be able to use 7powers and pdf report buttons",
+        text: "analysis already generated. please change the tickers and try again",
         isUser: false,
         type:"error"
     })}
 }
 const get7pPdf= async ()=>{
-
-    console.log(rawMessage.value)
     if(rawMessage.value.length>0){
         loading.value=true; 
         try{
-            const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/gemini/report`,{
-                ai_report:rawMessage.value
-            },
-            {
-                responseType:'blob'
-            })
-            const blob = new Blob([response.data],{
-                type:'application/pdf'
-            })
-            
-            const objectUrl= URL.createObjectURL(blob)
-            const link=document.createElement('a')
-            link.href=objectUrl
-            link.download=`${response.data.size}_${tickerStore.currentTickers.join('_')}.pdf`||'7_powers.pdf'
-            document.body.appendChild(link)
-            link.click()
-            URL.revokeObjectURL(objectUrl)
-            document.body.removeChild(link)
+            await downloadPdfReport(rawMessage.value,tickerStore.currentTickers,"7powers")
         }catch(err){
             console.error('error generating report ',err)
             messages.value.push({

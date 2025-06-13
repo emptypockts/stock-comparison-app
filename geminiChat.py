@@ -10,7 +10,7 @@ API_KEY = os.getenv('GEMINI_API')
 url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 querystring = {"key":API_KEY}
 
-def chatQuery(query)->str:
+def seven_powers(tickers)->str:
     agent = """
     You are a financial expert applying the 7 Powers framework by Hamilton Helmer to companies based on the provided ticker array.
 
@@ -31,7 +31,7 @@ def chatQuery(query)->str:
     "contents": [
         {
             "parts": [
-                {"text": ' '.join(query)}
+                {"text": ' '.join(tickers)}
             ]
         }
     ],
@@ -50,5 +50,5 @@ def chatQuery(query)->str:
 if __name__ == "__main__":
     ticker='pltr'
     user_query=['pltr','axp']
-    response = chatQuery(user_query)
+    response = seven_powers(user_query)
     print(response)

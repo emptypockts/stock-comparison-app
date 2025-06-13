@@ -25,7 +25,7 @@
           <p class="error-message" v-if="errorMessage">{{ errorMessage }}</p>
         </div>
         <div>
-        <button @click="goToRegister" class="reg-button">Create Account</button>
+        <button @click="goToRegister">Create Account</button>
       </div>
       </form>
     </div>
@@ -160,20 +160,22 @@ input[type="submit"]:hover, button[type="submit"]:hover {
   background-color: #468eda;
 }
 
-.reg-button {
+button {
+  position: relative;
   width: auto;
-  padding: 10px;
+  justify-content: left;
+  padding: 8px;
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  background-color: #8bb4e0;
   margin-top: 10px;
-  margin-bottom: 10px;
+  background-color: #8bb4e0;
+  margin-right: 10px;
 }
 
-.reg-button:hover {
-  background-color: #468eda;
+button:hover {
+    background-color: #468eda;
 }
 
 

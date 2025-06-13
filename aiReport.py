@@ -11,9 +11,9 @@ import json
 from fpdf import FPDF
 from datetime import datetime
 load_dotenv()
-
-
-
+API_KEY = os.getenv("GEMINI_API")
+url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+querystring = {"key": API_KEY}
 def get_company_data_agent(tickers)->str:
     return f"""
     You are a financial analysis AI assistant designed to generate concise, insightful feedback for investors.
@@ -31,7 +31,6 @@ def get_company_data_agent(tickers)->str:
     5. For each ticker, provide a brief insight summary (2–4 bullet points) that could help an investor decide whether to look deeper, hold, or avoid.
 
     Avoid financial advice (e.g., "Buy now"), but you can suggest whether a stock appears "worth further analysis" or "shows signs of risk."""
-
 def get_company_score_agent(tickers)->str:
     return f"""
     You are an AI assistant specialized in value investing, inspired by the principles of Benjamin Graham. Your job is to review a company's historical financials and determine how well it aligns with value investing standards.
@@ -80,7 +79,6 @@ def get_company_financials_agent(tickers)->str:
     Be concise but insightful, use plain language, and avoid overly technical jargon. Include bullet points for clarity where appropriate.
     Do not speculate on stock prices. Focus only on the financial data provided.
     """
-
 def get_company_financials_qtr_agent(tickers)->str:
     return f"""
     You are a financial analysis AI assistant that evaluates and compares companies based on their quarterly financial statements.
@@ -109,7 +107,6 @@ def get_company_financials_qtr_agent(tickers)->str:
     Be concise but insightful
     Do not speculate on stock prices. Focus only on the financial data provided.
     """
-
 def get_company_intrinsic_value_agent(tickers)->str:
     return f"""
     You are a financial valuation assistant specializing in intrinsic value analysis using Discounted Cash Flow (DCF) and Graham valuation models.
@@ -170,7 +167,6 @@ def get_full_report_agent(tickers)->str:
         "type": "bullets",
         "content": ["bullet1", "bullet2", "... bulletn"]
     """
-
 def get_json_validator():
     return """
 You are a JSON Output Validator.
@@ -204,14 +200,7 @@ Additional rules:
 - Optionally, you may correct common formatting issues only if it's clear and safe.
 - Be concise, structured, and strictly follow the output format.
 """
-
-API_KEY = os.getenv("GEMINI_API")
-
-url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
-querystring = {"key": API_KEY}
-
-
-def chat_query(agent, data)->str:
+def ai_query(agent, data)->str:
 
     payload = {
         "system_instruction": {"parts": [{"text": agent}]},
@@ -227,7 +216,6 @@ def chat_query(agent, data)->str:
     response = requests.post(url, json=payload, headers=headers, params=querystring)
     response = response.json()
     return response["candidates"][0]["content"]["parts"][0]["text"]
-
 def get_full_report(agent,r1,r2,r3,r4,r5)->str:
     payload = {
             "system_instruction": {"parts": [{"text": agent}]},
@@ -263,7 +251,6 @@ def validate_json(agent,r6)->str:
     response=requests.post(url,json=payload,headers=headers,params=querystring)
     response=response.json()
     return response["candidates"][0]["content"]["parts"][0]["text"]
-
 def compile(tickers)->str:
     try:
         #ai agent that analyses company basic data such as revenue and stock price
@@ -301,11 +288,11 @@ def compile(tickers)->str:
 
 
         # trigger ai agents
-        r1 = chat_query(company_data_agent, ai1)
-        r2 = chat_query(company_score_agent,ai2)
-        r3 = chat_query(company_financials_agent,ai3)
-        r4 = chat_query(company_financials_qtr_agent,ai4)
-        r5 = chat_query(company_intrinsic_value_agent,ai5)
+        r1 = ai_query(company_data_agent, ai1)
+        r2 = ai_query(company_score_agent,ai2)
+        r3 = ai_query(company_financials_agent,ai3)
+        r4 = ai_query(company_financials_qtr_agent,ai4)
+        r5 = ai_query(company_intrinsic_value_agent,ai5)
 
         #final report
         full_report_agent =get_full_report_agent(tickers) 
@@ -321,20 +308,7 @@ def compile(tickers)->str:
         
     except Exception as e:
         return e
-    
-
 if __name__ == "__main__":
     tickers = ["nvda", "meta"]
 
     print(compile(tickers))
-    
-
-    
-
-
-    
-
-    
-    
-
-    
