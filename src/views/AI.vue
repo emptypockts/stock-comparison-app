@@ -3,25 +3,25 @@
         <div>
             <h1>7power Analysis Framework from Helmer Hamilton.</h1>
         </div>
+        <div>
+            <CompanyData/>
+        </div>
 
         <div class="chat-messages">
             <div v-for="(message, index) in messages" :key="index" :class="{ 'user-message': message.isUser }"
                 v-html="message.text">
             </div>
         </div>
-
-        <!-- <textarea v-model="userMessage" @keyup.enter="sendMessage" placeholder="Type a message..." rows="2"
-                class="chatty-textarea" disabled>
-                </textarea> -->
-        <button @click="sendMessage">Send</button>
-
+        <button @click="sendMessage">7powers</button>
+        <small> ⚠️warning it takes around 30 sec per ticker <br></small>
+        <button @click="get7pPdf">get pdf</button>
         <div>
             <Navigation/>
         </div>
         <div v-if="loading" class="loading-overlay">
             <div class="loading-throbber">
                 <div class="spinner"></div>
-                <p>Sending query...Powered by google Gemini 1.5 flash Please wait...</p>
+                <p>Sending query...powered by google gemini flash please wait...</p>
             </div>
         </div>
     </div>
@@ -31,46 +31,64 @@
 <script setup>
 import { ref, watch } from 'vue';
 import Navigation from '@/components/Navigation.vue';
-// import { useRouter } from 'vue-router';
 import axios from 'axios';
-const analysisDone = ref(false);
+import { useTickerStore } from '@/stores/tickerStore';
+import CompanyData from './CompanyData.vue';
+import { downloadPdfReport } from '@/utils/downloadReport';
+downloadPdfReport
 const loading = ref(false);
-const userMessage = ref('');
-const ticker = ref('')
+const rawMessage = ref('');
+
+const tickerStore=useTickerStore();
+
+function cleanAndParseJson(rawString){
+    const cleaned = rawString
+    .replace(/^```json\s*/i,'')
+    .replace(/```$/,'')
+    .trim();
+    try{
+        return JSON.parse(cleaned)
+    }catch(err){
+        console.error('invalid json: ',err);
+        return null;
+    }
+}
 
 
-
-// const router = useRouter();
 const messages = ref([
     { text: 'I will conduct the 7power analysis for this ticker. If you want analysis for another, ticker just change the first ticker field in the main page. Hit send to start. ', isUser: false }
 ]);
 
 async function sendMessage() {
-    ticker.value = localStorage.getItem('ticker')
-    userMessage.value = `You are a financial expert that will conduct the 7power analysis framework from Hamilton Helmer about the company with ticker ${ticker.value}. Layout each of the 7 powers and your conclusion of each. Include any URL for reference.Make the analysis with the latest information and display those dates for any reference.
-    You must include the urls used for this research.`;
-    if (userMessage.value.trim() && !analysisDone.value && ticker.value) {
-        messages.value.push({ text: userMessage.value, isUser: true });
+    const tickers =tickerStore.currentTickers
+    
+    if ( tickers.length>0&& !rawMessage.value) {
         try {
 
-            console.log("Sending query")
-            console.log("loading status:", loading)
-            loading.value = true // Loading state for authentication
-            const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/chat`, {
-                query: userMessage.value,
+            loading.value = true 
+            const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/seven_p`, {
+                tickers: tickers
             });
+            let formattedResponse = response.data['assistant'];
+                rawMessage.value=formattedResponse;
             setTimeout(() => {
-                let formattedResponse = response.data['assistant']
-                    // .replace(/\* \*\*/g, '<br>')
-                    // .replace(/\. \*\*/g, '<br>')
-                    // .replace(/\:\*\*/g, '<br><br>')
-                    // .replace(/\*\*/g, '<br><br>');
-                    .replace(/\n/g, '<br>');
+                
+                const jsonToTextResponse= formattedResponse.map(section=>
+                    {
+                        switch(section.type){
+                            case "title":
+                                return `<h2 class="text-xl font-bold mb-2">${section.content}</h2>`;
+                            case "paragraph":
+                                return `<p class="text-base mb 3">${section.content}</p>`;
+                            case "bullets":
+                                return `<ul class="mb-3">${section.content.map(e=>`<li>${e}</li>`).join('').trim()}</ul>`
+                            default:
+                                return '';
+                        }
+                    }
+                ).join('');
 
-                formattedResponse = formattedResponse.trim(); // Remove any leading new line or space
-                messages.value.push({ text: formattedResponse, isUser: false });
-                localStorage.removeItem('ticker')
-                analysisDone.value = true;
+                messages.value.push({ text: jsonToTextResponse, isUser: true});
             }, 1000);
 
         }
@@ -78,14 +96,39 @@ async function sendMessage() {
             console.error('Error sending query', error);
         } loading.value = false;
     }
-    else (messages.value.push({
-        text: "<br>This ticker has been analysed already or the ticker field is empty. If you don't see any analysis done yet, try to update the ticker field and click the analyse button and then come back to this page.",
-        isUser: false
-    }))
-    return{
-        Navigation,
-    }
+    else {
+        console.error('analysis already generated. please change the tickers and try again')
+        messages.value.push({
+        text: "analysis already generated. please change the tickers and try again",
+        isUser: false,
+        type:"error"
+    })}
 }
+const get7pPdf= async ()=>{
+    if(rawMessage.value.length>0){
+        loading.value=true; 
+        try{
+            await downloadPdfReport(rawMessage.value,tickerStore.currentTickers,"7powers")
+        }catch(err){
+            console.error('error generating report ',err)
+            messages.value.push({
+                text:err,
+                isUser:false
+            })
+        }
+        finally{
+            loading.value=false;
+        }
+    }
+    else{
+        console.error('there is no analysis. please execute the analyisis to get a report')
+        messages.value.push({
+            text:'there is no analysis. please execute the analyisis to get a report',
+            isUser:false
+        })
+    }   
+}
+
 
 
 </script>
@@ -122,13 +165,17 @@ h2 {
 }
 
 button {
-    padding: 10px 20px;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    background-color: #8bb4e0;
-    margin-bottom: 20px;
+  position: relative;
+  width: auto;
+  justify-content: left;
+  padding: 8px;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 10px;
+  background-color: #8bb4e0;
+  margin-right: 10px;
 }
 
 button:hover {
@@ -163,7 +210,7 @@ button:hover {
 
     button {
         width: auto;
-        padding: 15px 30px;
+        padding: 8px;
     }
 }
 </style>

@@ -75,7 +75,7 @@ def db_4qtr_dei_data_fetch(db,ticker,collection='QtrDeiStockData'):
     return Object
 
 
-def fetch_4qtr_data(ticker):
+def fetch_4qtr_data(ticker)->dict:
     gaapObj = db_4qtr_data_fetch(db,ticker)
     deiObj=db_4qtr_dei_data_fetch(db,ticker)
     net_income=[]
@@ -152,7 +152,7 @@ def fetch_4qtr_data(ticker):
 # Example function call
 if __name__ == "__main__":
     
-    tickers = ['ROST']  # Replace with your desired ticker
+    tickers = ['COF','AXP']  # Replace with your desired ticker
     all_data = []
     
 

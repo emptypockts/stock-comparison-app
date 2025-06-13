@@ -700,17 +700,20 @@ p {
 }
 
 button {
+  position: relative;
   width: auto;
-  justify-content: auto;
+  justify-content: left;
   padding: 8px;
   color: white;
-  border: 1px;
+  border: none;
   border-radius: 8px;
   cursor: pointer;
+  margin-top: 10px;
   background-color: #8bb4e0;
+  margin-right: 10px;
 }
 
 button:hover {
-  background-color: #468eda;
+    background-color: #468eda;
 }
 </style>

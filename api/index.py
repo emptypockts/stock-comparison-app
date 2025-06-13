@@ -1,4 +1,5 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request,send_file
+from aiReport import ai_query,compile
 from flask_cors import CORS
 import pandas as pd
 import secDBFetch
@@ -22,7 +23,7 @@ from QStockScore import pull_QStockData,pullAllStockData,RevenueGrowthQtrStockDa
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 from stockPlotDataQtr import fetch_4qtr_data
-
+from PDFReport import PDFReport
 uri = os.getenv('MONGODB_URI')
 client = MongoClient(uri, server_api=ServerApi('1'))
 db = client["test"]
@@ -197,17 +198,46 @@ def verify_token():
         return jsonify({'success': False, 'message': 'Token has expired'}), 401
     except jwt.InvalidTokenError:
         return jsonify({'success': False, 'message': 'Invalid token'}), 401
-@app.route('/api/chat', methods=['POST'])
+@app.route('/api/v1/seven_p', methods=['POST'])
 def messageBot():
     data = request.json
-    query = data.get('query')
+    tickers = data.get('tickers')
     try:
-        response = geminiChat.chatQuery(query)
+        response = geminiChat.seven_powers(tickers)
         return jsonify({
             'assistant':response,
             }),200
-    except:
-        return jsonify({'error':response}),400
+    except Exception as e:
+        return jsonify({'error':e}),400
+@app.route('/api/v1/gemini',methods=['POST'])
+def gemini_post():
+    data=request.json
+    tickers = data.get('tickers')
+    try:
+        response = compile(tickers)
+        return jsonify({
+            'assistant':response
+        }),200
+    except Exception as e:
+            return jsonify({'error':str(e)}),400
+@app.route('/api/v1/gemini/report',methods=['POST'])
+def gemini_generate_pdf():
+    data= request.json
+    text=data.get('ai_report')
+    try:
+        pdf_report = PDFReport(text)
+        pdf_buffer,today=pdf_report.generate()
+        return send_file(pdf_buffer,as_attachment=True,
+                         download_name=f"{today}.pdf",
+                         mimetype='application/pdf',
+                         ),200
+    except Exception as e:
+        return jsonify({
+            "error":str(e)
+        }),500
+
+
+
 @app.route('/api/fetchStockfromDB', methods=['GET'])
 def MongoFetchStock():
     try:
@@ -229,7 +259,6 @@ def MongoFetchStock():
             'total_symbols':total_symbols
         }), 200
     except Exception as e:
-        print(f"Error: {e}")
         return jsonify({'error': str(e)}), 400
 @app.route('/api/QStockScore', methods=['GET'])
 def QtrStockScore ():
@@ -247,13 +276,11 @@ def QtrStockScore ():
             }for item in response])
 
         except Exception as e:
-            print(f"Error: {e}")
             return jsonify({'error': str(e)}), 400
     return jsonify(stockData)
 @app.route('/api/AllQStockTrend',methods=['GET'])
 def AllQtrStockRevTrend():
     try:
-        print("trying to get parameters")
         # Get pagination parameters
         page = int(request.args.get('page', 1))
         page_size = int(request.args.get('page_size', 10))  # Number of symbols per page
@@ -273,7 +300,6 @@ def AllQtrStockRevTrend():
             'total_symbols':total_symbols
             }), 200
     except Exception as e:
-        print(f"Error: {e}")
         return jsonify({'error': str(e)}), 400   
 @app.route('/api/financial_data_qtr', methods=['GET'])
 def fetch_4qtr_financial_data():

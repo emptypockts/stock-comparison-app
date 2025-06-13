@@ -1,9 +1,10 @@
 <template>
     <div>
       <h1>Rittenhouse Framework Analysis</h1>
-      <button @click="fetchAnalysisReports" :disabled="localIsProcessing">
+      <button @click="fetchAnalysisReports" :disabled="localIsProcessing">  
         Make Rittenhouse Analysis
       </button>
+      <small> ⚠️warning it takes around 30 sec per ticker <br></small>
       <!-- Legend for Sentiment Polarity and Subjectivity -->
       <div>
         <p><strong>Sentiment Polarity:</strong> Indicates the overall sentiment of the text, ranging from -1 (very negative) to 1 (very positive).</p>
@@ -82,6 +83,7 @@
       };
   
       const fetchAnalysisReports = async () => {
+        console.log('rittenhouse tickers',props.tickers)
         loading.startLoading();
           try {
             const params = props.tickers.reduce((acc, ticker, index) => {
@@ -263,12 +265,21 @@
     }
   
 button {
+  position: relative;
+  width: auto;
+  justify-content: left;
+  padding: 8px;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 10px;
   background-color: #8bb4e0;
+  margin-right: 10px;
 }
 
 button:hover {
-  background-color: #468eda;
+    background-color: #468eda;
 }
-
 
   </style>

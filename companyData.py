@@ -14,7 +14,8 @@ def alpha_get_market_cap(symbol):
     if 'MarketCapitalization' in data:
         return int(data['MarketCapitalization'])
     else:
-       return 0
+        return int(0)
+
 
 def get_StockInfo(ticker):
     try:
@@ -28,16 +29,19 @@ def get_StockInfo(ticker):
         response = requests.get(url)
         response.raise_for_status()  # Raise an HTTPError for bad responses (4xx or 5xx)
         market_cap= alpha_get_market_cap(ticker)
-      
         jsonObj = response.json()
+        if market_cap==0:
+            market_cap=jsonObj['results']['market_cap'],
+            if isinstance(market_cap,tuple):
+                market_cap=market_cap[0]
         if 'results' not in jsonObj or not jsonObj['results']:
             raise ValueError(f"No results found for ticker: {ticker}")
         stockData = {
             'symbol': jsonObj['results']['ticker'],
             'name': jsonObj['results']['name'],
-            'share_class_shares_outstanding': jsonObj['results']['share_class_shares_outstanding'],
+            'share_class_shares_outstanding': jsonObj['results']['weighted_shares_outstanding'],
             'market_cap': market_cap,
-            'current_price': round(market_cap / jsonObj['results']['share_class_shares_outstanding'],2)
+            'current_price': round(market_cap / jsonObj['results']['weighted_shares_outstanding'],2)
         }
         return stockData
 

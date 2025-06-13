@@ -2,9 +2,9 @@
   <h1>Ticker Data 
   </h1>    
   <div class="input-container">
-    <input v-model="ticker1" placeholder="Try:intc" id="ticker 1" />
-    <input v-model="ticker2" placeholder="Try:axp" id="ticker 2" />
-    <input v-model="ticker3" placeholder="Try:nvda" id="ticker 3" />
+    <input v-model="ticker1" placeholder="@ticker1" id="ticker 1" />
+    <input v-model="ticker2" placeholder="@ticker2" id="ticker 2" />
+    <input v-model="ticker3" placeholder="@ticker3" id="ticker 3" />
   </div>
   <div>
     <button @click="verifyAndFetchCompanyData">Analyse</button>
@@ -33,6 +33,7 @@ import { useRouter } from 'vue-router'; // Import useRouter for navigation
 import debounce from 'lodash.debounce';
 import { useLoadingStore } from '@/stores/loadingStore';
 import { verifyToken } from '@/utils/auth';
+import { useTickerStore } from '@/stores/tickerStore';
 export default {
   emits: ['tickers-updated'], // Declare the custom events
   setup(props, { emit }) {
@@ -43,10 +44,11 @@ export default {
     const loading = useLoadingStore();
     const companyData = ref({});
     const router = useRouter();
-  
+    const tickerStore=useTickerStore()
     const fetchCompanyData = debounce(async () => {
 
       const tickers = [ticker1, ticker2, ticker3].map(tickerRef => tickerRef.value).filter(Boolean);
+      tickerStore.updateTickers(tickers)
       if (tickers.length === 0) {
         errorMessage.value = "Please enter at least one stock ticker."
         console.log("error is ", errorMessage.value)
@@ -54,8 +56,6 @@ export default {
       }
       errorMessage.value = ""
 
-      
-      console.log("tickers:", tickers)
       loading.startLoading();
       try {
         const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/company_data`, {
@@ -79,11 +79,11 @@ export default {
           }
         }
 
-
+        console.log('ticker data',tickers)
         emit('tickers-updated', tickers);
+        console.log('emitting new ticker list',tickers)
       } catch (error) {
-        errorMessage.value = "One or more ticker symbols are invalid. Please check your input."
-        console.log("error is ", errorMessage.value)
+        console.log("error is ", error)
         return errorMessage;
       }
 

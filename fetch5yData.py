@@ -132,4 +132,4 @@ if __name__ == "__main__":
             all_data.append(None)
 
     combined_data = pd.concat(all_data,ignore_index=False)
-    print(combined_data)
+    print(combined_data.to_string(index=False))

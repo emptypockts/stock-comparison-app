@@ -23,7 +23,7 @@ async function gotoTable(){
     }
     else{
     console.log("routing to the Stock Chart")
-    router.push('/stockchart');
+    router.push('/dashboard/stockchart');
     }
 }
 </script>

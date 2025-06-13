@@ -53,7 +53,7 @@ def convert_to_usd(amount, currency):
     return stock_price_USD
 
 def calculate_intrinsic_value(ticker, growth_rate, discount_rate, terminal_growth_rate, projection_years):
-    print(f"calculating value for  {ticker, growth_rate, discount_rate, terminal_growth_rate, projection_years}")
+    # print(f"calculating value for  {ticker, growth_rate, discount_rate, terminal_growth_rate, projection_years}")
     growth_rate /= 100.0
     discount_rate /= 100.0
     terminal_growth_rate /= 100.0
@@ -77,7 +77,7 @@ def calculate_intrinsic_value(ticker, growth_rate, discount_rate, terminal_growt
 
 
 def calculate_grahams_formula_2(ticker, growth_rate=5.0):
-    print(f"calculating grahams value 2nd method for  {ticker, growth_rate}")
+    # print(f"calculating grahams value 2nd method for  {ticker, growth_rate}")
     growth_rate /= 100.0
     stock = yf.Ticker(ticker)
     eps = stock.info['trailingEps']
@@ -90,7 +90,7 @@ def calculate_grahams_formula_2(ticker, growth_rate=5.0):
     return graham_value
 
 def calculate_grahams_formula(ticker,growth_rate=5.0):
-    print(f"calculating grahams value for  {ticker, growth_rate}")
+    # print(f"calculating grahams value for  {ticker, growth_rate}")
     stock = yf.Ticker(ticker)
     eps = stock.info['trailingEps']
     
@@ -183,7 +183,7 @@ def get_company_name(ticker):
         return stock.info['longName']
 
 
-def getAllIntrinsicValues(ticker, growth_rate=5.0, discount_rate=10.0, terminal_growth_rate=2.0, projection_years=5):
+def getAllIntrinsicValues(ticker, growth_rate=5.0, discount_rate=10.0, terminal_growth_rate=2.0, projection_years=5)->list:
     intrinsic_values = []
     if not ticker:
         logging.warning(f"Ticker '{ticker}' is invalid or empty")
@@ -250,17 +250,11 @@ def getAllIntrinsicValues(ticker, growth_rate=5.0, discount_rate=10.0, terminal_
 # Example usage
 if __name__ == "__main__":
 
-    ticker_symbols = ['mov']
-    data=[]
-    for ticker in ticker_symbols:
-        result = getAllIntrinsicValues(ticker,growth_rate=5.0, discount_rate=10.0, terminal_growth_rate=2.0, projection_years=5)
-        if result is None:
-            continue
-        data.extend(result)  # Use extend instead of append to avoid nested lists
-
-    if data:
-        df = pd.DataFrame(data)
-        print(df.T)
-    else:
-        print("No valid data to display.")
-
+    tickers = ['pltr','axp']
+    data={
+        ticker:{
+            "data": getAllIntrinsicValues(ticker,growth_rate=5.0, discount_rate=10.0, terminal_growth_rate=2.0, projection_years=5)
+        
+        }for ticker in tickers
+    }
+    print(data)
