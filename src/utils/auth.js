@@ -1,9 +1,9 @@
 import axios from "axios";
 export const verifyToken = async () => {
-    console.log('verify token called')
+    
       const token = localStorage.getItem('token');
       if (!token) {
-        console.log('not a valid token')
+        console.error('not a valid token')
         return false;
       }
       try {
@@ -12,7 +12,7 @@ export const verifyToken = async () => {
             'token': token,
           },
         });
-        console.log('valid token',response.data.success)
+        
         return response.data.success;
         
       } catch (error) {

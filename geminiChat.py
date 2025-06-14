@@ -39,7 +39,6 @@ def seven_powers(tickers)->str:
     headers = {"Content-Type": "application/json"}
     response = requests.request("POST", url, json=payload, headers=headers, params=querystring)
     response =response.json()
-    print ("API Response ",response["candidates"][0]["content"]["parts"][0]["text"])
     r1 = response["candidates"][0]["content"]["parts"][0]["text"]
     #validate json object
     json_validator_agent=get_json_validator()

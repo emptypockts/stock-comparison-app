@@ -5,9 +5,8 @@ from datetime import datetime
 import re
 import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-print(BASE_DIR)
 FONT_PATH = os.path.join(BASE_DIR,'ai_reports','DejaVuSans.ttf')
-print(FONT_PATH)
+
 
 class PDFReport(FPDF):
     def __init__(self,ai_report):

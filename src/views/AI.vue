@@ -4,7 +4,7 @@
             <h1>7power Analysis Framework from Helmer Hamilton.</h1>
         </div>
         <div>
-            <CompanyData/>
+            <CompanyData />
         </div>
 
         <div class="chat-messages">
@@ -12,11 +12,17 @@
                 v-html="message.text">
             </div>
         </div>
-        <button @click="sendMessage">7powers</button>
+        <button @click="get_seven_p_analysis">7powers</button>
         <small> ⚠️warning it takes around 30 sec per ticker <br></small>
+
         <button @click="get7pPdf">get pdf</button>
         <div>
-            <Navigation/>
+            <Navigation />
+        </div>
+        <div v-if="tickerHistory.size > 0">
+            <small>
+                <strong>ticker history:</strong> {{ [...tickerHistory].join(',') }}
+            </small>
         </div>
         <div v-if="loading" class="loading-overlay">
             <div class="loading-throbber">
@@ -35,106 +41,126 @@ import axios from 'axios';
 import { useTickerStore } from '@/stores/tickerStore';
 import CompanyData from './CompanyData.vue';
 import { downloadPdfReport } from '@/utils/downloadReport';
-downloadPdfReport
+
 const loading = ref(false);
 const rawMessage = ref('');
-
-const tickerStore=useTickerStore();
-
-function cleanAndParseJson(rawString){
-    const cleaned = rawString
-    .replace(/^```json\s*/i,'')
-    .replace(/```$/,'')
-    .trim();
-    try{
-        return JSON.parse(cleaned)
-    }catch(err){
-        console.error('invalid json: ',err);
-        return null;
-    }
-}
-
+const tickerHistory = ref(new Set())
+const tickerStore = useTickerStore();
+const allowedTickers = ref([]);
+const tickers = ref([]);
 
 const messages = ref([
     { text: 'I will conduct the 7power analysis for this ticker. If you want analysis for another, ticker just change the first ticker field in the main page. Hit send to start. ', isUser: false }
 ]);
 
-async function sendMessage() {
-    const tickers =tickerStore.currentTickers
-    
-    if ( tickers.length>0&& !rawMessage.value) {
-        try {
+async function get_seven_p_analysis() {
+    tickers.value = tickerStore.currentTickers
 
-            loading.value = true 
-            const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/seven_p`, {
-                tickers: tickers
-            });
-            let formattedResponse = response.data['assistant'];
-                rawMessage.value=formattedResponse;
-            setTimeout(() => {
-                
-                const jsonToTextResponse= formattedResponse.map(section=>
-                    {
-                        switch(section.type){
-                            case "title":
-                                return `<h2 class="text-xl font-bold mb-2">${section.content}</h2>`;
-                            case "paragraph":
-                                return `<p class="text-base mb 3">${section.content}</p>`;
-                            case "bullets":
-                                return `<ul class="mb-3">${section.content.map(e=>`<li>${e}</li>`).join('').trim()}</ul>`
-                            default:
-                                return '';
-                        }
-                    }
-                ).join('');
+    if (tickers.length === 0) {
 
-                messages.value.push({ text: jsonToTextResponse, isUser: true});
-            }, 1000);
+        messages.value.push({
+            text: 'ticker analysis is empty. there must be an analysis and 7powers analysis generated first',
+            isUser: false
+        })
 
-        }
-        catch (error) {
-            console.error('Error sending query', error);
-        } loading.value = false;
     }
     else {
-        console.error('analysis already generated. please change the tickers and try again')
-        messages.value.push({
-        text: "analysis already generated. please change the tickers and try again",
-        isUser: false,
-        type:"error"
-    })}
-}
-const get7pPdf= async ()=>{
-    if(rawMessage.value.length>0){
-        loading.value=true; 
-        try{
-            await downloadPdfReport(rawMessage.value,tickerStore.currentTickers,"7powers")
-        }catch(err){
-            console.error('error generating report ',err)
-            messages.value.push({
-                text:err,
-                isUser:false
-            })
+        if (tickers.value.length > 0) {
+
+            allowedTickers.value = tickers.value.filter(e => !tickerHistory.value.has(e.toLowerCase()))
+
+            if (allowedTickers.value.length > 0) {
+                try {
+
+                    loading.value = true
+                    const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/seven_p`, {
+                        tickers: allowedTickers.value
+                    });
+                    let formattedResponse = response.data['assistant'];
+                    rawMessage.value = formattedResponse;
+                    setTimeout(() => {
+
+                        const jsonToTextResponse = formattedResponse.map(section => {
+                            switch (section.type) {
+                                case "title":
+                                    return `<h2 class="text-xl font-bold mb-2">${section.content}</h2>`;
+                                case "paragraph":
+                                    return `<p class="text-base mb 3">${section.content}</p>`;
+                                case "bullets":
+                                    return `<ul class="mb-3">${section.content.map(e => `<li>${e}</li>`).join('').trim()}</ul>`
+                                default:
+                                    return '';
+                            }
+                        }
+                        ).join('');
+
+                        messages.value.push({ text: jsonToTextResponse, isUser: true });
+                    }, 1000);
+
+                }
+                catch (error) {
+                    console.error('Error sending query', error);
+                }
+                finally {
+                    loading.value = false;
+                    tickers.value.forEach(t => tickerHistory.value.add(t.toLowerCase()));
+
+                }
+            }
+        else{
+                        messages.value.push({
+                    text: "ticker analysis is empty or these tickers were already analysed in this session. analyse the ticker and then generate the 7 power report again or go to the main page and return to this page to get a new report",
+                    isUser: false,
+                    type: "error"
+                })
         }
-        finally{
-            loading.value=false;
+        }
+        else {
+            if (!rawMessage.value) {
+                messages.value.push({
+                    text: "analysis already done for this ticker, go back to the main page and return to this section to get a new analysis",
+                    isUser: false,
+                    type: "error"
+                })
+            }
+            else {
+                messages.value.push({
+                    text: "analysis already done for this ticker, go back to the main page and return to this section to get a new analysis",
+                    isUser: false,
+                    type: "error"
+                })
+            }
         }
     }
-    else{
-        console.error('there is no analysis. please execute the analyisis to get a report')
+}
+const get7pPdf = async () => {
+    if (rawMessage.value.length > 0) {
+        loading.value = true;
+        try {
+            await downloadPdfReport(rawMessage.value, tickerStore.currentTickers, "7powers")
+        } catch (err) {
+            console.error('error generating report ', err)
+            messages.value.push({
+                text: err,
+                isUser: false
+            })
+        }
+        finally {
+            loading.value = false;
+        }
+    }
+    else {
         messages.value.push({
-            text:'there is no analysis. please execute the analyisis to get a report',
-            isUser:false
+            text: 'ticker analysis is empty. there must be an analysis and 7powers analysis generated first',
+            isUser: false
         })
-    }   
+    }
 }
 
 
 
 </script>
 <style scoped>
-
-
 h1 {
     text-align: center;
     font-size: 2em;
@@ -165,17 +191,17 @@ h2 {
 }
 
 button {
-  position: relative;
-  width: auto;
-  justify-content: left;
-  padding: 8px;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-top: 10px;
-  background-color: #8bb4e0;
-  margin-right: 10px;
+    position: relative;
+    width: auto;
+    justify-content: left;
+    padding: 8px;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 10px;
+    background-color: #8bb4e0;
+    margin-right: 10px;
 }
 
 button:hover {

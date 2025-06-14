@@ -83,7 +83,7 @@
       };
   
       const fetchAnalysisReports = async () => {
-        console.log('rittenhouse tickers',props.tickers)
+        
         loading.startLoading();
           try {
             const params = props.tickers.reduce((acc, ticker, index) => {
@@ -102,7 +102,7 @@
             console.error('Error fetching Rittenhouse analysis reports:', error);
           } finally {
             loading.stopLoading();
-            console.log("Rittenhouse Analysis completed, turning off the flag");
+            
           }
         
       };

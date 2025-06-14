@@ -350,7 +350,7 @@ export default {
               y: parseFloat(price) // Ensure the price is a float
             }))
           }
-        }); console.log("this is the price object last 4 qtr", this.datePricePairs)
+        }); 
 
         this.stockPriceData = Object.keys(stockPriceResponse.data).map(ticker => {
           const datePricePairs = stockPriceResponse.data[ticker];
@@ -361,8 +361,8 @@ export default {
               y: parseFloat(price) // Ensure the price is a float
             }))
           }
-        }); console.log("this is the price object", this.datePricePairs)
-        console.log("this is how the financial data object looks like:", this.financialData)
+        }); 
+        
 
       } catch (error) {
         this.errorMessage = error.response ? error.response.data : error.message; // Update here
@@ -378,7 +378,7 @@ export default {
         const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{x:'1900-01-01',y:0};
         const assets = financialData["Assets"] ||{x:'1900-01-01',y:0};
         const totalRevenue = financialData["total_revenue"] ||{x:'1900-01-01',y:0};
-        console.log("revenue Qtr function",financialData)
+        
         return [
           {
             name: `${ticker} Total Revenue`,

@@ -97,7 +97,7 @@ export default {
         });
 
         if (response.data.success) {
-          console.log("register success ")
+          
           this.successMessage = 'User created successfully! You will be redirected to the login page.';
           this.errorMessage = '';
           this.loading = false;

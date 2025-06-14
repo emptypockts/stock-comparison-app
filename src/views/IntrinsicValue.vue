@@ -156,7 +156,7 @@ export default {
         });
 
         intrinsicData.value = response.data;
-        console.log('Intrinsic Value Stock Data: ', response.data);
+        
       } catch (error) {
         console.error('Error fetching intrinsic value data:', error);
         errorMessage.value = `Failed to fetch intrinsic value data: ${error.response ? error.response.data : error.message}`;

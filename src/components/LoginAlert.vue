@@ -40,7 +40,6 @@ export default {
     const dismissAlert = () => {
 
       localStorage.setItem('loginAlert', 'false')
-      console.log("loginAlert Status set to :", showAlert.value)
       showAlert.value = false
     };
 

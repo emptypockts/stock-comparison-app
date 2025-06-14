@@ -130,7 +130,7 @@ export default {
     const sortKey = ref(''); 
     const sortOrder = ref(1); 
     const sortTable = (key) => { if (sortKey.value === key) { 
-      console.log("Sorting")
+      
       sortOrder.value = -sortOrder.value; 
       // Reverse order if same column is sorted again 
       } 
@@ -161,8 +161,7 @@ export default {
     const paginatedRecords = computed(() => {
       const start = (currentPage.value - 1) * props.itemsPerPage;
       const end = start + props.itemsPerPage;
-      console.log("Paginated Records Start:",start)
-      console.log("Paginated Records End:",end)
+      
       return sortedRecords.value.slice(0, 100); //Start and end is constant to 100 records 
     });
 
@@ -182,17 +181,14 @@ export default {
         const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/fetchStockfromDB`, {
           params: { page, page_size: props.itemsPerPage },
         });
-        console.log("Pages to query: ", page)
-        console.log("Page size of query: ", props.itemsPerPage)
+        
 
         // Assign fetched data to stocks
         if (response.data.data && typeof response.data.data === 'object') {
           stocks.value = response.data.data;
           totalSymbols.value = response.data.total_symbols;
           totalPages.value=Math.ceil(totalSymbols.value/100)
-          console.log("Total Pages:",totalPages.value)
-          console.log("This is the response data :", response.data)
-          console.log("totalSymbols :", totalSymbols.value)
+          
           // Flatten the structure
           flatRecords.value = Object.entries(stocks.value).flatMap(([symbol, records]) => {
             return records.map(record => ({ symbol, ...record }));
@@ -217,7 +213,7 @@ export default {
       if (currentPage.value > 1) currentPage.value--;
     };
     const goToPage = () => {
-      console.log("Click go to page ",enteredPage.value)
+      
       if (enteredPage.value >= 1 && enteredPage.value <= totalPages.value) {
         currentPage.value = enteredPage.value;
       } else {
@@ -226,7 +222,7 @@ export default {
     };
 
     onMounted(() => {
-      console.log('hello from stock charts')
+      
       fetchData();
 
 

@@ -17,7 +17,6 @@ export default {
         const router = useRouter();
         function logout() {
             localStorage.clear()
-            console.log("Logout successful, routing to the login app");
             // Redirect to login page
             router.push('/');
         }

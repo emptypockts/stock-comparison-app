@@ -86,7 +86,7 @@ export default {
         const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/economy_index`);
 
         // Log the structure to confirm it's correct
-        console.log("API Response:", response.data);
+        
 
         this.indexList = Object.keys(response.data).map(indexID => {
           const observations = response.data[indexID];
@@ -106,7 +106,7 @@ export default {
           };
         });
 
-        console.log("Processed Index List:", this.indexList);
+        
       } catch (error) {
         this.errorMessage = error.response ? error.response.data : error.message;
         console.error('Error fetching economic data:', this.errorMessage);

@@ -51,7 +51,6 @@ export default {
       tickerStore.updateTickers(tickers)
       if (tickers.length === 0) {
         errorMessage.value = "Please enter at least one stock ticker."
-        console.log("error is ", errorMessage.value)
         return errorMessage;
       }
       errorMessage.value = ""
@@ -67,7 +66,7 @@ export default {
 
 
         companyData.value = response.data;
-        console.log("Company Data Object:", companyData.value)
+        
         if (!companyData.value || Object.keys(companyData.value).length === 0) {
           errorMessage.value = 'No data found for the entered tickers.';
         } else {
@@ -79,11 +78,11 @@ export default {
           }
         }
 
-        console.log('ticker data',tickers)
+        
         emit('tickers-updated', tickers);
-        console.log('emitting new ticker list',tickers)
+        
       } catch (error) {
-        console.log("error is ", error)
+        console.error("error trying to fetch company data", error)
         return errorMessage;
       }
 
@@ -96,14 +95,14 @@ export default {
     // Wrapper function to verify the token before fetching company names
     const verifyAndFetchCompanyData = async () => {
       const isTokenValid = await verifyToken();
-      console.log("Is token valid?: ", isTokenValid)
+      
       if (isTokenValid) {
         fetchCompanyData();
       } else {
-        console.log("Pushing to login")
+        
         localStorage.clear()
         router.push('/').then(() => {
-          console.log('Navigation successful');
+          
         }).catch((error) => {
           console.error('Navigation failed:', error);
         });

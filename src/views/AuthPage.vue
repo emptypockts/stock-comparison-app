@@ -63,13 +63,13 @@ export default {
             }
           });
 
-        console.log("Login Response :", response.data.success)
+        
 
         if (response.data.success) {
           // Store JWT in localStorage
           localStorage.setItem('token', response.data.token);
           localStorage.setItem('tokenExpiration', response.data.expiresAt);
-          console.log("Login successful, routing to the main app")
+          
           // Redirect to the main app
           router.push('/dashboard');
         } else {
@@ -77,7 +77,7 @@ export default {
         }
 
       } catch (error) {
-        console.log(error);  // Debugging step
+        console.error('error decoding password: ',error)
         if (error.response && error.response.status === 404) {
           // Show invalid username or password message
           errorMessage.value = 'Invalid username or password.';
@@ -91,7 +91,7 @@ export default {
     };
     const goToRegister = () => {
       // Redirect to the registration page
-      console.log("register request")
+      
       router.push('/register');
     };
 
