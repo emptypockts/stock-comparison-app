@@ -155,17 +155,15 @@ def get_full_report_agent(tickers)->str:
     ## Conclusion
     [Comparison and wrap-up.]
 
-    
-    the format of the report has to be a json object with the following validated schema:
-    
-        "type": "title",
-        "content": "string"
-    
-        "type": "paragraph",
-        "content": "string"
-    
-        "type": "bullets",
-        "content": ["bullet1", "bullet2", "... bulletn"]
+    ✅ The output MUST be a **pure JSON array** (no wrapper object, no "report" field, etc.), where each element matches **exactly one** of the following formats:
+
+    1. {{ "type": "title", "content": "string" }}
+    2. {{ "type": "paragraph", "content": "string" }}
+    3. {{ "type": "bullets", "content": ["bullet1", "bullet2", ..., "bulletn"] }}
+
+    Do NOT include any outer object like {{ "report": [...] }}. Only return the array.
+
+    Ensure the JSON is valid and ready for parsing.
     """
 def get_json_validator():
     return """
@@ -309,6 +307,6 @@ def compile(tickers)->str:
     except Exception as e:
         return e
 if __name__ == "__main__":
-    tickers = ["nvda", "meta"]
+    tickers = ["intc"]
 
     print(compile(tickers))
