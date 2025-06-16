@@ -4,7 +4,7 @@
       <div v-if="isLoading" class="loading-overlay">
     <div class="loading-throbber">
       <div class="spinner">
-        .................
+        ...
       </div>
     </div>
     </div>
