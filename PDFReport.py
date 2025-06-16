@@ -56,6 +56,7 @@ class PDFReport(FPDF):
         self.image(logo_path,x=x_pos,w=logo_width)
 
     def generate(self):
+      print('generating report now')
       if isinstance(self.ai_report, str):
         try:
           ai_json_report= json.loads(self.ai_report)
@@ -66,6 +67,7 @@ class PDFReport(FPDF):
           except Exception as e:
             raise ValueError(f"error trying to parse json or python structure {e}")           
       else:
+         print('proceeding now')
          ai_json_report=self.ai_report
       self.add_page()
       self.set_auto_page_break(auto=True,margin=25)

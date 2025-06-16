@@ -232,6 +232,7 @@ def gemini_generate_pdf():
                          mimetype='application/pdf',
                          ),200
     except Exception as e:
+        print(str(e))
         return jsonify({
             "error":str(e)
         }),500

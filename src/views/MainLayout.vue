@@ -65,7 +65,7 @@ const get_report = async () => {
                 })
                 const rawMessage = response.data['assistant'];
 
-
+                console.log('calling pdf with ',rawMessage)
                 await downloadPdfReport(rawMessage, tickers.value, "overall")
 
 
