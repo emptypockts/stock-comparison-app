@@ -5,7 +5,6 @@
     <StockFinancialCharts :tickers="tickers" />
     <IntrinsicValue :tickers="tickers" />
     <RittenhouseAnalysis Analyis :tickers="tickers" />
-
     <Navigation />
     <CookieBanner />
     <LoginAlert />
