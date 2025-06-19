@@ -293,9 +293,12 @@ def compile(tickers)->str:
         r5 = ai_query(company_intrinsic_value_agent,ai5)
 
         #final report
-        full_report_agent =get_full_report_agent(tickers) 
-        r6 =get_full_report(full_report_agent,r1,r2,r3,r4,r5)
-
+        try:
+            full_report_agent =get_full_report_agent(tickers) 
+            r6 =get_full_report(full_report_agent,r1,r2,r3,r4,r5)
+        except Exception as e:
+            print(str(e))
+            raise(f"error getting full report is {str(e)}")
         #validate json object
         json_validator_agent=get_json_validator()
         response = validate_json(json_validator_agent,r6.replace("```","").replace("json","").strip().lower())
