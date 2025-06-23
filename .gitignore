@@ -6,10 +6,6 @@ __pycache__
 .vercel
 .notes
 sec_filings/
-<<<<<<< HEAD
-/venv/
-ai_reports/
-=======
 ai_reports/
 /venv/
->>>>>>> DAH-131-ai-report
+flask_session/
