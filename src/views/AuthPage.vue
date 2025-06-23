@@ -59,7 +59,7 @@ export default {
         },
           {
             headers: {
-              'Content-Type': 'application/json' // Ensure Content-Type is set to application/json
+              'Content-Type': 'application/json' 
             }
           });
 
@@ -71,7 +71,7 @@ export default {
           localStorage.setItem('tokenExpiration', response.data.expiresAt);
           
           // Redirect to the main app
-          router.push('/dashboard');
+          router.push('/');
         } else {
           errorMessage.value = 'Invalid username or password.';
         }

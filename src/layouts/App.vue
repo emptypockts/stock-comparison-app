@@ -12,10 +12,7 @@
     </div>
 </template>
 
-<script setup>
-import CookieBanner from "@/components/CookieBanner.vue";
-import LoginAlert from "@/components/LoginAlert.vue";
-import Navigation from "@/components/Navigation.vue";   
+<script setup>   
 import { useLoadingStore } from "@/stores/loadingStore"; 
 import { computed,ref } from "vue";
 const load_store=useLoadingStore()

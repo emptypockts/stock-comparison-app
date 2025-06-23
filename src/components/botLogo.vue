@@ -16,7 +16,7 @@ import { useRouter } from 'vue-router';
 
 const router = useRouter();
 async function  botTalk(){
-    router.push('/dashboard/ai');
+    router.push('/ai');
 }
 </script>
 

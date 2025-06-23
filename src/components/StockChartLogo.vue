@@ -16,16 +16,10 @@ import { useRouter } from 'vue-router';
 import { verifyToken } from '@/utils/auth';
 const router = useRouter();
 async function gotoTable(){
-        const isAuthenticated= await verifyToken();
-    if (!isAuthenticated){
-        localStorage.clear();
-        router.push('/');
+       
+    router.push('/stockchart');
     }
-    else{
-    
-    router.push('/dashboard/stockchart');
-    }
-}
+
 </script>
 
 <style scoped>

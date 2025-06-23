@@ -114,7 +114,7 @@ export default {
     },
     redirectToLogin() {
       this.showSuccessModal = false; // Hide the modal
-      this.router.push('/'); // Redirect to the login page
+      this.router.push('/login'); // Redirect to the login page
     }
   }
 };

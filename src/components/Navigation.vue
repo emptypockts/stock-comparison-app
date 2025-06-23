@@ -1,5 +1,5 @@
 <template>
-    <Logout />
+    <Logout/>
     <BotLogo />
     <economyIdxLogo />
     <GoBack />

@@ -4,9 +4,8 @@ import RegisterUser from '@/views/RegisterUser.vue';
 import AI from '@/views/AI.vue';
 import EconomyStats from '@/views/EconomyStats.vue';
 import StockChart from '@/views/StockChart.vue';
-import MainLayout from '@/views/MainLayout.vue';
 import QtrStockTrend from '@/views/QtrStockTrend.vue';
-import { verifyToken } from '@/utils/auth';
+import { verifyCfToken } from '@/utils/auth';
 import App from '@/layouts/App.vue';
 import { useTickerStore } from '@/stores/tickerStore';
 
@@ -14,12 +13,12 @@ const router = createRouter({
   history:createWebHistory(),
   routes:[
   {
-    path: '/',
+    path: '/login',
     name: 'Auth',
     component: AuthPage,
   },
   {
-    path: '/dashboard',
+    path: '/',
     component: App,
     children:[
         {
@@ -44,7 +43,7 @@ const router = createRouter({
   },
   {
     path:'',
-    name:'/dashboard',
+    name:'/',
     component:()=> import('@/views/MainLayout.vue')
   }
     ]
@@ -64,12 +63,16 @@ const router = createRouter({
 
 router.beforeEach(async (to, from) => {
   const tickerStore=useTickerStore()
-  const token = localStorage.getItem('token');
-  const isAuthenticated = await verifyToken(token);
+  const isAuthenticated = await verifyCfToken();
   if (to.name !== 'Auth' && to.name !== 'RegisterUser'&&!isAuthenticated){ 
     return {name:'Auth'}
 
     }
+  if (to.name==='Auth' && isAuthenticated){
+    return {path:'/'}
+  }
+    
+
     tickerStore.deleteTickers();
     return true;
 
