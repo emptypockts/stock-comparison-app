@@ -1,6 +1,8 @@
-from flask import Flask, jsonify, request,send_file
-from aiReport import ai_query,compile
+from flask import Flask, jsonify,session,send_file,render_template,request,redirect,url_for
+import jwt.algorithms
+from aiReport import ai_query, compile
 from flask_cors import CORS
+from flask_session import Session
 import pandas as pd
 import secDBFetch
 import rittenhouse
@@ -15,6 +17,7 @@ import os
 import bcrypt
 import jwt
 import datetime
+import app_constants
 from authLogin import loginStep
 from authRegister import registerStep
 import EconomyStats
@@ -24,14 +27,32 @@ from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 from stockPlotDataQtr import fetch_4qtr_data
 from PDFReport import PDFReport
+import requests
+load_dotenv()
+CF_CERT_URL = f"https://{os.getenv('CF_URL_CDN_CGI_CERTS')}/cdn-cgi/access/certs"
+CERT_KYS = requests.get(CF_CERT_URL).json()
+CF_AUDIENCE_ID = os.getenv('CF_AUD_ID')
 uri = os.getenv('MONGODB_URI')
 client = MongoClient(uri, server_api=ServerApi('1'))
 db = client["test"]
-load_dotenv()
 app = Flask(__name__)
+app.config.from_object(app_constants)
 CORS(app)
+Session(app)
 DOWNLOAD_DIR = 'sec_filings'
 #fetch Economy Indicators
+def verify_cf_token(token):
+    headers = jwt.get_unverified_header(token)
+    key = next(k for k in CERT_KYS["keys"] if k["kid"]==headers["kid"])
+    public_key = jwt.algorithms.RSAAlgorithm.from_jwk(key)
+    return jwt.decode(
+        token,
+        public_key,
+        algorithms=["RS256"],
+        audience=CF_AUDIENCE_ID
+    )
+
+
 @app.route('/api/economy_index', methods=['GET'])
 def fetch_economy_index():
     all_data = {}
@@ -76,7 +97,6 @@ def fetch_5y_financial_data():
             data = fetch5yData.fetch_5y_data(ticker)
             all_data.append(data)
         except Exception as e:
-            print(f"Cannot fetch stock {ticker}: {e}")
             all_data.append(None)
     if not all_data:
         return jsonify({"error": "Failed to fetch any data"}), 500
@@ -161,7 +181,6 @@ def login():
     if bcrypt.checkpw(password.encode('utf-8'), stored_hashed_password):
         # If valid, create and return JWT token
         expiration_time =datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes= 30)
-        print(expiration_time)
         token = jwt.encode({
             'user_id': str(user['_id']),
             'exp': expiration_time
@@ -232,13 +251,9 @@ def gemini_generate_pdf():
                          mimetype='application/pdf',
                          ),200
     except Exception as e:
-        print(str(e))
         return jsonify({
             "error":str(e)
         }),500
-
-
-
 @app.route('/api/fetchStockfromDB', methods=['GET'])
 def MongoFetchStock():
     try:
@@ -317,5 +332,33 @@ def fetch_4qtr_financial_data():
     if not all_data:
         return jsonify({"error": "Failed to fetch any qtr data"}), 500
     return jsonify(all_data),200
+@app.route('/api/cfToken',methods=['GET'])
+def get_a_token():
+
+    print ('this is the cf-audience id\n',CF_AUDIENCE_ID)
+    print('this is the certificate fetch\n',CERT_KYS)
+    token = request.headers.get("Cf-Access-Jwt-Assertion") or request.cookies.get("CF_Authorization")
+    print('this is the token',token)
+    if not token:
+        return jsonify({
+            "error":"missing token"
+        }),401
+    try:
+        decoded = verify_cf_token(token)
+        return jsonify({
+            "email":decoded.get("email"),
+            "sub":decoded.get("sub"),
+            "name":decoded.get("name"),
+            "aud":decoded.get("aud"),
+            "iss":decoded.get("iss")
+
+        }),200
+    except Exception as e:
+        return jsonify({
+            "error":f"error decoding token: {e}"
+        }),401
+    
+
+
 if __name__ == '__main__':
     app.run(debug=True)
