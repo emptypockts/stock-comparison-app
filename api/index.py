@@ -1,5 +1,6 @@
 from flask import Flask, jsonify,session,send_file,render_template,request,redirect,url_for
 import jwt.algorithms
+from datetime import datetime
 from aiReport import ai_query, compile
 from flask_cors import CORS
 from flask_session import Session
@@ -40,17 +41,6 @@ app.config.from_object(app_constants)
 CORS(app)
 Session(app)
 DOWNLOAD_DIR = 'sec_filings'
-#fetch Economy Indicators
-def verify_cf_token(token):
-    headers = jwt.get_unverified_header(token)
-    key = next(k for k in CERT_KYS["keys"] if k["kid"]==headers["kid"])
-    public_key = jwt.algorithms.RSAAlgorithm.from_jwk(key)
-    return jwt.decode(
-        token,
-        public_key,
-        algorithms=["RS256"],
-        audience=CF_AUDIENCE_ID
-    )
 
 
 @app.route('/api/economy_index', methods=['GET'])
@@ -209,7 +199,6 @@ def verify_token():
     token = request.headers.get('token')
     if not token:
         return jsonify({'success': False, 'message': 'Token is missing'}), 401
-
     try:
         decoded = jwt.decode(token, os.getenv('JWT_SECRET'), algorithms=['HS256'])
         return jsonify({'success': True, 'user_id': decoded['user_id'],"expire":datetime.datetime.fromtimestamp(decoded['exp'],tz=datetime.timezone.utc).strftime('%a, %d %b %Y %H:%M:%S UTC')}), 200
@@ -332,33 +321,35 @@ def fetch_4qtr_financial_data():
     if not all_data:
         return jsonify({"error": "Failed to fetch any qtr data"}), 500
     return jsonify(all_data),200
-@app.route('/api/cfToken',methods=['GET'])
+@app.route('/api/v1/cfToken',methods=['GET'])
 def get_a_token():
-
-    print ('this is the cf-audience id\n',CF_AUDIENCE_ID)
-    print('this is the certificate fetch\n',CERT_KYS)
     token = request.headers.get("Cf-Access-Jwt-Assertion") or request.cookies.get("CF_Authorization")
-    print('this is the token',token)
     if not token:
         return jsonify({
             "error":"missing token"
         }),401
+    headers = jwt.get_unverified_header(token)
+    key = next(k for k in CERT_KYS["keys"] if k["kid"]==headers["kid"])
+    public_key = jwt.algorithms.RSAAlgorithm.from_jwk(key)
     try:
-        decoded = verify_cf_token(token)
+        decoded = jwt.decode(
+        token,
+        public_key,
+        algorithms=["RS256"],
+        audience=CF_AUDIENCE_ID)
         return jsonify({
+            "success":True,
             "email":decoded.get("email"),
             "sub":decoded.get("sub"),
-            "name":decoded.get("name"),
+            "name":decoded.get("name",'noName'),
             "aud":decoded.get("aud"),
-            "iss":decoded.get("iss")
-
+            "iss":decoded.get("iss"),
+            "exp":datetime.datetime.fromtimestamp(decoded.get('exp'))
         }),200
-    except Exception as e:
-        return jsonify({
-            "error":f"error decoding token: {e}"
-        }),401
+    except jwt.ExpiredSignatureError:
+        return jsonify({"success": False, "message": "Token has expired"}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({"success": False, "message": "Invalid token"}), 401
     
-
-
 if __name__ == '__main__':
     app.run(debug=True)

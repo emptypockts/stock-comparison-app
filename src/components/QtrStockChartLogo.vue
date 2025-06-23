@@ -16,14 +16,8 @@ import { useRouter } from 'vue-router';
 import { verifyToken } from '@/utils/auth';
 const router = useRouter();
 async function gotoTable(){
-    const isAuthenticated= await verifyToken();
-    if (!isAuthenticated){
-        localStorage.clear();
-        router.push('/');
-    }
-    else{
-    router.push('/dashboard/qtrtrend');
-    }
+    router.push('/qtrtrend');
+
 }
 </script>
 

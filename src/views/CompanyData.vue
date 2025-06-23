@@ -32,7 +32,7 @@ import axios from 'axios';
 import { useRouter } from 'vue-router'; // Import useRouter for navigation
 import debounce from 'lodash.debounce';
 import { useLoadingStore } from '@/stores/loadingStore';
-import { verifyToken } from '@/utils/auth';
+import { verifyCfToken, verifyToken } from '@/utils/auth';
 import { useTickerStore } from '@/stores/tickerStore';
 export default {
   emits: ['tickers-updated'], // Declare the custom events
@@ -94,18 +94,10 @@ export default {
     },600);
     // Wrapper function to verify the token before fetching company names
     const verifyAndFetchCompanyData = async () => {
-      const isTokenValid = await verifyToken();
+      const isTokenValid = await verifyCfToken();
       
       if (isTokenValid) {
         fetchCompanyData();
-      } else {
-        
-        localStorage.clear()
-        router.push('/').then(() => {
-          
-        }).catch((error) => {
-          console.error('Navigation failed:', error);
-        });
       }
     };
     return {

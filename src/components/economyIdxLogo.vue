@@ -16,14 +16,8 @@ import { verifyToken } from '@/utils/auth';
 const router = useRouter();
 
 async function goToIdx(){
-        const isAuthenticated= await verifyToken();
-    if (!isAuthenticated){
-        localStorage.clear();
-        router.push('/');
-    }
-    else{
-    router.push('/dashboard/economyidx');
-    }
+    router.push('/economyidx');
+    
 }
 </script>
 

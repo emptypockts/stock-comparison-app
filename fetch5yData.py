@@ -119,7 +119,7 @@ def fetch_5y_data(ticker):
 # Example function call
 if __name__ == "__main__":
     
-    tickers = ['rost']  # Replace with your desired ticker
+    tickers = ['intc']  # Replace with your desired ticker
     all_data = []
 
     # all_data = [fetch_5y_data(ticker)for ticker in tickers]
