@@ -6,11 +6,6 @@ __pycache__
 .vercel
 .notes
 sec_filings/
-<<<<<<< HEAD
 ai_reports/
 /venv/
-=======
-/venv/
-ai_reports/
->>>>>>> 3352257 (testing sso with cloudflare)
 flask_session/
