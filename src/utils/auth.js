@@ -22,6 +22,12 @@ export const verifyToken = async () => {
 };
 
 export const verifyCfToken = async () => {
+  const flag = import.meta.env.VITE_DEV_FLAG
+  
+  if (flag==1){
+    console.log('dev mode')
+    return true
+  }
   try {
     const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/v1/cfToken`)
     return response.data.success;

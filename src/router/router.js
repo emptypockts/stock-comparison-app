@@ -8,6 +8,7 @@ import QtrStockTrend from '@/views/QtrStockTrend.vue';
 import { verifyCfToken } from '@/utils/auth';
 import App from '@/layouts/App.vue';
 import { useTickerStore } from '@/stores/tickerStore';
+import MainLayout from '@/views/MainLayout.vue';
 
 const router = createRouter({
   history:createWebHistory(),
@@ -43,8 +44,8 @@ const router = createRouter({
   },
   {
     path:'',
-    name:'/',
-    component:()=> import('@/views/MainLayout.vue')
+    name:'Home',
+    component: MainLayout
   }
     ]
   },
@@ -65,7 +66,7 @@ router.beforeEach(async (to, from) => {
   const tickerStore=useTickerStore()
   const isAuthenticated = await verifyCfToken();
   if (to.name !== 'Auth' && to.name !== 'RegisterUser'&&!isAuthenticated){ 
-    return {name:'Auth'}
+    return {path:'/'}
 
     }
   if (to.name==='Auth' && isAuthenticated){
