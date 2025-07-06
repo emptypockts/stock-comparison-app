@@ -339,13 +339,13 @@ def get_a_token():
         audience=CF_AUDIENCE_ID)
         return jsonify({
             "success":True,
-            "email":decoded.get("email"),
-            "sub":decoded.get("sub"),
-            "name":decoded.get("name",'noName'),
-            "aud":decoded.get("aud"),
-            "iss":decoded.get("iss"),
-            "preferred_username":decoded.get('identity').get('oidc_fields').get('preferred_username'),
-            "upn":decoded.get('identity').get('oidc_fields').get('upn',''),
+            "email":decoded.get("email",''),
+            "sub":decoded.get("sub",''),
+            "name":decoded.get("name",''),
+            "aud":decoded.get("aud",''),
+            "iss":decoded.get("iss",''),
+            "preferred_username":decoded.get('custom','').get('preferred_username',''),
+            "upn":decoded.get('custom',{}).get('upn',''),
             "exp":datetime.datetime.fromtimestamp(decoded.get('exp'))
         }),200
     except jwt.ExpiredSignatureError:
