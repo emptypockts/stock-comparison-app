@@ -66,9 +66,14 @@ router.beforeEach(async (to, from) => {
   const tickerStore=useTickerStore()
   const isAuthenticated = await verifyCfToken();
   if (to.name !== 'Auth' && to.name !== 'RegisterUser'&&!isAuthenticated){ 
-    return {path:'/'}
-
+    if (import.meta.env.VITE_DEV_FLAG==='1'){
+    return {path:'login'}
     }
+    else{
+      window.location.href='https://www.dahoncho.com/cdn-cgi/access/logout'
+      return false
+    }
+  }
   if (to.name==='Auth' && isAuthenticated){
     return {path:'/'}
   }
