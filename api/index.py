@@ -344,6 +344,8 @@ def get_a_token():
             "name":decoded.get("name",'noName'),
             "aud":decoded.get("aud"),
             "iss":decoded.get("iss"),
+            "preferred_username":decoded.get('identity').get('oidc_fields').get('preferred_username'),
+            "upn":decoded.get('identity').get('oidc_fields').get('upn',''),
             "exp":datetime.datetime.fromtimestamp(decoded.get('exp'))
         }),200
     except jwt.ExpiredSignatureError:
