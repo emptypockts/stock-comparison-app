@@ -29,6 +29,7 @@ from pymongo.server_api import ServerApi
 from stockPlotDataQtr import fetch_4qtr_data
 from PDFReport import PDFReport
 import requests
+from worker import generate_ai_report,celery
 load_dotenv()
 CF_CERT_URL = f"https://{os.getenv('CF_URL_CDN_CGI_CERTS')}/cdn-cgi/access/certs"
 CERT_KYS = requests.get(CF_CERT_URL).json()
@@ -221,11 +222,17 @@ def messageBot():
 def gemini_post():
     data=request.json
     tickers = data.get('tickers')
-    try:
-        response = compile(tickers)
+    user_id = data.get('user_id')
+    if 'user_id' not in data or 'tickers' not in data:
         return jsonify({
-            'assistant':response
-        }),200
+            'error':'missing fields'
+        }),400
+    try:
+        task =generate_ai_report.delay(tickers,user_id)
+        return jsonify({
+            'task_id':task.id,
+            'status':'processing'
+        }),202
     except Exception as e:
             return jsonify({'error':str(e)}),400
 @app.route('/api/v1/gemini/report',methods=['POST'])
@@ -352,6 +359,30 @@ def get_a_token():
         return jsonify({"success": False, "message": "Token has expired"}), 401
     except jwt.InvalidTokenError:
         return jsonify({"success": False, "message": "Invalid token"}), 401
-    
+ #check celery task status   
+@app.route('/api/v1/gemini/status/<task_id>',methods=['GET'])
+def gemini_task_status(task_id):
+    try:
+        task=celery.AsyncResult(task_id)
+        if task.state=='PENDING':
+            return jsonify({'status':'pending'}),202
+        elif task.state=='SUCCESS':
+            return jsonify({
+                'status':'completed',
+                'assistant':task.result
+                }),200
+        elif task.state=='FAILURE':
+            return jsonify({
+                'status':'failed',
+                'error':str(task.result)
+            }),500
+        else:
+            return jsonify({
+                'status':task.state
+            }),202
+    except Exception as e:
+        return jsonify({
+            'error':e
+        })
 if __name__ == '__main__':
     app.run(debug=True)

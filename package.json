@@ -27,6 +27,7 @@
     "pinia": "^3.0.2",
     "popper.js": "^1.16.1",
     "regexp": "^1.0.0",
+    "socket.io-client": "^4.8.1",
     "vite": "^5.4.8",
     "vue": "^3.2.13",
     "vue-apexcharts": "^1.6.2",

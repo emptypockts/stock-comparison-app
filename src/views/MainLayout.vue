@@ -9,7 +9,7 @@
     <CookieBanner />
     <LoginAlert />
     <button :disabled="tickers.length === 0" @click="get_report">ai report</button>
-    <small> ⚠️warning it takes around 30 sec per ticker <br></small>
+    <small> ⚠️warning it takes around 40 sec per ticker <br></small>
     <div v-if="tickerHistory.size > 0">
         <small>
             <strong>ticker history:</strong> {{[...tickerHistory].join(',')}}
@@ -35,6 +35,8 @@ import { showTempMessage } from '@/utils/timeout';
 import { useLoadingStore } from '@/stores/loadingStore';
 import axios from 'axios';
 import { downloadPdfReport } from '@/utils/downloadReport';
+import { taskSocket } from '@/composables/taskSocket';
+
 const tickers = ref([]);
 const errorMessage = ref('');
 const tickerStore = useTickerStore();
@@ -58,14 +60,22 @@ const get_report = async () => {
         
         if (allowedTickers.value.length>0) {
             loading.startLoading();
+            const user_id = localStorage.getItem('user_id')
             try {
                 const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/gemini`, {
-                    tickers: allowedTickers.value
+                    tickers: allowedTickers.value,
+                    user_id:user_id
                 })
-                const rawMessage = response.data['assistant'];
+                
+                const task_id = response.task_id;
 
-                console.log('calling pdf with ',rawMessage)
-                await downloadPdfReport(rawMessage, tickers.value, "overall")
+                taskSocket(task_id,async (assistant)=>{
+                    console.log('task completed calling from mainlayout, calling pdf api',assistant)
+                    await downloadPdfReport(assistant, tickers.value, "overall")
+                })
+
+                
+                
 
 
             }

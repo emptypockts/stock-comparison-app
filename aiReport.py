@@ -303,7 +303,6 @@ def compile(tickers)->str:
         json_validator_agent=get_json_validator()
         response = validate_json(json_validator_agent,r6.replace("```","").replace("json","").strip().lower())
         r7=json.loads(response.replace("```json","").replace("```","").strip().lower())
-        
         return r7
         
         
