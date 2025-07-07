@@ -27,6 +27,8 @@ def disconnect():
 def generate_ai_report(self,tickers,user_id):
     from aiReport import compile
     try:
+        if not user_id:
+            raise ValueError("missing user_id")
         result= compile(tickers)
         task_id = self.request.id
         if result:
