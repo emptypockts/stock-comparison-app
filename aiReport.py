@@ -212,7 +212,10 @@ def ai_query(agent, data)->str:
     }
     headers = {"Content-Type": "application/json"}
     response = requests.post(url, json=payload, headers=headers, params=querystring)
+    if response.status_code==429:
+        raise Exception("quota exceeded",response)
     response = response.json()
+    
     return response["candidates"][0]["content"]["parts"][0]["text"]
 def get_full_report(agent,r1,r2,r3,r4,r5)->str:
     payload = {
@@ -230,6 +233,8 @@ def get_full_report(agent,r1,r2,r3,r4,r5)->str:
     }
     headers = {"Content-Type": "application/json"}
     response = requests.post(url, json=payload, headers=headers, params=querystring)
+    if response.status_code==429:
+        raise Exception("quota exceeded",response)
     response = response.json()
     return response["candidates"][0]["content"]["parts"][0]["text"]
 def validate_json(agent,r6)->str:
@@ -247,6 +252,8 @@ def validate_json(agent,r6)->str:
     }
     headers= {"Content-Type":"application/json"}
     response=requests.post(url,json=payload,headers=headers,params=querystring)
+    if response.status_code==429:
+        raise Exception("quota exceeded",response)
     response=response.json()
     return response["candidates"][0]["content"]["parts"][0]["text"]
 def compile(tickers)->str:

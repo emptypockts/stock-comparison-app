@@ -250,7 +250,7 @@ def getAllIntrinsicValues(ticker, growth_rate=5.0, discount_rate=10.0, terminal_
 # Example usage
 if __name__ == "__main__":
 
-    tickers = ['pltr','axp']
+    tickers = ['intc']
     data={
         ticker:{
             "data": getAllIntrinsicValues(ticker,growth_rate=5.0, discount_rate=10.0, terminal_growth_rate=2.0, projection_years=5)
