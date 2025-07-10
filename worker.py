@@ -6,9 +6,7 @@ from dotenv import load_dotenv
 import os
 load_dotenv()
 uri = os.getenv('MONGODB_URI')
-client = MongoClient(uri, server_api=ServerApi('1'))
-db = client["test"]
-socket_io=socketio.Client()
+WS_SOCKET_URI=os.getenv('VITE_WS_SERVER')
 
 celery = Celery(
     'ai_reports',
@@ -16,38 +14,43 @@ celery = Celery(
     backend='redis://localhost:6379/0'
 )
 
-@socket_io.event
-def connect():
-     print('connected to ws server')
-@socket_io.event
-def disconnect():
-     print('disconnected from ws server')
+sio = socketio.Client()
+
 
 @celery.task(bind=True)
 def generate_ai_report(self,tickers,user_id):
+    
     from aiReport import compile
     try:
         if not user_id:
             raise ValueError("missing user_id")
         result= compile(tickers)
         task_id = self.request.id
+
         if result:
-            
-            stock_collection = db["aiTasks"]
-            stock_collection.insert_one({
+            client = MongoClient(uri, server_api=ServerApi('1'))
+            db = client["test"]
+            ai_report_collections = db["aiTasks"]
+            ai_report_collections.insert_one({
             "user_id":user_id,
             "task_id":task_id,
             "assistant":result
             })
-        
-                
+
+
         try:
-            socket_io.connect("http://localhost:5009")
-            socket_io.emit('task_done',{
-            'user_id':user_id,
-            'assistant':result
-            })
-            socket_io.disconnect()
+            print('notifying server of completion')
+            if not sio.connected:      
+                sio.connect(
+                    WS_SOCKET_URI,
+                    ssl_verify=True 
+                    )
+            sio.emit('task_done',{
+                'user_id':user_id,
+                'task_id':task_id,
+                'tickers':tickers
+            },namespace='/')
+            print('emit done')
         except Exception as e:
             print('ws issue',str(e))
         return result

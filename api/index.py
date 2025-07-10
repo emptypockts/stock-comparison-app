@@ -238,9 +238,10 @@ def gemini_post():
 @app.route('/api/v1/gemini/report',methods=['POST'])
 def gemini_generate_pdf():
     data= request.json
-    text=data.get('ai_report')
+    task_id=data.get('task_id')
+    print('task_id',task_id)
     try:
-        pdf_report = PDFReport(text)
+        pdf_report = PDFReport(task_id)
         pdf_buffer,today=pdf_report.generate()
         return send_file(pdf_buffer,as_attachment=True,
                          download_name=f"{today}.pdf",

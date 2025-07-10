@@ -15,6 +15,12 @@
             <strong>ticker history:</strong> {{[...tickerHistory].join(',')}}
             </small>
     </div>
+      <div>
+    <p v-if="isConnected">🟢 Connected to AI Report Server</p>
+    <p v-else>🔴 Disconnected</p>
+
+    <pre v-if="taskData">{{ taskData }}</pre>
+  </div>
     <div class="error-message">
         {{ errorMessage }}
     </div>
@@ -34,8 +40,8 @@ import LoginAlert from '@/components/LoginAlert.vue';
 import { showTempMessage } from '@/utils/timeout';
 import { useLoadingStore } from '@/stores/loadingStore';
 import axios from 'axios';
-import { downloadPdfReport } from '@/utils/downloadReport';
-import { taskSocket } from '@/composables/taskSocket';
+import {useSocket} from '@/composables/taskSocket'
+const {isConnected, taskData}=useSocket();
 
 const tickers = ref([]);
 const errorMessage = ref('');
@@ -48,6 +54,8 @@ const updateTickers = (newTickers) => {
     tickers.value = tickerStore.currentTickers
 }
 
+
+
 const get_report = async () => {
     if (tickers.value.length == 0) {
         console.error('missing tickers');
@@ -55,7 +63,6 @@ const get_report = async () => {
         showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 2000);
     }
     else {
-        
         allowedTickers.value=tickers.value.filter(e=>!tickerHistory.value.has(e.toLowerCase()))
         
         if (allowedTickers.value.length>0) {
@@ -66,18 +73,6 @@ const get_report = async () => {
                     tickers: allowedTickers.value,
                     user_id:user_id
                 })
-                
-                const task_id = response.task_id;
-
-                taskSocket(task_id,async (assistant)=>{
-                    console.log('task completed calling from mainlayout, calling pdf api',assistant)
-                    await downloadPdfReport(assistant, tickers.value, "overall")
-                })
-
-                
-                
-
-
             }
 
 

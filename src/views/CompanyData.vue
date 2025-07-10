@@ -56,7 +56,6 @@ export default {
       errorMessage.value = ""
 
       loading.startLoading();
-      console.log('api urlssss',import.meta.env.VITE_APP_API_URL)
       try {
         const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/company_data`, {
           params: tickers.reduce((acc, ticker, index) => {

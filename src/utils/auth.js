@@ -30,7 +30,7 @@ export const verifyCfToken = async () => {
   }
   try {
     const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/v1/cfToken`)
-    localStorage.setItem(response.data.upn)
+    localStorage.setItem('user_id',response.data.upn)
     return response.data.success;
   }
   catch (err) {
