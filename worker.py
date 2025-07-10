@@ -43,7 +43,6 @@ def generate_ai_report(self,tickers,user_id):
             if not sio.connected:      
                 sio.connect(
                     WS_SOCKET_URI,
-                    ssl_verify=True 
                     )
             sio.emit('task_done',{
                 'user_id':user_id,
