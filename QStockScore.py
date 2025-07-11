@@ -66,7 +66,8 @@ def fetch_Stock_Info():
     'ResearchAndDevelopmentExpense':'R&D', #rd
     'NetCashProvidedByUsedInOperatingActivities':'operatingCashFlow', #fcf =NetCashProvidedByUsedInOperatingActivities- PaymentsToAcquirePropertyPlantAndEquipment
     'PaymentsOfDividends':'dividends', #dividends
-    'EntityCommonStockSharesOutstanding':'OutstandingShares', #outstandingshares
+    'EntityCommonStockSharesOutstanding':'OutstandingShares', #outstandingshares,
+    'StockholdersEquity':'OutstandingShares',
     'EarningsPerShareBasic':'EPS',
     'EarningsPerShareDiluted':'EPS_diluted',
     'CommercialPaper':'CommercialPaper',
@@ -102,6 +103,7 @@ def fetch_Stock_Info():
                                     if metric['form'] == '10-Q' and (endDate.year>2023)  :
                                         qtr_obj.append({
                                                 'ticker':ticker,
+                                                'entity':item['entityName'],
                                                 'metric':metric_name,
                                                 'value':metric['val'],
                                                 'date':metric['end'],
@@ -181,7 +183,7 @@ def push_QStockData(db, objects, collection):
         print(f"An error occurred: {e}")
 def pull_QStockData(db, ticker, collection='QtrStockData'):
     QStockData_Collection = db[collection]
-    QStockData = QStockData_Collection.find({"ticker": ticker.lower()})
+    QStockData = QStockData_Collection.find({"ticker": ticker.upper()})
 
     return QStockData
 def RevenueGrowthQtrStockData (df):
@@ -360,6 +362,21 @@ def swap_temp_prod(db,collection):
         print(f"Connection failure: {cf}")
     except errors.OperationFailure as ofe:
         print(f"Operation failure: {ofe}")
+
+def create_index(db):
+    try:
+        # db['aiTasks']
+        # db['QtrStockData']
+        # db['QtrStockRevTrend']
+        # db['RefreshToken']
+        # db['StockScore']
+        # db['tickerCIK']
+        # db['User']
+        db['QtrDeiStockData'].create_index([("ticker", 1), ("metric", 1), ("date", -1)])
+        print('index created successfully')
+    except Exception as e:
+        print('error creating collection',str(e))
+
 if __name__=="__main__":
     uri = os.getenv('MONGODB_URI')
     client = MongoClient(uri, server_api=ServerApi('1'))
@@ -392,7 +409,10 @@ if __name__=="__main__":
     # swap_temp_prod(db,collection='QtrStockRevTrend')
     
     #join the qtr stock rev trend with the stock value score
-    aggregateScoreToQtrRevTrend(db)
+    # aggregateScoreToQtrRevTrend(db)
+
+    #create index for each collection
+    create_index(db)
     
         
     
