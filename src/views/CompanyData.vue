@@ -17,9 +17,19 @@
   <div>
     <div v-if="companyData">
       <ul class="list-container">
-        <li v-for="(name, ticker) in companyData" :key="ticker">
-          <strong>Company:</strong> {{ ticker }}: {{ name['gStockData']['name'] }}. <strong>Current price:</strong> ${{ name['gStockData']['current_price'] }} <strong>
-            Last Filing :</strong> {{ name['last_filing_date'] }}<br><br>
+        <li v-for="(element) in companyData" :key="element">
+          <strong>
+            Company:
+          </strong> 
+            {{ element.ticker }}: {{ element.name }}. 
+            <strong>
+            Current price:
+          </strong> 
+          ${{ element.current_price }} 
+          <strong>
+            Last Filing :
+          </strong> {{ element.last_filing }}
+          <br><br>
         </li>
       </ul>
       </div>
@@ -63,7 +73,6 @@ export default {
             return acc;
           }, {}),
         });
-
 
         companyData.value = response.data;
         
