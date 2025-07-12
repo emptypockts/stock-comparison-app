@@ -1,7 +1,7 @@
-export const showTempMessage = (ref,message,duration=3000)=>{
-ref.value= message;
+export const showTempMessage = (errorMessage,message,duration=3000)=>{
+errorMessage.value= message;
 setTimeout(()=>{
-    ref.value='';
+    errorMessage.value='';
 
 },duration);
 };

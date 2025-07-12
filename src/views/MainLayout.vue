@@ -16,10 +16,8 @@
             </small>
     </div>
       <div>
-    <p v-if="isConnected">🟢 Connected to AI Report Server</p>
-    <p v-else>🔴 Disconnected</p>
-
-    <pre v-if="taskData">{{ taskData }}</pre>
+    <p v-if="isConnected">🟢 ai analysis available</p>
+    <p v-else>🔴 ai analysis not available</p>
   </div>
     <div class="error-message">
         {{ errorMessage }}

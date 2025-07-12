@@ -17,18 +17,19 @@
   <div>
     <div v-if="companyData">
       <ul class="list-container">
-        <li v-for="(element) in companyData" :key="element">
+        
+        <li v-for="(e,ticker) in companyData" :key="ticker">
           <strong>
             Company:
           </strong> 
-            {{ element.ticker }}: {{ element.name }}. 
+            {{ e.ticker }}: {{ e.name }}. 
             <strong>
             Current price:
           </strong> 
-          ${{ element.current_price }} 
+          ${{ e.current_price }} 
           <strong>
             Last Filing :
-          </strong> {{ element.last_filing }}
+          </strong> {{ e.last_filing }}
           <br><br>
         </li>
       </ul>
@@ -36,7 +37,7 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router'; // Import useRouter for navigation
@@ -44,23 +45,21 @@ import debounce from 'lodash.debounce';
 import { useLoadingStore } from '@/stores/loadingStore';
 import { verifyCfToken, verifyToken } from '@/utils/auth';
 import { useTickerStore } from '@/stores/tickerStore';
-export default {
-  emits: ['tickers-updated'], // Declare the custom events
-  setup(props, { emit }) {
+import { showTempMessage } from '@/utils/timeout';
+  const emit = defineEmits(['tickers-updated']);
     const errorMessage = ref('');
     const ticker1 = ref('');
     const ticker2 = ref('');
     const ticker3 = ref('');
     const loading = useLoadingStore();
     const companyData = ref({});
-    const router = useRouter();
     const tickerStore=useTickerStore()
     const fetchCompanyData = debounce(async () => {
 
       const tickers = [ticker1, ticker2, ticker3].map(tickerRef => tickerRef.value).filter(Boolean);
       tickerStore.updateTickers(tickers)
       if (tickers.length === 0) {
-        errorMessage.value = "Please enter at least one stock ticker."
+        showTempMessage(errorMessage, 'Please enter at least one stock ticker.', 2000);
         return errorMessage;
       }
       errorMessage.value = ""
@@ -73,17 +72,20 @@ export default {
             return acc;
           }, {}),
         });
+        console.log('tickers',tickers)
 
         companyData.value = response.data;
-        
         if (!companyData.value || Object.keys(companyData.value).length === 0) {
-          errorMessage.value = 'No data found for the entered tickers.';
+          errorMessage.value = 'No data found. this app is doing data collection of american companies only';
+          showTempMessage(errorMessage, 'No data found for the entered tickers.', 2000);
+
         } else {
           const missingTickers = tickers.filter(
             ticker => !Object.keys(companyData.value).includes(ticker)
           );
           if (missingTickers.length > 0) {
-            errorMessage.value = `Data for the following tickers is missing: ${missingTickers.join(', ')}.`;
+            showTempMessage(errorMessage, `Data for the following tickers is missing: ${missingTickers.join(', ')}.
+            this app is doing data collection for american companies only.`, 5000);
           }
         }
 
@@ -109,17 +111,6 @@ export default {
         fetchCompanyData();
       }
     };
-    return {
-      ticker1,
-      ticker2,
-      ticker3,
-      fetchCompanyData,
-      companyData,
-      verifyAndFetchCompanyData,
-      errorMessage,
-    };
-  },
-};
 </script>
 <style scoped>
 .error-message {

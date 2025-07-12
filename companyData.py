@@ -43,17 +43,16 @@ def compile_stockData(tickers):
     if not isinstance(tickers, list):
         logger.error("Input `tickers` must be a list.")
         return {}
-    stock_info=[]
+    stock_info={}
     for ticker in tickers:
         object = fetch_metric(collection,ticker.upper(),'StockholdersEquity','EntityCommonStockSharesOutstanding')
         if object:
-            stock_info.append(
-            {
+            stock_info[ticker]={
                 'ticker':object.get('ticker',''),
                 'name':object.get('entity','unknown'),
                 'last_filing':object.get('date',''),
                 'current_price': fetch_price_fmp(ticker)
-            })
+            }
     
 
     
@@ -66,7 +65,7 @@ def compile_stockData(tickers):
 if __name__ == "__main__":
     db = client['test']
     collection = db['QtrStockData']
-    tickers= ['kbh','len','phm']
+    tickers= ['eric']
 
     stock_info=compile_stockData(tickers)
     print(stock_info)
