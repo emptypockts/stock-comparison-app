@@ -66,17 +66,35 @@ def fetch_Stock_Info():
     'ResearchAndDevelopmentExpense':'R&D', #rd
     'NetCashProvidedByUsedInOperatingActivities':'operatingCashFlow', #fcf =NetCashProvidedByUsedInOperatingActivities- PaymentsToAcquirePropertyPlantAndEquipment
     'PaymentsOfDividends':'dividends', #dividends
+    'PaymentsOfDividendsCommonStock':'dividends',
     'EntityCommonStockSharesOutstanding':'OutstandingShares', #outstandingshares,
-    'StockholdersEquity':'OutstandingShares',
+    'StockholdersEquity':'StockholdersEquity',
+    'WeightedAverageNumberOfSharesOutstandingBasic':'OutstandingShares',
     'EarningsPerShareBasic':'EPS',
     'EarningsPerShareDiluted':'EPS_diluted',
     'CommercialPaper':'CommercialPaper',
-    'OtherLiabilitiesCurrent':'OtherLiabilitiesCurrent', #total debt = OtherLiabilitiesCurrent+ OtherLiabilitiesNonCurrent +LiabilitiesCurrent +LiabilitiesNoncurrent
-    'OtherLiabilitiesNoncurrent':'OtherLiabilitiesNoncurrent', #total debt = OtherLiabilitiesCurrent+ OtherLiabilitiesNonCurrent +LiabilitiesCurrent +LiabilitiesNoncurrent
-    'LiabilitiesCurrent':'LiabilitiesCurrent', #total debt = OtherLiabilitiesCurrent+ OtherLiabilitiesNonCurrent +LiabilitiesCurrent +LiabilitiesNoncurrent
-    'LiabilitiesNoncurrent':'LiabilitiesNoncurrent', #total debt = OtherLiabilitiesCurrent+ OtherLiabilitiesNonCurrent +LiabilitiesCurrent +LiabilitiesNoncurrent
+    'OtherLiabilitiesCurrent':'OtherLiabilitiesCurrent', 
+    'OtherLiabilitiesNoncurrent':'OtherLiabilitiesNoncurrent',
+    'LiabilitiesCurrent':'LiabilitiesCurrent', 
+    'LiabilitiesNoncurrent':'LiabilitiesNoncurrent',#Total Debt =CurrentPortionOfLongTermDebt+ LongTermDebtNoncurrent(+ FinanceLeaseObligations, optional)
     'PaymentsToAcquirePropertyPlantAndEquipment':'capex',
-    'NetCashProvidedByUsedInInvestingActivities':'capex2'
+    'NetCashProvidedByUsedInInvestingActivities':'capex2',
+    'StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest':'StockholdersEquity',
+    'CurrentPortionOfLongTermDebt':'ShortTermDebt',
+    'ShortTermBorrowings':'ShortTermDebt',
+    'ShortTermDebt':'ShortTermDebt',
+    'DebtCurrent':'ShortTermDebt',
+    'LongTermDebtAndCapitalLeaseObligationsCurrent':'ShortTermDebt',
+    'CurrentDebtAndCapitalLeaseObligation':'ShortTermDebt',
+    'CommercialPaper':'ShortTermDebt',
+    'OtherShortTermBorrowings':'ShortTermDebt',
+    'BondsPayableNoncurrent':'LongTermDebt',
+    'LongTermBorrowings':'LongTermDebt',
+    'MortgageLoansOnRealEstate':'LongTermDebt',
+    'LongTermDebtNoncurrent':'LongTermDebt',
+    'DebtNoncurrent':'LongTermDebt',
+    'LongTermDebtAndCapitalLeaseObligation':'LongTermDebt',
+    'LongTermDebt':'LongTermDebt'
     }
     for file in files:
         # use to debug
@@ -156,7 +174,7 @@ def fetch_dei_info():
 
                                     
     return qtr_obj
-def push_QStockData(db, objects, collection):
+def push_StockData(db, objects, collection):
     load_dotenv()
     today = datetime.now().strftime("%m_%d_%y_%H_%M_%S")
     prod_collection = collection
@@ -389,13 +407,13 @@ if __name__=="__main__":
    
     # # Flow to update stock info from json files  (GAAP)
     # object = fetch_Stock_Info()
-    # push_QStockData(db,object,collection='QtrStockData')
+    # push_StockData(db,object,collection='QtrStockData')
 
     
     # Flow to update stock info from json files (IFRS) not used recently
     # # Flow to update stock info from json files (DEI)
     # object=fetch_dei_info()
-    # push_QStockData(db,object,collection='QtrDeiStockData')
+    # push_StockData(db,object,collection='QtrDeiStockData')
     
     # print(object)
     

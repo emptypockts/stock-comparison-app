@@ -119,13 +119,14 @@ def fetch_5y_data(ticker):
 # Example function call
 if __name__ == "__main__":
     
-    tickers = ['intc']  # Replace with your desired ticker
+    tickers = ['nvda']  # Replace with your desired ticker
     all_data = []
 
     # all_data = [fetch_5y_data(ticker)for ticker in tickers]
     for ticker in tickers:
         try:
             data= fetch_5y_data(ticker)
+            print('returned object: \n',data)
             all_data.append(data)
         except:
             print(f"Cannot fetch stock {ticker}.")

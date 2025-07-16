@@ -1,4 +1,4 @@
-from flask import Flask, jsonify,session,send_file,render_template,request,redirect,url_for
+from flask import Flask, jsonify,send_file,render_template,request,redirect,url_for
 import jwt.algorithms
 from datetime import datetime
 from aiReport import ai_query, compile
@@ -23,7 +23,7 @@ from authLogin import loginStep
 from authRegister import registerStep
 import EconomyStats
 from fetchStockfromdB import stockFetch
-from QStockScore import pull_QStockData,pullAllStockData,RevenueGrowthQtrStockData,PullQtrStockRevenueTrends
+from qtrStockDbOps import pull_QStockData,PullQtrStockRevenueTrends
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 from stockPlotDataQtr import fetch_4qtr_data
