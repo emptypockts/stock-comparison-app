@@ -300,7 +300,7 @@ def AllQtrStockRevTrend():
         
         
         # Fetch grouped stock data
-        grouped_stocks,total_symbols = PullQtrStockRevenueTrends(db,page,page_size)
+        grouped_stocks,total_symbols = PullQtrStockRevenueTrends(db['QtrStockRevTrend'],page,page_size)
         # Pagination logic
         start = (page - 1) * page_size
         end = start + page_size

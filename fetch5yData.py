@@ -1,21 +1,29 @@
-import yfinance as yf
 import pandas as pd
+import yrStockDbOps
+from companyData  import fetch_metric,fetch_price_fmp
+import logging
+import os
+import requests
+from pandas import Series
+from datetime import datetime,timedelta
+from dotenv import load_dotenv
+from typing import Literal
+from pymongo.server_api import ServerApi
+from pymongo import MongoClient,DESCENDING
+load_dotenv()
+uri = os.getenv('MONGODB_URI')
+client = MongoClient(uri, server_api=ServerApi('1'))
+
+
+
 
 def fetch_5y_data(ticker):
-    stock = yf.Ticker(ticker)
-    dividends = stock.dividends
+    db = client['test']
+    collection = db['StockScore']
+    dividends= fetch_metric(collection,ticker.upper(),metric=dividends_metric,mode='all')
+    
 
-    def Transform_Obj_and_Date(Object):
-        index = pd.to_datetime(Object.index)
-        Object_df = pd.DataFrame(Object, index=index)
-        Object_df.index = Object_df.index.year
-        Object_df.index.name = 'Date'
-        Object_df[Object.name] = Object_df[Object.name].astype(float)
-        try:
-            Object_df = Object_df.drop(2019)
-        except:
-            return Object_df
-        return Object_df
+
 
     def check_market_cap(row):
         return int(row['Market Cap'] > 2e+09)
@@ -126,7 +134,6 @@ if __name__ == "__main__":
     for ticker in tickers:
         try:
             data= fetch_5y_data(ticker)
-            print('returned object: \n',data)
             all_data.append(data)
         except:
             print(f"Cannot fetch stock {ticker}.")

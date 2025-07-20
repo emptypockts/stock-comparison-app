@@ -2,69 +2,35 @@
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 from dotenv import load_dotenv
+from financialUtils import fetch_ticker,fetch_cik
 import os
 import json
+load_dotenv()
 uri = os.getenv('MONGODB_URI')
 
 
 
-def upatedB(db,file,collection='tickerCIK'):
-    load_dotenv()
+def createCikTickerCollection(file,collection):
     with open(file) as f:
         document = f.read()
     jsonObj = json.loads(document)
     documents=[jsonObj[str(index)] for index,item in enumerate(jsonObj)]     
-    stock_collection = db[collection]
     #inject the object in the database
-    stock_collection.insert_many(documents)
+    collection.insert_many(documents)
     print("jsonData inserted successfully")
 
-def fetch_cik(db,ticker,collection='tickerCIK'):
-    filter={
-        'ticker':ticker.upper()
-    }
-    project={
-    'cik_str': 1, 
-    '_id': 0
-    }
-    
-    tickerCIK_Collection = db[collection]
-    cik=tickerCIK_Collection.find_one(
-        filter=filter,
-        projection=project
-    )
-    if cik:
-        return cik['cik_str'] 
-    else:
-        return None
-def fetch_ticker(db,cik,collection='tickerCIK'):
-    filter={
-        'cik_str':int(cik)
-    }
-    project={
-    'ticker': 1, 
-    '_id': 0
-    }
-    
-    tickerCIK_Collection = db[collection]
-    ticker=tickerCIK_Collection.find_one(
-        filter=filter,
-        projection=project
-    )
-    if ticker:
-        return ticker['ticker'] 
-    else:
-        return None
+
+
 
 
     
 if __name__ == "__main__":
     client = MongoClient(uri, server_api=ServerApi('1'))
     db = client["test"]
-    collection='tickerCIK'
+    collection=db['tickerCIK']
     # file= "C:\\Users\\ejujo\\Downloads\\tickers.json"
     # updateCIKTicker(file,collection)
-    print(fetch_cik(db,'rost'))
-    file='CIK0000730000.json'
+    print(fetch_cik('rost',collection))
+    file='CIK000019617.json'
     cik_integer= int(file[:-5].lstrip("CIK").lstrip("0"))
-    print(fetch_ticker(db,cik_integer))
+    print(fetch_ticker(cik_integer,collection))

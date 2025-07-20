@@ -2,17 +2,18 @@ from dotenv import load_dotenv
 import os
 from pymongo.server_api import ServerApi
 from pymongo import MongoClient, errors,UpdateOne
+from pymongo.collection import Collection
 import json
 import pandas as pd
-from CIKTickerUpdate import fetch_cik,fetch_ticker
+from financialUtils import get_metric_keys,fetch_ticker,push_StockData,swap_temp_prod
 from math import atan, degrees
 import numpy as np
 from datetime import datetime
 
 # join qtr rev trend table with stock score 
-def aggregateScoreToQtrRevTrend(db,collection='QtrStockRevTrend'):
-    QtrStockRevTrendCollection=db[collection]
-    stocks = QtrStockRevTrendCollection.aggregate([
+def aggregateScoreToQtrRevTrend(collection:Collection):
+    
+    stocks = collection.aggregate([
     {
         '$lookup':{
             'from':'StockScore',
@@ -48,59 +49,21 @@ def aggregateScoreToQtrRevTrend(db,collection='QtrStockRevTrend'):
         )
         )
     if jsonObject:
-        QtrStockRevTrendCollection.bulk_write(jsonObject)
+        collection.bulk_write(jsonObject)
         print('push completed successfully')
 def fetch_Stock_Info():
+
+    collection=db['tickerCIK']
     path = r"C:\\Users\\ejujo\\Downloads\\companyfacts\\"
     files = os.listdir(path)
     qtr_obj = []
     nasdaq =pd.read_csv(r"C:\\Users\ejujo\\coding\\nasdaq.csv")
-    metric_keys = {
-    'RevenueFromContractWithCustomerExcludingAssessedTax': 'revenue',#revenue
-    'RevenueFromContractWithCustomerIncludingAssessedTax':'revenue', #revenue
-    'Revenues': 'revenue', #revenue
-    'Assets': 'assets',#assets
-    'CashAndCashEquivalentsAtCarryingValue':'end_cash_postion', #cash
-    'Liabilities':'liabilities', #total liabilities
-    'NetIncomeLoss':'netIncome', #net_income #return on assets = net_income / assets
-    'ResearchAndDevelopmentExpense':'R&D', #rd
-    'NetCashProvidedByUsedInOperatingActivities':'operatingCashFlow', #fcf =NetCashProvidedByUsedInOperatingActivities- PaymentsToAcquirePropertyPlantAndEquipment
-    'PaymentsOfDividends':'dividends', #dividends
-    'PaymentsOfDividendsCommonStock':'dividends',
-    'EntityCommonStockSharesOutstanding':'OutstandingShares', #outstandingshares,
-    'StockholdersEquity':'StockholdersEquity',
-    'WeightedAverageNumberOfSharesOutstandingBasic':'OutstandingShares',
-    'EarningsPerShareBasic':'EPS',
-    'EarningsPerShareDiluted':'EPS_diluted',
-    'CommercialPaper':'CommercialPaper',
-    'OtherLiabilitiesCurrent':'OtherLiabilitiesCurrent', 
-    'OtherLiabilitiesNoncurrent':'OtherLiabilitiesNoncurrent',
-    'LiabilitiesCurrent':'LiabilitiesCurrent', 
-    'LiabilitiesNoncurrent':'LiabilitiesNoncurrent',#Total Debt =CurrentPortionOfLongTermDebt+ LongTermDebtNoncurrent(+ FinanceLeaseObligations, optional)
-    'PaymentsToAcquirePropertyPlantAndEquipment':'capex',
-    'NetCashProvidedByUsedInInvestingActivities':'capex2',
-    'StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest':'StockholdersEquity',
-    'CurrentPortionOfLongTermDebt':'ShortTermDebt',
-    'ShortTermBorrowings':'ShortTermDebt',
-    'ShortTermDebt':'ShortTermDebt',
-    'DebtCurrent':'ShortTermDebt',
-    'LongTermDebtAndCapitalLeaseObligationsCurrent':'ShortTermDebt',
-    'CurrentDebtAndCapitalLeaseObligation':'ShortTermDebt',
-    'CommercialPaper':'ShortTermDebt',
-    'OtherShortTermBorrowings':'ShortTermDebt',
-    'BondsPayableNoncurrent':'LongTermDebt',
-    'LongTermBorrowings':'LongTermDebt',
-    'MortgageLoansOnRealEstate':'LongTermDebt',
-    'LongTermDebtNoncurrent':'LongTermDebt',
-    'DebtNoncurrent':'LongTermDebt',
-    'LongTermDebtAndCapitalLeaseObligation':'LongTermDebt',
-    'LongTermDebt':'LongTermDebt'
-    }
+    metric_keys =get_metric_keys()
     for file in files:
         # use to debug
     # for file in files[:3:]: 
         cik_integer = int(file[:-5].lstrip("CIK").lstrip("0"))
-        ticker=fetch_ticker(db,cik_integer)
+        ticker=fetch_ticker(cik_integer,collection)
         if ticker and ticker in nasdaq['ticker'].values:
             with open(path + file) as f:
                 item = json.loads(f.read())
@@ -174,35 +137,9 @@ def fetch_dei_info():
 
                                     
     return qtr_obj
-def push_StockData(db, objects, collection):
-    load_dotenv()
-    today = datetime.now().strftime("%m_%d_%y_%H_%M_%S")
-    prod_collection = collection
-    temp_collection = f"temp_{collection}"
-    bakcup_collection= f"{prod_collection}_{today}"
-    if temp_collection in db.list_collection_names():
-        db.drop_collection(temp_collection)
-    try:
-        stock_collection = db[temp_collection]
-        # Inject the objects into the database
-        result = stock_collection.insert_many(objects)
-        print(f"jsonData inserted successfully, inserted_ids: {result.inserted_ids}")
-        assert stock_collection.count_documents({})>0
-        db[prod_collection].rename(bakcup_collection)
-        db[temp_collection].rename(prod_collection)
-        print('temp to prod swap done successfully')
-    except errors.BulkWriteError as bwe:
-        print(f"Bulk write error: {bwe.details}")
-    except errors.ConnectionFailure as cf:
-        print(f"Connection failure: {cf}")
-    except errors.OperationFailure as ofe:
-        print(f"Operation failure: {ofe}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-def pull_QStockData(db, ticker, collection='QtrStockData'):
-    QStockData_Collection = db[collection]
-    QStockData = QStockData_Collection.find({"ticker": ticker.upper()})
 
+def pull_QStockData(ticker, collection):
+    QStockData = collection.find({"ticker": ticker.upper()})
     return QStockData
 def RevenueGrowthQtrStockData (df):
     if df.empty:
@@ -222,9 +159,9 @@ def RevenueGrowthQtrStockData (df):
             percentIncrease = ((lastQ-refQ)/refQ)*100
 
         return pd.Series([percentIncrease] * len(df), index=df.index) 
-def pullAllStockData(db,skip,limit_size=10000,collection='QtrStockData'):
-    QStockData_Collection = db[collection]
-    QStockData = QStockData_Collection.aggregate([
+def pullAllStockData(collection:Collection,skip,limit_size=10000,):
+    
+    QStockData = collection.aggregate([
  {
         '$match': {
             # 'ticker':{'$in':['CVS','MSFT']},
@@ -269,10 +206,10 @@ def pullAllStockData(db,skip,limit_size=10000,collection='QtrStockData'):
 ])
     
     return QStockData
-def pushMergedRevenueGrowthQtrStockData(db, MergedJsonResponseRevenueGrowthQtrStockData, collection):
+def pushMergedRevenueGrowthQtrStockData(MergedJsonResponseRevenueGrowthQtrStockData, collection:Collection):
     try:
-        QtrStockRevTrend_Collection = db[collection]
-        result = QtrStockRevTrend_Collection.insert_many(MergedJsonResponseRevenueGrowthQtrStockData)
+        
+        result = collection.insert_many(MergedJsonResponseRevenueGrowthQtrStockData)
         print(f"jsonData inserted successfully, inserted_ids: {result.inserted_ids}")
     except errors.BulkWriteError as bwe:
         print(f"Bulk write error: {bwe.details}")
@@ -282,9 +219,9 @@ def pushMergedRevenueGrowthQtrStockData(db, MergedJsonResponseRevenueGrowthQtrSt
         print(f"Operation failure: {ofe}")
     except Exception as e:
         print(f"An error occurred: {e}")
-def PullProcessMergeRevenueGrowthQtrStockData(db,skip,limit_size):
+def PullProcessMergeRevenueGrowthQtrStockData(collection,skip,limit_size):
 
-    ResponsePullAllStockData = pullAllStockData(db,skip,limit_size)
+    ResponsePullAllStockData = pullAllStockData(collection,skip,limit_size,)
     DfResponseRevenueGrowthQtrStockData= pd.DataFrame(ResponsePullAllStockData)
     if DfResponseRevenueGrowthQtrStockData.empty:
         print('object is empty')
@@ -296,13 +233,12 @@ def PullProcessMergeRevenueGrowthQtrStockData(db,skip,limit_size):
     MergedDfResponseRevenueGrowthQtrStockData = DfResponseRevenueGrowthQtrStockData.groupby('ticker').agg({ 'value': lambda x: ','.join(map(str, x)), 'trend': 'first' }).reset_index()
     MergedJsonResponseRevenueGrowthQtrStockData=MergedDfResponseRevenueGrowthQtrStockData.to_dict(orient='records')
     return MergedJsonResponseRevenueGrowthQtrStockData
-def PullQtrStockRevenueTrends(db, page=1,items_per_page=100,collection='QtrStockRevTrend'):
+def PullQtrStockRevenueTrends(collection:Collection,page=1,items_per_page=100):
     print("Page",page)
     print("Page size ",items_per_page)
-    QtrStockRevTrendCollection = db[collection]
-# 
+    
     # Fetch records with pagination
-    stocks = QtrStockRevTrendCollection.aggregate([
+    stocks = collection.aggregate([
 
         {
         '$sort' :{'trend':-1}
@@ -325,14 +261,14 @@ def PullQtrStockRevenueTrends(db, page=1,items_per_page=100,collection='QtrStock
             grouped_stocks[ticker] = []
         grouped_stocks[ticker].append(stock)
     
-    total_tickers = QtrStockRevTrendCollection.distinct("ticker")
+    total_tickers = collection.distinct("ticker")
     total_tickers_count = len(total_tickers)
 
     return grouped_stocks,total_tickers_count
-def CountAggRecordPipeline(db, collection='QtrStockData'):
-    QStockData_Collection = db[collection]
-    QstockData=QStockData_Collection.aggregate([
- {
+def CountAggRecordPipeline(collection:Collection):
+    
+    QstockData=collection.aggregate([
+        {
         '$match': {
             'metric': {
                 '$in': [
@@ -364,73 +300,37 @@ def CountAggRecordPipeline(db, collection='QtrStockData'):
 ])
     resultObj = list(QstockData)
     return resultObj[0]['totalRecords'] if resultObj else 0
-def swap_temp_prod(db,collection):
-    today = datetime.now().strftime("%m_%d_%y_%H_%M_%S")
-    prod_collection = collection
-    temp_collection = f"temp_{collection}"
-    bakcup_collection= f"{prod_collection}_{today}"
-    try:
-        db[prod_collection].rename(bakcup_collection)
-        db[temp_collection].rename(prod_collection)
-        db.drop_collection(temp_collection)
-        print('temp to prod swap done successfully')
-    except errors.BulkWriteError as bwe:
-        print(f"Bulk write error: {bwe.details}")
-    except errors.ConnectionFailure as cf:
-        print(f"Connection failure: {cf}")
-    except errors.OperationFailure as ofe:
-        print(f"Operation failure: {ofe}")
 
-def create_index(db):
-    try:
-        # db['aiTasks']
-        # db['QtrStockData']
-        # db['QtrStockRevTrend']
-        # db['RefreshToken']
-        # db['StockScore']
-        # db['tickerCIK']
-        # db['User']
-        db['QtrDeiStockData'].create_index([("ticker", 1), ("metric", 1), ("date", -1)])
-        print('index created successfully')
-    except Exception as e:
-        print('error creating collection',str(e))
+
 
 if __name__=="__main__":
     uri = os.getenv('MONGODB_URI')
     client = MongoClient(uri, server_api=ServerApi('1'))
     db = client["test"]
     tickers = ['CVS','ROST']
-    collectionSize=CountAggRecordPipeline(db)
+    collectionSize=CountAggRecordPipeline(db['QtrStockData'])
     limit_size=10000
     skip=0
     #go to this link to download the company facts https://www.sec.gov/Archives/edgar/daily-index/xbrl/companyfacts.zip
    
     # # Flow to update stock info from json files  (GAAP)
     # object = fetch_Stock_Info()
-    # push_StockData(db,object,collection='QtrStockData')
-
-    
-    # Flow to update stock info from json files (IFRS) not used recently
-    # # Flow to update stock info from json files (DEI)
-    # object=fetch_dei_info()
-    # push_StockData(db,object,collection='QtrDeiStockData')
-    
+    # push_StockData(db,object,collection='QtrStockData')    
     # print(object)
-    
-    # function to update main revenue trends per quarter in the db
-   
+
+
+    # # function to update main revenue trends per quarter in the db   
     # for skip in range((collectionSize//limit_size)+1):
-    #     # print(skip,collectionSize)
-    #     response =PullProcessMergeRevenueGrowthQtrStockData(db,skip,limit_size)
-    #     # print(response)
-    #     pushMergedRevenueGrowthQtrStockData(db,response,collection='temp_QtrStockRevTrend')
+    #     response =PullProcessMergeRevenueGrowthQtrStockData(db['QtrStockData'],skip,limit_size)
+    #     print(response)
+    #     pushMergedRevenueGrowthQtrStockData(response,db['temp_QtrStockRevTrend'])
     # swap_temp_prod(db,collection='QtrStockRevTrend')
     
     #join the qtr stock rev trend with the stock value score
-    # aggregateScoreToQtrRevTrend(db)
+    aggregateScoreToQtrRevTrend(db['QtrStockRevTrend'])
 
     #create index for each collection
-    create_index(db)
+    # create_index(db)
     
         
     
