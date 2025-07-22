@@ -47,7 +47,7 @@ def fetch_yearly_data():
                             if 'USD' in item['facts']['us-gaap'][metric_name]['units'] or 'USD/shares' in item['facts']['us-gaap'][metric_name]['units'] or 'shares' in item['facts']['us-gaap'][metric_name]['units']:
                                 if metric_name=='EarningsPerShareBasic' or metric_name=='EarningsPerShareDiluted':
                                     metrics = item['facts']['us-gaap'][metric_name]['units']['USD/shares']
-                                elif metric_name=='WeightedAverageNumberOfSharesOutstandingBasic':
+                                elif metric_name=='WeightedAverageNumberOfSharesOutstandingBasic' or metric_name=='CommonStockSharesOutstanding':
                                     metrics = item['facts']['us-gaap'][metric_name]['units']['shares']
                                 else:
                                     metrics = item['facts']['us-gaap'][metric_name]['units']['USD']
@@ -219,66 +219,46 @@ def market_cap_calc(ticker,shares_cursor:Cursor):
             market_cap_list.append(new_doc)
     return market_cap_list
 def total_assets_calc(ticker,collection:Collection):
-    current_assets_metric=['Assets','AssetsCurrent','OtherAssetsCurrent']
-    non_current_assets_metric=['AssetsNonCurrent','OtherAssetsNonCurrent']
+    assets_metric=['Assets']
+    fallback_metric=['AssetsCurrent','OtherAssetsCurrent','AssetsNonCurrent','OtherAssetsNonCurrent']
     actual_year = datetime.now().year
     total_assets_obj=[]
 
     for i in range(actual_year-5,actual_year):
         new_doc={'calculated_from':{}}
-        current_assets=fetch_metric(collection,ticker.upper(),metric=current_assets_metric,mode='year',calendar_yr=str(i),unique_metric=False)
-        current_assets_acc=0
-        non_current_assets_acc=0
-        for a in current_assets:
-            current_assets_value=a.get('value',0) or 0
-            if a['metric']=='Assets':
-                new_doc['calculated_from']['assets']=current_assets_value
-                new_doc['date']=a.get('date','')
-                new_doc['form']=a.get('form','')
-                new_doc['fp']=a.get('fp','')
-                new_doc['ticker']=ticker.upper()
-                new_doc['frame']=a.get('frame','')
-                new_doc['entity']=a.get('entity','')
-                break      
-            current_assets_acc+=current_assets_value
-            if 'assets' not in new_doc['calculated_from'] and current_assets_acc:
-                new_doc['calculated_from']['assets']=current_assets_acc
-                new_doc['date']=a.get('date','')
-                new_doc['form']=a.get('form','')
-                new_doc['fp']=a.get('fp','')
-                new_doc['ticker']=ticker.upper()
-                new_doc['frame']=a.get('frame','')
-                new_doc['entity']=a.get('entity','')
-        
-        non_current_assets=fetch_metric(collection,ticker.upper(),metric=non_current_assets_metric,mode='year',calendar_yr=str(i),unique_metric=False)
-        for a in non_current_assets:
-            non_current_assets_value=a.get('value',0) or 0
-            if a['metric']=='AssetsNonCurrent':
-                new_doc['calculated_from']['assets_non_current']=non_current_assets_value
-                new_doc['date']=a.get('date','')
-                new_doc['form']=a.get('form','')
-                new_doc['fp']=a.get('fp','')
-                new_doc['ticker']=ticker.upper()
-                new_doc['frame']=a.get('frame','')
-                new_doc['entity']=a.get('entity','')
-                break
-            non_current_assets_acc+=non_current_assets_value
-
-            if 'assets_non_current' not in new_doc['calculated_from'] and non_current_assets_acc:
-                new_doc['calculated_from']['assets_non_current']=non_current_assets_acc
-                new_doc['date']=a.get('date','')
-                new_doc['form']=a.get('form','')
-                new_doc['fp']=a.get('fp','')
-                new_doc['ticker']=ticker.upper()
-                new_doc['frame']=a.get('frame','')
-                new_doc['entity']=a.get('entity','')
-
-        current_total=new_doc['calculated_from'].get('assets',0)
-        non_current_total=new_doc['calculated_from'].get('assets_non_current',0)
-        total=current_total+non_current_total
-        if total>0:
-            new_doc['metric']='total_assets'
-            new_doc['value']=total
+        current_assets_cursor=fetch_metric(
+            collection,
+            ticker.upper(),
+            metric=assets_metric,
+            mode='year',
+            calendar_yr=str(i),
+            unique_metric=False)
+        if current_assets_cursor:
+            break
+        else:
+            fallback_cursor=fetch_metric(
+            collection,
+            ticker.upper(),
+            metric=fallback_metric,
+            mode='year',
+            calendar_yr=str(i),
+            unique_metric=False
+        )
+            if fallback_cursor:
+                assets_acc=0
+                for a in fallback_cursor:
+                    new_doc['date']=a.get('date','')
+                    new_doc['form']=a.get('form','')
+                    new_doc['fp']=a.get('fp','')
+                    new_doc['ticker']=ticker.upper()
+                    new_doc['frame']=a.get('frame','')
+                    new_doc['entity']=a.get('entity','')
+                    val=a.get('value',0) or 0
+                    assets_acc+=val
+                    if a.get('metric') in fallback_metric:
+                        new_doc['calculated_from'][a.get('metric')]=val
+                        new_doc['metric']='Assets'
+                        new_doc['value']=assets_acc
             total_assets_obj.append(new_doc)
     return total_assets_obj
 
@@ -420,6 +400,86 @@ def long_term_liabilities_calc(ticker:str,collection:Collection):
                     total_long_term_liabilities_obj.append(new_doc)
     return(total_long_term_liabilities_obj)                       
 
+def total_liabilities_calc(ticker:str,collection:Collection):
+    total_liabilities_metric=['Liabilities']
+    fallback_total_liabilities_metric=['LiabilitiesNoncurrent','LiabilitiesCurrent']
+    actual_year = datetime.now().year
+    total_liabilities_obj=[]
+    for i in range(actual_year-5,actual_year):
+        new_doc={'calculated_from':{}}
+        total_liabilities_cursor=fetch_metric(
+            collection,
+            ticker.upper(),
+            metric=total_liabilities_metric,
+            mode='year',
+            calendar_yr=str(i),
+            unique_metric=False
+        )
+        if total_liabilities_cursor:
+            print(f"total liability for year {i} already exists")
+        else:
+            fallback_total_liabilities_cursor=fetch_metric(
+                collection,
+                ticker.upper(),
+                metric=fallback_total_liabilities_metric,
+                mode='year',
+                calendar_yr=str(i),
+                unique_metric=False
+            )
+            if fallback_total_liabilities_cursor:
+                total_liabilities_acc=0
+                for a in fallback_total_liabilities_cursor:
+                    new_doc['date']=a.get('date','')
+                    new_doc['form']=a.get('form','')
+                    new_doc['fp']=a.get('fp','')
+                    new_doc['ticker']=ticker.upper()
+                    new_doc['frame']=a.get('frame','')
+                    new_doc['entity']=a.get('entity','')
+                    val = a.get('value',0) or 0
+                    total_liabilities_acc+=val
+                    
+                    if a.get('metric') in fallback_total_liabilities_metric:
+                        new_doc['calculated_from'][a.get('metric')]=val
+                        new_doc['metric']='Liabilities'
+                        new_doc['value']=total_liabilities_acc
+                total_liabilities_obj.append(new_doc)
+    return total_liabilities_obj
+
+def book_value_calc(ticker:str,collection:Collection):
+    book_value_metrics=['Liabilities','Assets']
+    actual_year = datetime.now().year
+    book_value_obj=[]
+    for i in range(actual_year-5,actual_year):
+        new_doc={'calculated_from':{}}
+        book_value_cursor=fetch_metric(
+            collection,
+            ticker.upper(),
+            metric=book_value_metrics,
+            mode='year',
+            calendar_yr=str(i),
+            unique_metric=False
+        )
+        if book_value_cursor:
+            book_value_acc=0
+            for a in book_value_cursor:
+                new_doc['date']=a.get('date','')
+                new_doc['form']=a.get('form','')
+                new_doc['fp']=a.get('fp','')
+                new_doc['ticker']=ticker.upper()
+                new_doc['frame']=a.get('frame','')
+                new_doc['entity']=a.get('entity','')
+                val = a.get('value',0) or 0
+                if a.get('metric') in book_value_metrics:
+                    new_doc['calculated_from'][a.get('metric')]=val
+            assets_val=new_doc['calculated_from'].get('Assets')
+            liabilities_val=new_doc['calculated_from'].get('Liabilities')
+            new_doc['metric']='book_value'
+            new_doc['value']=assets_val-liabilities_val
+            book_value_obj.append(new_doc)
+    return book_value_obj
+
+
+
 
 
 
@@ -440,7 +500,7 @@ if __name__=='__main__':
     diluted_eps_metric=['EarningsPerShareDiluted']
     short_term_debt_metric=['ShortTermBorrowings','ShortTermDebt','CurrentPortionOfLongTermDebt','CurrentDebtAndCapitalLeaseObligation','DebtCurrent']
     long_term_debt_metric=['LongTermDebtNoncurrent','LongTermBorrowings','LongTermDebt','DebtNoncurrent','LongTermDebtAndCapitalLeaseObligation']
-# # # # fetch companyfacts and create the rawEdgarCollection
+# # # fetch companyfacts and create the rawEdgarCollection
 #     object= fetch_yearly_data()
 #     index_params=[{
 #         "fields":[("ticker",1),("metric",1),("date",1),("value",1)],
@@ -479,7 +539,9 @@ if __name__=='__main__':
 # # calculate total assets
 #         total_assets_obj=total_assets_calc(ticker,edgar_collection)
 #         if total_assets_obj:
+#             print(total_assets_obj)
 #             write_object(edgar_collection,total_assets_obj,mode='many')
+
 
 # # calculate total current liabilities
 #         current_liabilities_obj=current_liabilities_calc(ticker,edgar_collection)
@@ -487,12 +549,18 @@ if __name__=='__main__':
 #             write_object(edgar_collection,current_liabilities_obj,mode='many')
         
 # # calculate long term liabilities
-        # long_term_liabilities_obj=long_term_liabilities_calc(ticker,edgar_collection)
-        # if long_term_liabilities_obj:
-        #     write_object(edgar_collection,long_term_liabilities_obj,mode='many')
-# # #fetch metrics to create the stockScore collection
-
-
+#         long_term_liabilities_obj=long_term_liabilities_calc(ticker,edgar_collection)
+#         if long_term_liabilities_obj:
+#             write_object(edgar_collection,long_term_liabilities_obj,mode='many')
+# # calculate total liabilities
+        # total_liabilities_obj=total_liabilities_calc(ticker,edgar_collection)
+        # if total_liabilities_obj:
+        #     write_object(edgar_collection,total_liabilities_obj,mode='many')
+# calculate book value
+        book_value_obj=book_value_calc(ticker,edgar_collection)
+        if book_value_obj:
+            print(book_value_obj)
+            # write_object(edgar_collection,book_value_obj,mode='many')
             
 
         
