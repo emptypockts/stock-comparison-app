@@ -103,7 +103,7 @@ def fcf_generate_doc(ticker,collection:Collection):
     capex_metric='PaymentsToAcquirePropertyPlantAndEquipment'
     actual_year = datetime.now().year
     new_doc=[]
-    for i in range(actual_year-5,actual_year):
+    for i in range(actual_year-5,actual_year+1):
         
         cash_doc=fetch_metric(collection,ticker,[cash_metric],mode='year',calendar_yr=str(i))
         capex_doc=fetch_metric(collection,ticker,[capex_metric],mode='year',calendar_yr=str(i))
@@ -142,7 +142,7 @@ def total_short_term_debt_calc(ticker,collection:Collection):
     
     actual_year = datetime.now().year
     total_short_term_debt_obj=[]
-    for i in range(actual_year-5,actual_year):
+    for i in range(actual_year-5,actual_year+1):
         short_term_debt_cursor=fetch_metric(
             collection,
             ticker.upper(),
@@ -195,7 +195,7 @@ def total_long_term_debt_calc(ticker,collection:Collection):
     
     actual_year = datetime.now().year
     total_long_term_debt_obj=[]
-    for i in range(actual_year-5,actual_year):
+    for i in range(actual_year-5,actual_year+1):
         long_term_debt_cursor=fetch_metric(
             collection,
             ticker.upper(),
@@ -239,69 +239,36 @@ def total_long_term_debt_calc(ticker,collection:Collection):
 
 #calculate total debt and insert doc       
 def total_debt_calc(ticker,collection:Collection):
-    short_term_debt_metric=['ShortTermDebt']
-    long_term_debt_metric=['LongTermDebt']
-    actual_year = datetime.now().year
+    total_debt_metrics=['LongTermDebt','ShortTermDebt']
     total_debt_obj=[]
-
-    for i in range(actual_year-5,actual_year):
+    actual_year = datetime.now().year
+    total_long_term_debt_obj=[]
+    for i in range(actual_year-5,actual_year+1):
         new_doc={'calculated_from':{}}
-        short_term_debt = fetch_metric(collection,ticker.upper(),metric=short_term_debt_metric,mode='year',calendar_yr=str(i),unique_metric=False)
-        short_acc_debt=0
-        long_acc_debt=0
-        for e in short_term_debt:  
-            short_term_debt_value=e.get('value',0) or 0
-            if  e['metric']=='ShortTermDebt':
-                new_doc['calculated_from']['short_term_debt']=short_term_debt_value
-                new_doc['date']=e.get('date','')
-                new_doc['form']=e.get('form','')
-                new_doc['fp']=e.get('fp','')
+        total_debt_acc=0
+        total_debt_cursor=fetch_metric(
+            collection,
+            ticker.upper(),
+            metric=total_debt_metrics,
+            mode='year',
+            calendar_yr=str(i),
+            unique_metric=False)
+        if total_debt_cursor:
+            for a in total_debt_cursor:
+                new_doc['date']=a.get('date','')
+                new_doc['form']=a.get('form','')
+                new_doc['fp']=a.get('fp','')
                 new_doc['ticker']=ticker.upper()
-                new_doc['frame']=e.get('frame','')
-                new_doc['entity']=e.get('entity','')
-                break
-            short_acc_debt+=short_term_debt_value
-            if 'short_term_debt' not in new_doc['calculated_from'] and short_acc_debt:
-                new_doc['calculated_from']['short_term_debt']=short_acc_debt
-                new_doc['date']=e.get('date','')
-                new_doc['form']=e.get('form','')
-                new_doc['fp']=e.get('fp','')
-                new_doc['ticker']=ticker.upper()
-                new_doc['frame']=e.get('frame','')
-                new_doc['entity']=e.get('entity','')
-
-        long_term_debt =fetch_metric(collection,ticker.upper(),metric=long_term_debt_metric,mode='year',calendar_yr=str(i),unique_metric=False)
-        for e in long_term_debt:
-            long_term_debt_value=e.get('value',0) or 0
-            if e['metric']=='LongTermDebt':
-                
-                new_doc['calculated_from']['long_term_debt']=long_term_debt_value
-                new_doc['date']=e.get('date','')
-                new_doc['form']=e.get('form','')
-                new_doc['fp']=e.get('fp','')
-                new_doc['ticker']=ticker.upper()
-                new_doc['frame']=e.get('frame','')
-                new_doc['entity']=e.get('entity','')
-                break
-            long_acc_debt+=long_term_debt_value
-            if 'long_term_debt' not in new_doc['calculated_from'] and long_acc_debt:
-                new_doc['calculated_from']['long_term_debt']=long_acc_debt
-                new_doc['date']=e.get('date','')
-                new_doc['form']=e.get('form','')
-                new_doc['fp']=e.get('fp','')
-                new_doc['ticker']=ticker.upper()
-                new_doc['frame']=e.get('frame','')
-                new_doc['entity']=e.get('entity','')
-        
-        short_term=new_doc['calculated_from'].get('short_term_debt',0)
-        long_term=new_doc['calculated_from'].get('long_term_debt',0)
-        total=short_term+long_term
-        if total>0:
-            new_doc['value']=total
+                new_doc['frame']=a.get('frame','')
+                new_doc['entity']=a.get('entity','')
+                val = a.get('value',0)
+                if val>0:
+                    total_debt_acc+=val
+                    new_doc['calculated_from'][a.get('metric')]=val
             new_doc['metric']='total_debt'
+            new_doc['value']=total_debt_acc
             total_debt_obj.append(new_doc)
-            
-    return total_debt_obj if total_debt_obj else []
+    return total_debt_obj
 
 def market_cap_calc(ticker,shares_cursor:Cursor):
     prices_series=fetch_price_fmp(ticker,mode='5y')
@@ -332,7 +299,7 @@ def total_assets_calc(ticker,collection:Collection):
     actual_year = datetime.now().year
     total_assets_obj=[]
 
-    for i in range(actual_year-5,actual_year):
+    for i in range(actual_year-5,actual_year+1):
         new_doc={'calculated_from':{}}
         current_assets_cursor=fetch_metric(
             collection,
@@ -392,7 +359,7 @@ def current_liabilities_calc(ticker:str,collection:Collection):
         ]
     actual_year = datetime.now().year
     total_current_liabilities_obj=[]
-    for i in range(actual_year-5,actual_year):
+    for i in range(actual_year-5,actual_year+1):
         liabilities_cursor=fetch_metric(
             collection,
             ticker.upper(),
@@ -457,7 +424,7 @@ def long_term_liabilities_calc(ticker:str,collection:Collection):
     ]
     actual_year = datetime.now().year
     total_long_term_liabilities_obj=[]
-    for i in range(actual_year-5,actual_year):
+    for i in range(actual_year-5,actual_year+1):
         new_doc={'calculated_from':{}}
         liabilities_cursor=fetch_metric(
             collection,
@@ -513,7 +480,7 @@ def total_liabilities_calc(ticker:str,collection:Collection):
     fallback_total_liabilities_metric=['LiabilitiesNoncurrent','LiabilitiesCurrent']
     actual_year = datetime.now().year
     total_liabilities_obj=[]
-    for i in range(actual_year-5,actual_year):
+    for i in range(actual_year-5,actual_year+1):
         new_doc={'calculated_from':{}}
         total_liabilities_cursor=fetch_metric(
             collection,
@@ -557,7 +524,7 @@ def book_value_calc(ticker:str,collection:Collection):
     book_value_metrics=['Liabilities','Assets']
     actual_year = datetime.now().year
     book_value_obj=[]
-    for i in range(actual_year-5,actual_year):
+    for i in range(actual_year-5,actual_year+1):
         new_doc={'calculated_from':{}}
         book_value_cursor=fetch_metric(
             collection,
@@ -590,7 +557,7 @@ def pb_ratio_calc(ticker:str,collection:Collection):
     pb_ratio_metrics=['book_value','market_cap']
     actual_year=datetime.now().year
     pb_ratio_obj=[]
-    for i in range(actual_year-5,actual_year):
+    for i in range(actual_year-5,actual_year+1):
         new_doc={'calculated_from':{}}
         pb_ratio_cursor=fetch_metric(
             collection,
@@ -611,8 +578,8 @@ def pb_ratio_calc(ticker:str,collection:Collection):
                 val = a.get('value',0) or 0
                 if a.get('metric') in pb_ratio_metrics and val>0:
                     new_doc['calculated_from'][a.get('metric')]=val
-            market_cap=new_doc['calculated_from'].get('market_cap')
-            book_value=new_doc['calculated_from'].get('book_value')
+            market_cap=new_doc['calculated_from'].get('market_cap',0)
+            book_value=new_doc['calculated_from'].get('book_value',0)
             if market_cap >0 and book_value!=0:
                 new_doc['metric']='pb_ratio'
                 new_doc['value']=market_cap/book_value
@@ -624,18 +591,53 @@ def pe_ratio_calc(ticker:str,collection:Collection):
     actual_year=datetime.now().year
     pe_ratio_obj=[]
     price_5y= fetch_price_fmp(ticker,mode='5y')
-    for i in range(actual_year-5,actual_year):
+    for i in range(actual_year-5,actual_year+1):
         new_doc={'calculated_from':{}}
-        pe_ratio_cursor=fetch_metric(
+        pe_ratio_dict=fetch_metric(
             collection,
             ticker.upper(),
             metric=pe_ratio_metrics,
             mode='year',
             calendar_yr=str(i),
+            unique_metric=True
+        )
+        if pe_ratio_dict:
+            new_doc['date']=pe_ratio_dict.get('date','')
+            new_doc['form']=pe_ratio_dict.get('form','')
+            new_doc['fp']=pe_ratio_dict.get('fp','')
+            new_doc['ticker']=ticker.upper()
+            new_doc['frame']=pe_ratio_dict.get('frame','')
+            new_doc['entity']=pe_ratio_dict.get('entity','')
+            val = pe_ratio_dict.get('value',0) or 0
+            if pe_ratio_dict.get('metric') in pe_ratio_metrics and val>0:
+                price_close=float(price_5y['close'].get(i))
+                new_doc['calculated_from'][pe_ratio_dict.get('metric')]=val
+                new_doc['calculated_from']['close']=price_close
+
+        eps_diluted=new_doc['calculated_from'].get('EarningsPerShareDiluted',0)
+        pps=new_doc['calculated_from'].get('close',0)
+        if eps_diluted !=0 and pps>0:
+            new_doc['metric']='pe_ratio'
+            new_doc['value']=pps/eps_diluted
+            pe_ratio_obj.append(new_doc)
+    return(pe_ratio_obj)
+
+def debt_fcf_ratio_calc(ticker:str,collection:Collection):
+    debt_fcf_ratio_metrics=['total_debt','fcf']
+    actual_year=datetime.now().year
+    debt_fcf_ratio_obj=[]
+    for i in range(actual_year-5,actual_year+1):
+        new_doc={'calculated_from':{}}
+        debt_fcf_ratio_cursor=fetch_metric(
+            collection,
+            ticker.upper(),
+            metric=debt_fcf_ratio_metrics,
+            mode='year',
+            calendar_yr=str(i),
             unique_metric=False
         )
-        if pe_ratio_cursor:
-            for a in pe_ratio_cursor:
+        if debt_fcf_ratio_cursor:
+            for a in debt_fcf_ratio_cursor:
                 new_doc['date']=a.get('date','')
                 new_doc['form']=a.get('form','')
                 new_doc['fp']=a.get('fp','')
@@ -643,18 +645,83 @@ def pe_ratio_calc(ticker:str,collection:Collection):
                 new_doc['frame']=a.get('frame','')
                 new_doc['entity']=a.get('entity','')
                 val = a.get('value',0) or 0
-                if a.get('metric') in pe_ratio_metrics and val>0:
-                    price_close=float(price_5y['close'].get(i))
+                if a.get('metric') in debt_fcf_ratio_metrics and val>0:
                     new_doc['calculated_from'][a.get('metric')]=val
-                    new_doc['calculated_from']['close']=price_close
+            total_debt=new_doc['calculated_from'].get('total_debt',0)
+            fcf=new_doc['calculated_from'].get('fcf',0)
+            if total_debt !=0 and fcf!=0:
+                new_doc['metric']='debt_fcf_ratio'
+                new_doc['value']=total_debt/fcf
+                debt_fcf_ratio_obj.append(new_doc)
+    return(debt_fcf_ratio_obj)
 
-            eps_diluted=new_doc['calculated_from'].get('EarningsPerShareDiluted')
-            pps=new_doc['calculated_from'].get('close')
-            if eps_diluted !=0 and pps>0:
-                new_doc['metric']='pe_ratio'
-                new_doc['value']=pps/eps_diluted
-                pe_ratio_obj.append(new_doc)
-    return(pe_ratio_obj)
+def earnings_yield_calc(ticker:str,collection:Collection):
+    earnings_yield_metric=['EarningsPerShareDiluted']
+    actual_year=datetime.now().year
+    earnings_yield_obj=[]
+    price_5y= fetch_price_fmp(ticker,mode='5y')
+    for i in range(actual_year-5,actual_year+1):
+        new_doc={'calculated_from':{}}
+        earnings_yield_dict=fetch_metric(
+            collection,
+            ticker.upper(),
+            metric=earnings_yield_metric,
+            mode='year',
+            calendar_yr=str(i),
+            unique_metric=True
+        )
+        if earnings_yield_dict:
+            new_doc['date']=earnings_yield_dict.get('date','')
+            new_doc['form']=earnings_yield_dict.get('form','')
+            new_doc['fp']=earnings_yield_dict.get('fp','')
+            new_doc['ticker']=ticker.upper()
+            new_doc['frame']=earnings_yield_dict.get('frame','')
+            new_doc['entity']=earnings_yield_dict.get('entity','')
+            val = earnings_yield_dict.get('value',0) or 0
+            if earnings_yield_dict.get('metric') in earnings_yield_metric and val>0:
+                pps=float(price_5y['close'].get(i,0))
+                new_doc['calculated_from'][earnings_yield_dict.get('metric')]=val
+                new_doc['calculated_from']['close']=pps
+                
+                new_doc['metric']='earnings_yield'
+                new_doc['value']=(val/pps)
+            earnings_yield_obj.append(new_doc)
+
+    return(earnings_yield_obj)
+
+def dividends_yield_calc(ticker:str,collection:Collection):
+    dividends_yield_metric=['PaymentsOfDividendsCommonStock','market_cap']
+    actual_year=datetime.now().year
+    dividends_yield_obj=[]
+    price_5y= fetch_price_fmp(ticker,mode='5y')
+    for i in range(actual_year-5,actual_year+1):
+        new_doc={'calculated_from':{}}
+        dividends_yield_cursor=fetch_metric(
+            collection,
+            ticker.upper(),
+            metric=dividends_yield_metric,
+            mode='year',
+            calendar_yr=str(i),
+            unique_metric=False
+        )
+        if dividends_yield_cursor:
+            for a in dividends_yield_cursor:
+                new_doc['date']=a.get('date','')
+                new_doc['form']=a.get('form','')
+                new_doc['fp']=a.get('fp','')
+                new_doc['ticker']=ticker.upper()
+                new_doc['frame']=a.get('frame','')
+                new_doc['entity']=a.get('entity','')
+                val = a.get('value',0) or 0
+                if a.get('metric') in dividends_yield_metric and val>0:
+                    new_doc['calculated_from'][a.get('metric')]=val
+            market_cap=new_doc['calculated_from'].get('market_cap',0)
+            dividends=new_doc['calculated_from'].get('PaymentsOfDividendsCommonStock',0)
+            if market_cap >0 and dividends!=0:
+                new_doc['metric']='dividend_yield'
+                new_doc['value']=dividends/market_cap
+                dividends_yield_obj.append(new_doc)
+    return(dividends_yield_obj)
 
 if __name__=='__main__':
 # write the raw edgar db
@@ -687,20 +754,21 @@ if __name__=='__main__':
 #         index_list=index_params
 #         )
 
-    for ticker in tickers:
-# calculate short term debt
-        # short_term_debt_obj=total_short_term_debt_calc(ticker,edgar_collection)
-        # if short_term_debt_obj:
-        #     print(short_term_debt_obj)
-        #     write_object(edgar_collection,short_term_debt_obj,mode='many')
-# calculate long term debt
-        long_term_debt_obj=total_long_term_debt_calc(ticker,edgar_collection)
-        if long_term_debt_obj:
-            print(long_term_debt_obj)
-            write_object(edgar_collection,long_term_debt_obj,mode='many')
+#     for ticker in tickers:
+# # calculate short term debt
+#         short_term_debt_obj=total_short_term_debt_calc(ticker,edgar_collection)
+#         if short_term_debt_obj:
+#             print(short_term_debt_obj)
+#             write_object(edgar_collection,short_term_debt_obj,mode='many')
+# # calculate long term debt
+#         long_term_debt_obj=total_long_term_debt_calc(ticker,edgar_collection)
+#         if long_term_debt_obj:
+#             print(long_term_debt_obj)
+#             write_object(edgar_collection,long_term_debt_obj,mode='many')
 # # calculate total debt and write it on rawEdgarCollection
 #         total_debt_object=total_debt_calc(ticker,edgar_collection)
 #         if total_debt_object:
+#             print(total_debt_object)
 #             write_object(edgar_collection,total_debt_object,mode='many')
 # # calculate free cash flow
 #         fcf_object= fcf_generate_doc(ticker,edgar_collection)
@@ -736,26 +804,37 @@ if __name__=='__main__':
 #         if long_term_liabilities_obj:
 #             write_object(edgar_collection,long_term_liabilities_obj,mode='many')
 # # calculate total liabilities
-        # total_liabilities_obj=total_liabilities_calc(ticker,edgar_collection)
-        # if total_liabilities_obj:
-        #     write_object(edgar_collection,total_liabilities_obj,mode='many')
+#         total_liabilities_obj=total_liabilities_calc(ticker,edgar_collection)
+#         if total_liabilities_obj:
+#             write_object(edgar_collection,total_liabilities_obj,mode='many')
 # # calculate book value
-        # book_value_obj=book_value_calc(ticker,edgar_collection)
-        # if book_value_obj:
-        #     print(book_value_obj)
-        #     write_object(edgar_collection,book_value_obj,mode='many')
+#         book_value_obj=book_value_calc(ticker,edgar_collection)
+#         if book_value_obj:
+#             print(book_value_obj)
+#             write_object(edgar_collection,book_value_obj,mode='many')
             
-# calculate pb_ratio
-        # pb_ratio_obj=pb_ratio_calc(ticker,edgar_collection)
-        # if pb_ratio_obj:
-        #     print(pb_ratio_obj)
-            # write_object(edgar_collection,pb_ratio_obj,mode='many')
-# calculate pe_ratio
-        # pe_ratio_obj=pe_ratio_calc(ticker,edgar_collection)
-        # if pe_ratio_obj:
-        #     print(pe_ratio_obj)
-        #     write_object(edgar_collection,pe_ratio_obj,mode='many')
-
-
-        
-    
+# # calculate pb_ratio
+#         pb_ratio_obj=pb_ratio_calc(ticker,edgar_collection)
+#         if pb_ratio_obj:
+#             print(pb_ratio_obj)
+#             write_object(edgar_collection,pb_ratio_obj,mode='many')
+# # calculate pe_ratio
+#         pe_ratio_obj=pe_ratio_calc(ticker,edgar_collection)
+#         if pe_ratio_obj:
+#             print(pe_ratio_obj)
+#             write_object(edgar_collection,pe_ratio_obj,mode='many')
+# # calculate debt to fcf ratio
+#             debt_fcf_ratio_obj=debt_fcf_ratio_calc(ticker,edgar_collection)
+#             if debt_fcf_ratio_obj:
+#                 print(debt_fcf_ratio_obj)
+#                 write_object(edgar_collection,debt_fcf_ratio_obj,mode='many')
+# # calculate earnings yield to pps ratio
+#             earning_yield_obj=earnings_yield_calc(ticker,edgar_collection)
+#             if earning_yield_obj:
+#                 print(earning_yield_obj)
+#                 write_object(edgar_collection,earning_yield_obj,mode='many')
+# # calculate dividend yields
+#             dividends_yield_obj=dividends_yield_calc(ticker,edgar_collection)
+#             if dividends_yield_obj:
+#                 print(dividends_yield_obj)
+#                 write_object(edgar_collection,dividends_yield_obj,mode='many')
