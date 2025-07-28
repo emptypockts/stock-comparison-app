@@ -30,7 +30,8 @@ if __name__ == "__main__":
     collection=db['tickerCIK']
     # file= "C:\\Users\\ejujo\\Downloads\\tickers.json"
     # updateCIKTicker(file,collection)
+
     print(fetch_cik('rost',collection))
-    file='CIK000019617.json'
-    cik_integer= int(file[:-5].lstrip("CIK").lstrip("0"))
-    print(fetch_ticker(cik_integer,collection))
+    file=['CIK000019617.json','CIK0000002098.json']
+    ciks=[int(e[:-5].lstrip("CIK").lstrip("0"))for e in file]
+    print(fetch_ticker(ciks,collection))

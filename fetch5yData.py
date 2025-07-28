@@ -31,6 +31,7 @@ def check_market_cap(row):
 
 
 def fetch_5y_data(ticker):
+    stock_data=[]
     metrics=[
     'WeightedAverageNumberOfSharesOutstandingBasic',
     'book_value',
@@ -47,24 +48,27 @@ def fetch_5y_data(ticker):
     'market_cap'
     ]
     price_5y=fini.fetch_price_fmp(ticker,mode='5y')
-    cursor=fini.fetch_metric(
-        collection=collection,
-        ticker=ticker,
-        metric=metrics,
-        mode='all',
-        unique_metric=False)
-    b={}
-    for a in cursor:
-        year =datetime.fromisoformat(a.get('date')).year
-        pps=float(price_5y['close'].get(year))
-        b[a.get('metric')]=a.get('value')
-        b['ticker']=a.get('ticker')
-        b['entity']=a.get('entity')
-        b['date']=a.get('date')
-        b['price_per_share']=pps
-        object.append(b)
+    year= datetime.now().year
+    for i in range(year-5,year+1):
+        cursor=fini.fetch_metric(
+            collection=collection,
+            ticker=ticker,
+            metric=metrics,
+            mode='year',
+            calendar_yr=str(i),
+            unique_metric=False)
+        b={}
+        if cursor:
+            for a in cursor:
+                pps=float(price_5y['close'].get(i))
+                b[a.get('metric')]=a.get('value')
+                b['ticker']=a.get('ticker')
+                b['entity']=a.get('entity')
+                b['date']=a.get('date')
+                b['price_per_share']=pps
+            stock_data.append(b)
 
-    combined_df= pd.DataFrame(object)
+    combined_df= pd.DataFrame(stock_data)
 
     # Calculate metrics
     combined_df['market_cap_score'] = combined_df.apply(check_market_cap, axis=1)
@@ -80,8 +84,8 @@ def fetch_5y_data(ticker):
     combined_df['dividend_yield_score'] = int(combined_df['dividend_yield'].gt(0).all())
     combined_df['total_score'] = combined_df['dividend_yield_score'] + \
         combined_df['earnings_yield_score'] + combined_df['1.3x_earnings_yield_score']\
-              + combined_df['sum_debt_fcf_ratio_score'] + combined_df['pb_ratio_score']\
-                  + combined_df['pe_ratio_score'] + combined_df['market_cap_score']
+            + combined_df['sum_debt_fcf_ratio_score'] + combined_df['pb_ratio_score']\
+                + combined_df['pe_ratio_score'] + combined_df['market_cap_score']
 
     # remove $nan for 0
     combined_df=combined_df.fillna(0.01)
@@ -100,13 +104,13 @@ def fetch_5y_data(ticker):
     combined_df['dividend_yield'] = combined_df['dividend_yield'].apply(format_percentage)
     combined_df['earnings_yield'] = combined_df['earnings_yield'].apply(format_percentage)
     combined_df['market_cap'] = combined_df['market_cap'].apply(format_currency)
-    
+
     return combined_df
 # Example function call
 if __name__ == "__main__":
  
     tickers = ['abt','air']
-    object=[]
+    
     
     for ticker in tickers:
         response=fetch_5y_data(ticker)

@@ -1,8 +1,6 @@
-
 from typing import Literal
 from pymongo.collection import Collection,Cursor
 from pymongo import errors,DESCENDING,MongoClient
-
 from datetime import datetime,timedelta
 import pandas as pd
 import requests
@@ -79,24 +77,21 @@ def get_metric_keys():
         "OtherEmployeeRelatedLiabilitiesNoncurrent":"LiabilitiesLongTerm"
     }
 
-def fetch_ticker(cik,collection):
-    filter={
-        'cik_str':int(cik)
-    }
-    project={
-    'ticker': 1, 
-    '_id': 0
+def fetch_ticker(cik:list,collection:Collection):
+    query={
+        'cik_str':
+        {"$in":cik}
     }
     
     
-    ticker=collection.find_one(
-        filter=filter,
-        projection=project
+    ticker=collection.find(
+        query
     )
-    if ticker:
-        return ticker['ticker'] 
+    if collection.count_documents(query)>0:
+        tickers=[e['ticker'] for e in ticker] 
+        return tickers
     else:
-        return None
+        return []
     
 def fetch_cik(ticker,collection):
     filter={
@@ -206,10 +201,14 @@ def create_index(db):
 def fetch_price_fmp(
         
         ticker,
-        mode:Literal["last","5y"]="last"):
+        mode:Literal["last","5y","calendar_yr"]="last",
+        calendar_yr:int=None):
+    import calendar
+    import time
     if mode=='last':
         URL = f"{URL_BASE}/price?symbol={ticker.upper()}&apikey={KY}&source=docs"
         response = requests.get(URL)
+        time.sleep(7.5)
         try:
             price = float(response.json()['price'])
         except Exception as e:
@@ -221,8 +220,13 @@ def fetch_price_fmp(
         start_date = end_date-timedelta(days=365*5)
         URL = f"{URL_BASE}/time_series?start_date={start_date}&end_date={end_date}&symbol={ticker.upper()}&interval=1month&apikey={KY}"
         response = requests.get(URL)
+        time.sleep(7.5)
+        print('status code',response.status_code)
+        print('ticker',ticker)
         try:
             historic_stock_prices = response.json()
+            if 'code' in historic_stock_prices:
+                return pd.Series(0)
             if 'values' in historic_stock_prices:      
                 values= historic_stock_prices['values']
                 date=[]
@@ -234,12 +238,54 @@ def fetch_price_fmp(
                 stock_price.index.name='date'
                 stock_price_y= stock_price.resample('YE').last()
                 df= Transform_Obj_and_Date(stock_price_y)
-                return df
+                if df is None:
+                    return pd.Series(0)
+                else:
+                    return df
+        except:
+            return 0
+
+    elif mode=='calendar_yr':
+        if calendar_yr==datetime.now().year:
+            URL = f"{URL_BASE}/price?symbol={ticker.upper()}&apikey={KY}&source=docs"
+            response = requests.get(URL)
+            time.sleep(7.5)
+            try:
+                price = float(response.json()['price'])
+            except Exception as e:
+                print('error: ',str(e))
+                price = 0
+            return price
+        else:
+            start_date = datetime(year=calendar_yr,month=12,day=30).date()
+            end_date=datetime(year=calendar_yr,month=12,day=31).date()
+            URL = f"{URL_BASE}/time_series?start_date={start_date}&end_date={end_date}&symbol={ticker.upper()}&interval=1day&apikey={KY}"
+            response = requests.get(URL)
+            time.sleep(7.5)
+            print('status code',response.status_code)
+            print('ticker',ticker)
+            try:
+                historic_stock_prices = response.json()
+                if 'code' in historic_stock_prices:
+                    return pd.Series(0)
+                if 'values' in historic_stock_prices:      
+                    values= historic_stock_prices['values']
+                    date=[]
+                    close=[]
+                    for e in values:
+                        date.append(datetime.fromisoformat(e.get('datetime','')))
+                        close.append(float(e.get('close','')))
+                    stock_price=pd.Series(data=close,index=date,name='close')
+                    stock_price.index.name='date'
+                    df= Transform_Obj_and_Date(stock_price)
+                    if df is None:
+                        return pd.Series(0)
+                    else:
+                        return df
 
 
-
-        except Exception as e:
-            print(f"error calling api: {str(e)}")
+            except Exception as e:
+                print(f"error calling api: {str(e)}")
 
 def fetch_metric(
         collection:Collection,
@@ -287,4 +333,7 @@ def fetch_metric(
 
 
 if __name__=="__main__":
-    print('hello')
+        current_y=datetime.now().year
+        for i in range(current_y-5,current_y+1):
+            price=fetch_price_fmp('MSFT',mode='calendar_yr',calendar_yr=i)
+            print(price)
