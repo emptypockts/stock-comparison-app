@@ -845,96 +845,100 @@ if __name__=='__main__':
     #     index_list=index_params
     #     )
     tickers = fetch_tickers(cik_collection)
-    tickers=['AMZN']
+    # tickers=['MOV']
     for ticker in tickers:
-# calculate short term debt
-        short_term_debt_obj=total_short_term_debt_calc(ticker,edgar_collection)
-        if short_term_debt_obj:
-            print('writing short term_debt',ticker)
-            write_object(edgar_collection,short_term_debt_obj,mode='many')
-# calculate long term debt
-        long_term_debt_obj=total_long_term_debt_calc(ticker,edgar_collection)
-        if long_term_debt_obj:
-            print('writing long_term_debt',ticker)
-            write_object(edgar_collection,long_term_debt_obj,mode='many')
-# calculate total debt and write it on rawEdgarCollection
-        total_debt_object=total_debt_calc(ticker,edgar_collection)
-        if total_debt_object:
-            print('writing total_debt_obj',ticker)
-            write_object(edgar_collection,total_debt_object,mode='many')
-# calculate free cash flow
-        fcf_object= fcf_generate_doc(ticker,edgar_collection)
-        if fcf_object:
-            print('writing fcf',ticker)
-            write_object(edgar_collection,fcf_object,mode='many')
-# extract first and last fcf to calculate cagr
-        first_fcf=fetch_metric(edgar_collection,ticker,metric=fcf_metric,mode='first')
-        last_fcf=fetch_metric(edgar_collection,ticker,metric=fcf_metric,mode='last')
-        if first_fcf and last_fcf:
+# # calculate short term debt
+#         short_term_debt_obj=total_short_term_debt_calc(ticker,edgar_collection)
+#         if short_term_debt_obj:
+#             print('writing short term_debt',ticker)
+#             write_object(edgar_collection,short_term_debt_obj,mode='many')
+# # calculate long term debt
+#         long_term_debt_obj=total_long_term_debt_calc(ticker,edgar_collection)
+#         if long_term_debt_obj:
+#             print('writing long_term_debt',ticker)
+#             write_object(edgar_collection,long_term_debt_obj,mode='many')
+# # calculate total debt and write it on rawEdgarCollection
+#         total_debt_object=total_debt_calc(ticker,edgar_collection)
+#         if total_debt_object:
+#             print('writing total_debt_obj',ticker)
+#             write_object(edgar_collection,total_debt_object,mode='many')
+# # calculate free cash flow
+#         fcf_object= fcf_generate_doc(ticker,edgar_collection)
+#         if fcf_object:
+#             print('writing fcf',ticker)
+#             write_object(edgar_collection,fcf_object,mode='many')
+# # extract first and last fcf to calculate cagr
+#         first_fcf=fetch_metric(edgar_collection,ticker,metric=fcf_metric,mode='first')
+#         last_fcf=fetch_metric(edgar_collection,ticker,metric=fcf_metric,mode='last')
+#         if first_fcf and last_fcf:
             
-            cagr_obj=calculate_historical_growth_rate(first_fcf,last_fcf,edgar_collection)
-        else:
-            cagr_obj={}
-        if cagr_obj:
-            print('writing fcf_cagr',ticker)
-            write_object(edgar_collection,cagr_obj)
-# get price and shares for last 5y and calculate market cap
-        market_cap_obj=market_cap_calc(ticker,edgar_collection)
-        if market_cap_obj:
-            print('writing markeT_cap',ticker)
-            write_object(edgar_collection,market_cap_obj,mode='many')
+#             cagr_obj=calculate_historical_growth_rate(first_fcf,last_fcf,edgar_collection)
+#         else:
+#             cagr_obj={}
+#         if cagr_obj:
+#             print('writing fcf_cagr',ticker)
+#             write_object(edgar_collection,cagr_obj)
+# # get price and shares for last 5y and calculate market cap
+#         market_cap_obj=market_cap_calc(ticker,edgar_collection)
+#         if market_cap_obj:
+#             print('writing markeT_cap',ticker)
+#             write_object(edgar_collection,market_cap_obj,mode='many')
 
-# calculate total assets
-        total_assets_obj=total_assets_calc(ticker,edgar_collection)
-        if total_assets_obj:
-            print('writing assets',ticker)
-            write_object(edgar_collection,total_assets_obj,mode='many')
+# # calculate total assets
+#         total_assets_obj=total_assets_calc(ticker,edgar_collection)
+#         if total_assets_obj:
+#             print('writing assets',ticker)
+#             write_object(edgar_collection,total_assets_obj,mode='many')
 
 
-# calculate total current liabilities
-        current_liabilities_obj=current_liabilities_calc(ticker,edgar_collection)
-        if current_liabilities_obj:
-            print('writing current_liab',ticker)
-            write_object(edgar_collection,current_liabilities_obj,mode='many')
+# # calculate total current liabilities
+#         current_liabilities_obj=current_liabilities_calc(ticker,edgar_collection)
+#         if current_liabilities_obj:
+#             print('writing current_liab',ticker)
+#             write_object(edgar_collection,current_liabilities_obj,mode='many')
         
-# calculate long term liabilities
-        long_term_liabilities_obj=long_term_liabilities_calc(ticker,edgar_collection)
-        if long_term_liabilities_obj:
-            print('writing long_term_liab',ticker)
-            write_object(edgar_collection,long_term_liabilities_obj,mode='many')
-# calculate total liabilities
-        total_liabilities_obj=total_liabilities_calc(ticker,edgar_collection)
-        if total_liabilities_obj:
-            print('writing liab',ticker)
-            write_object(edgar_collection,total_liabilities_obj,mode='many')
-# calculate book value
-        book_value_obj=book_value_calc(ticker,edgar_collection)
-        if book_value_obj:
-            print('writing book_v',ticker)
-            write_object(edgar_collection,book_value_obj,mode='many')
+# # calculate long term liabilities
+#         long_term_liabilities_obj=long_term_liabilities_calc(ticker,edgar_collection)
+#         if long_term_liabilities_obj:
+#             print('writing long_term_liab',ticker)
+#             write_object(edgar_collection,long_term_liabilities_obj,mode='many')
+# # calculate total liabilities
+#         total_liabilities_obj=total_liabilities_calc(ticker,edgar_collection)
+#         if total_liabilities_obj:
+#             print('writing liab',ticker)
+#             write_object(edgar_collection,total_liabilities_obj,mode='many')
+# # calculate book value
+#         book_value_obj=book_value_calc(ticker,edgar_collection)
+#         if book_value_obj:
+#             print('writing book_v',ticker)
+#             write_object(edgar_collection,book_value_obj,mode='many')
             
-# calculate pb_ratio
-        pb_ratio_obj=pb_ratio_calc(ticker,edgar_collection)
-        if pb_ratio_obj:
-            print('writing pb_ratio',ticker)
-            write_object(edgar_collection,pb_ratio_obj,mode='many')
-# calculate pe_ratio
-        pe_ratio_obj=pe_ratio_calc(ticker,edgar_collection)
-        if pe_ratio_obj:
-            print('writing pe_ratio',ticker)
-            write_object(edgar_collection,pe_ratio_obj,mode='many')
-# calculate debt to fcf ratio
-            debt_fcf_ratio_obj=debt_fcf_ratio_calc(ticker,edgar_collection)
-            if debt_fcf_ratio_obj:
-                print('writing debt_fcf_ratio',ticker)
-                write_object(edgar_collection,debt_fcf_ratio_obj,mode='many')
-# calculate earnings yield to pps ratio
-            earning_yield_obj=earnings_yield_calc(ticker,edgar_collection)
-            if earning_yield_obj:
-                print('writing earnings_yeild',ticker)
-                write_object(edgar_collection,earning_yield_obj,mode='many')
-# calculate dividend yields
-            dividends_yield_obj=dividends_yield_calc(ticker,edgar_collection)
-            if dividends_yield_obj:
-                print('writing dividends_yield',ticker)
-                write_object(edgar_collection,dividends_yield_obj,mode='many')
+# # calculate pb_ratio
+#         pb_ratio_obj=pb_ratio_calc(ticker,edgar_collection)
+#         if pb_ratio_obj:
+#             print('writing pb_ratio',ticker)
+#             write_object(edgar_collection,pb_ratio_obj,mode='many')
+# # calculate pe_ratio
+#         pe_ratio_obj=pe_ratio_calc(ticker,edgar_collection)
+#         if pe_ratio_obj:
+#             print('writing pe_ratio',ticker)
+#             write_object(edgar_collection,pe_ratio_obj,mode='many')
+# # calculate debt to fcf ratio
+#             debt_fcf_ratio_obj=debt_fcf_ratio_calc(ticker,edgar_collection)
+#             if debt_fcf_ratio_obj:
+#                 print('writing debt_fcf_ratio',ticker)
+#                 write_object(edgar_collection,debt_fcf_ratio_obj,mode='many')
+# # calculate earnings yield to pps ratio
+#             earning_yield_obj=earnings_yield_calc(ticker,edgar_collection)
+#             if earning_yield_obj:
+#                 print('writing earnings_yeild',ticker)
+#                 write_object(edgar_collection,earning_yield_obj,mode='many')
+# # calculate dividend yields
+#             dividends_yield_obj=dividends_yield_calc(ticker,edgar_collection)
+#             if dividends_yield_obj:
+#                 print('writing dividends_yield',ticker)
+#                 write_object(edgar_collection,dividends_yield_obj,mode='many')
+
+# get stock price
+            price_obj=fetch_price_fmp(edgar_collection,ticker,mode='5y')
+            print(price_obj)

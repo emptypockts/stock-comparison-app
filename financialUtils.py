@@ -199,12 +199,14 @@ def create_index(db):
         print('error creating collection',str(e))
 
 def fetch_price_fmp(
-        
+        collection:Collection,
         ticker,
         mode:Literal["last","5y","calendar_yr"]="last",
-        calendar_yr:int=None):
+        calendar_yr:int=None,
+        ):
     import calendar
     import time
+    import json
     if mode=='last':
         URL = f"{URL_BASE}/price?symbol={ticker.upper()}&apikey={KY}&source=docs"
         response = requests.get(URL)
@@ -216,34 +218,57 @@ def fetch_price_fmp(
             price = 0
         return price
     elif mode=='5y':
+        years_list=[]
         end_date = datetime.now().date()
         start_date = end_date-timedelta(days=365*5)
-        URL = f"{URL_BASE}/time_series?start_date={start_date}&end_date={end_date}&symbol={ticker.upper()}&interval=1month&apikey={KY}"
-        response = requests.get(URL)
-        time.sleep(7.5)
-        print('status code',response.status_code)
-        print('ticker',ticker)
-        try:
-            historic_stock_prices = response.json()
-            if 'code' in historic_stock_prices:
-                return pd.Series(0)
-            if 'values' in historic_stock_prices:      
-                values= historic_stock_prices['values']
-                date=[]
-                close=[]
-                for e in values:
-                    date.append(datetime.fromisoformat(e.get('datetime','')))
-                    close.append(float(e.get('close','')))
-                stock_price=pd.Series(data=close,index=date,name='close')
-                stock_price.index.name='date'
-                stock_price_y= stock_price.resample('YE').last()
-                df= Transform_Obj_and_Date(stock_price_y)
-                if df is None:
-                    return pd.Series(0)
-                else:
-                    return df
-        except:
-            return 0
+        for i in range(start_date.year,end_date.year):
+            years_list.append(i)
+        query={
+            "ticker":ticker.upper(),
+            "metric":"price_close",
+            "date":{
+                "$in":years_list
+            }
+        }
+        cursor= collection.find(query).sort("date",DESCENDING)
+        collection_count=collection.count_documents(query)
+        price_series=[]
+        if collection_count!=len(years_list):
+            print(f"doc count {collection_count} not matching list of years {years_list}")
+            years_cursor=[]
+            for a in cursor:
+                years_cursor.append(a.get('date'))
+                a.pop("_id")
+                price_series.append(a)
+            missing_years=list(set(years_list)-set(years_cursor))
+            print('missing years are ',missing_years)
+            for year in missing_years:
+                missing_start_date=str(year)+'-12-30'
+                missing_end_date=str(year)+'-12-31'
+                URL = f"{URL_BASE}/time_series?start_date={missing_start_date}&end_date={missing_end_date}\
+                    &symbol={ticker.upper()}&interval=1day&apikey={KY}"
+                response = requests.get(URL)
+                time.sleep(7.5)
+                try:
+                    historic_stock_prices = response.json()
+                    if 'code' in historic_stock_prices:
+                        return pd.Series(0)
+                    if 'values' in historic_stock_prices:      
+                        values= historic_stock_prices['values']
+                        price_object={}
+                        for e in values:
+                            price_object['ticker']=historic_stock_prices['meta'].get('symbol')
+                            price_object['date']=datetime.fromisoformat(e.get('datetime')).year
+                            price_object['metric']='price_close'
+                            price_object['value']=float(e.get('close'))
+                        if price_object:
+                            write_object(collection,price_object)
+                            price_series.append(price_object)
+                except Exception as e:
+                    print(f"error calling api: {str(e)}")
+        return price_series
+                
+                            
 
     elif mode=='calendar_yr':
         if calendar_yr==datetime.now().year:
