@@ -25,7 +25,11 @@ def fetch_tickers(collection:Collection)->list:
     nasdaq =pd.read_csv(r"C:\\Users\ejujo\\coding\\nasdaq.csv")
     ciks=[int(e[:-5].lstrip("CIK").lstrip("0"))for e in files]
     tickers=fetch_ticker(ciks,collection)
-    return tickers
+    stock_list=[]
+    for e in tickers:
+        if e in nasdaq['ticker'].values:
+            stock_list.append(e)
+    return stock_list
 #refresh database with latest companyfacts
 def fetch_yearly_data():
     db = client['test']
@@ -92,7 +96,7 @@ def calculate_historical_growth_rate(first,last,collection:Collection):
         )
         new_doc={'calculated_from':{}}
         if not verify_fcf_cagr_cursor:
-            if start_value== 0 or end_value==0 or num_years==0:
+            if start_value<= 0 or end_value<=0 or num_years==0:
                 cagr=0
             else:
                 cagr = (end_value / start_value) ** (1 / num_years) - 1
@@ -145,7 +149,7 @@ def fcf_generate_doc(ticker,collection:Collection):
                     "form":cash_doc.get('form',''),
                     "fp":cash_doc.get('fp','')
                 })
-                    
+    print('returned doc',new_doc)              
     return new_doc if new_doc else []
 # calculate short term debt
 def total_short_term_debt_calc(ticker:str,collection:Collection):
@@ -285,11 +289,15 @@ def total_debt_calc(ticker,collection:Collection):
 def market_cap_calc(ticker,collection:Collection):
     market_cap_metric=[
         'WeightedAverageNumberOfSharesOutstandingBasic',
-        'market_cap']
+        'market_cap',
+        'price_close']
     market_cap_obj=[]
     price_5y=[]
     actual_year = datetime.now().year
     for i in range(actual_year-5,actual_year+1):
+        shares=0
+        price=0
+        new_doc={'calculated_from':{}}
         market_cap_cursor=fetch_metric(
             collection,
             ticker.upper(),
@@ -299,35 +307,30 @@ def market_cap_calc(ticker,collection:Collection):
             unique_metric=False
         )
         if market_cap_cursor:
-            for e in market_cap_cursor:
-                if e['metric']=='market_cap':
+            for a in market_cap_cursor:
+                if a['metric']=='market_cap':
                     break
                 else:
-                    prices_series=fetch_price_fmp(ticker,mode='5y')
-                    if not 'close' in price_5y:
-                        price_5y=pd.Series(0)
-                        if datetime.fromisoformat(e.get('date','')).year in prices_series.index:
-                            shares=e.get('value',0)
-                            price_close=prices_series['close'][pd.to_datetime(e.get('date',0)).year]
-                            result=float(shares*price_close)
-                            new_doc={
-                                
-                                'ticker':e.get('ticker',''),
-                                'entity':e.get('entity',''),
-                                'metric':'market_cap',
-                                'value':result,
-                                'date':e.get('date',''),
-                                'form':e.get('form',''),
-                                'fp':e.get('fp',''),
-                                'frame':e.get('frame',''),
-                                'calculated_from':{
-                                    'price_close':price_close,
-                                    'WeightedAverageNumberOfSharesOutstandingBasic':shares
-                                }
-                            }
-                            if 'value' in new_doc:
-                                if new_doc['value']!=0:
-                                    market_cap_obj.append(new_doc)
+                    new_doc['date']=a.get('date','')
+                    new_doc['form']=a.get('form','')
+                    new_doc['fp']=a.get('fp','')
+                    new_doc['ticker']=ticker.upper()
+                    new_doc['frame']=a.get('frame','')
+                    new_doc['entity']=a.get('entity','')
+                    val = a.get('value',0) or 0
+                    if a['metric']=='WeightedAverageNumberOfSharesOutstandingBasic' and val>0:
+                        new_doc['calculated_from'][a.get('metric')]=val
+                        shares=val
+                    if a['metric']=='price_close' and val!=0:
+                        new_doc['calculated_from'][a.get('metric')]=val
+                        price=val
+            result=float(shares*price)
+            if result!=0:
+                new_doc['metric']='market_cap'
+                new_doc['value']=result
+            if 'value' in new_doc:
+                if new_doc['value']!=0:
+                    market_cap_obj.append(new_doc)
     return market_cap_obj
 def total_assets_calc(ticker,collection:Collection):
     assets_metric=['Assets']
@@ -588,6 +591,8 @@ def pb_ratio_calc(ticker:str,collection:Collection):
     actual_year=datetime.now().year
     pb_ratio_obj=[]
     for i in range(actual_year-5,actual_year+1):
+        market_cap=0
+        book_val=0
         new_doc={'calculated_from':{}}
         pb_ratio_cursor=fetch_metric(
             collection,
@@ -600,6 +605,7 @@ def pb_ratio_calc(ticker:str,collection:Collection):
         if pb_ratio_cursor:
             for a in pb_ratio_cursor:
                 if a['metric']=='pb_ratio':
+                    print('pb ratio already exists for ',ticker)
                     break
                 else:
                     new_doc['date']=a.get('date','')
@@ -609,66 +615,55 @@ def pb_ratio_calc(ticker:str,collection:Collection):
                     new_doc['frame']=a.get('frame','')
                     new_doc['entity']=a.get('entity','')
                     val = a.get('value',0) or 0
-                    if a.get('metric') in pb_ratio_metrics and val>0:
+                    if a.get('metric') == 'market_cap' and val>0:
+                            new_doc['calculated_from'][a.get('metric')]=val
+                            market_cap=val
+                    if a.get('metric')=='book_value' and val>0:
                         new_doc['calculated_from'][a.get('metric')]=val
-                market_cap=new_doc['calculated_from'].get('market_cap',0)
-                book_value=new_doc['calculated_from'].get('book_value',0)
-                if market_cap >0 and book_value!=0:
+                        book_val=val
+                if market_cap >0 and book_val!=0:
                     new_doc['metric']='pb_ratio'
-                    new_doc['value']=market_cap/book_value
+                    new_doc['value']=market_cap/book_val
                     if 'value' in new_doc:
                         pb_ratio_obj.append(new_doc)
     return pb_ratio_obj
 def pe_ratio_calc(ticker:str,collection:Collection):
-    pe_ratio_metrics=['EarningsPerShareDiluted']
-    verify_pe_ratio_metric=['pe_ratio']
+    pe_ratio_metrics=['EarningsPerShareDiluted','pe_ratio','price_close']
     actual_year=datetime.now().year
-    price_5y=[]
-    missing_years=[]
-    for b in (actual_year-5,actual_year+1):    
-        verify_pe_ratio_cursor=fetch_metric(
-            collection,
-            ticker,
-            metric=verify_pe_ratio_metric,
-            mode='year',
-            calendar_yr=str(b),
-            unique_metric=True
-        )
-        if not verify_pe_ratio_cursor:
-            missing_years.append(b)
-            price_5y= fetch_price_fmp(ticker,mode='5y')
     pe_ratio_obj=[]
-    if not 'close' in price_5y:
-        price_5y=pd.Series(0)
     for i in range(actual_year-5,actual_year+1):
-        if i in missing_years:
-            new_doc={'calculated_from':{}}
-            pe_ratio_dict=fetch_metric(
-                collection,
-                ticker.upper(),
-                metric=pe_ratio_metrics,
-                mode='year',
-                calendar_yr=str(i),
-                unique_metric=True
-            )
-            if pe_ratio_dict:
-                new_doc['date']=pe_ratio_dict.get('date','')
-                new_doc['form']=pe_ratio_dict.get('form','')
-                new_doc['fp']=pe_ratio_dict.get('fp','')
-                new_doc['ticker']=ticker.upper()
-                new_doc['frame']=pe_ratio_dict.get('frame','')
-                new_doc['entity']=pe_ratio_dict.get('entity','')
-                val = pe_ratio_dict.get('value',0) or 0
-                if pe_ratio_dict.get('metric') in pe_ratio_metrics and val>0 and 'close' in price_5y:
-                    price_close=float(price_5y['close'].get(i))
-                    new_doc['calculated_from'][pe_ratio_dict.get('metric')]=val
-                    new_doc['calculated_from']['close']=price_close
-
-            eps_diluted=new_doc['calculated_from'].get('EarningsPerShareDiluted',0)
-            pps=new_doc['calculated_from'].get('close',0)
-            if eps_diluted !=0 and pps>0:
+        price_close=0
+        eps_diluted=0
+        new_doc={'calculated_from':{}}
+        pe_ratio_cursor=fetch_metric(
+            collection,
+            ticker.upper(),
+            metric=pe_ratio_metrics,
+            mode='year',
+            calendar_yr=str(i),
+            unique_metric=False
+        )
+        if pe_ratio_cursor:
+            for a in pe_ratio_cursor:
+                if a['metric']=='pe_ratio':
+                    break
+                else:
+                    new_doc['date']=a.get('date','')
+                    new_doc['form']=a.get('form','')
+                    new_doc['fp']=a.get('fp','')
+                    new_doc['ticker']=ticker.upper()
+                    new_doc['frame']=a.get('frame','')
+                    new_doc['entity']=a.get('entity','')
+                    val = a.get('value',0) or 0
+                    if a['metric'] == 'EarningsPerShareDiluted' and val>0:
+                        new_doc['calculated_from'][a.get('metric')]=val
+                        eps_diluted=val
+                    if a['metric']=='price_close' and val>0:
+                        new_doc['calculated_from'][a.get('metric')]=val
+                        price_close=val
+            if eps_diluted >0 and price_close!=0:
                 new_doc['metric']='pe_ratio'
-                new_doc['value']=pps/eps_diluted
+                new_doc['value']=price_close/eps_diluted
                 if 'value' in new_doc:
                     pe_ratio_obj.append(new_doc)
     return pe_ratio_obj
@@ -710,109 +705,87 @@ def debt_fcf_ratio_calc(ticker:str,collection:Collection):
     return(debt_fcf_ratio_obj)
 def earnings_yield_calc(ticker:str,collection:Collection):
     actual_year=datetime.now().year
-    earnings_yield_metric=['EarningsPerShareDiluted']
-    verify_earnings_yield_metric=['earnings_yield']
+    earnings_yield_metrics=['EarningsPerShareDiluted','earnings_yield','price_close']
     missing_years=[]
     earnings_yield_obj=[]
     for b in range(actual_year-5,actual_year+1):
-        verify_earnings_yield_cursor=fetch_metric(
+        price_close=0
+        eps_diluted=0
+        new_doc={'calculated_from':{}}
+        earnings_yield_cursor=fetch_metric(
             collection,
             ticker,
-            metric=verify_earnings_yield_metric,
+            metric=earnings_yield_metrics,
             mode='year',
             calendar_yr=str(b),
-            unique_metric=True
+            unique_metric=False
         )
-        if not verify_earnings_yield_cursor:
-            missing_years.append(b),
-            price_5y= fetch_price_fmp(ticker,mode='5y')
-    
-    if not 'close' in price_5y:
-        price_5y=pd.Series(0)
-
-    for i in range(actual_year-5,actual_year+1):
-        new_doc={'calculated_from':{}}
-        earnings_yield_dict=fetch_metric(
-            collection,
-            ticker.upper(),
-            metric=earnings_yield_metric,
-            mode='year',
-            calendar_yr=str(i),
-            unique_metric=True
-        )
-        if earnings_yield_dict and i in missing_years:
-            new_doc['date']=earnings_yield_dict.get('date','')
-            new_doc['form']=earnings_yield_dict.get('form','')
-            new_doc['fp']=earnings_yield_dict.get('fp','')
-            new_doc['ticker']=ticker.upper()
-            new_doc['frame']=earnings_yield_dict.get('frame','')
-            new_doc['entity']=earnings_yield_dict.get('entity','')
-            val = earnings_yield_dict.get('value',0) or 0
-            if earnings_yield_dict.get('metric') in earnings_yield_metric and val>0:
-                if not 'close' in price_5y:
-                    pps=0
-                else:    
-                    pps=float(price_5y['close'].get(i,0))
-                    new_doc['calculated_from'][earnings_yield_dict.get('metric')]=val
-                    new_doc['calculated_from']['close']=pps
-                    
-                    new_doc['metric']='earnings_yield'
-                    if pps!=0:
-                        new_doc['value']=(val/pps)
+        if earnings_yield_cursor:
+            for a in  earnings_yield_cursor:
+                if a['metric']=='earnings_yield':
+                    print('metric exists for ',ticker)
+                    break
+                else:
+                    new_doc['date']=a.get('date','')
+                    new_doc['form']=a.get('form','')
+                    new_doc['fp']=a.get('fp','')
+                    new_doc['ticker']=ticker.upper()
+                    new_doc['frame']=a.get('frame','')
+                    new_doc['entity']=a.get('entity','')
+                    val = a.get('value',0) or 0
+                    if a['metric']=='EarningsPerShareDiluted'and val>0:
+                        new_doc['calculated_from'][a.get('metric')]=val
+                        eps_diluted=val
+                    if a['metric']=='price_close' and val>0:
+                        new_doc['calculated_from'][a.get('metric')]=val
+                        price_close=val
+            if eps_diluted >0 and price_close!=0:
+                new_doc['metric']='earnings_yield'
+                new_doc['value']=(val/price_close)
                 if 'value' in new_doc:
                     earnings_yield_obj.append(new_doc)
 
     return(earnings_yield_obj)
 def dividends_yield_calc(ticker:str,collection:Collection):
-    dividends_yield_metric=['PaymentsOfDividendsCommonStock','market_cap']
-    verify_dividend_yield_metric=['dividend_yield']
+    dividends_yield_metrics=['PaymentsOfDividendsCommonStock','market_cap','dividend_yield']
     actual_year=datetime.now().year
     dividends_yield_obj=[]
-    price_5y=[]
-    missing_years=[]
-    for b in range(actual_year-5,actual_year+1):
-        verify_dividend_yield_cursor=fetch_metric(
-            collection,
-            ticker,
-            metric=verify_dividend_yield_metric,
-            mode='year',
-            calendar_yr=str(b),
-            unique_metric=True
-        )
-        if verify_dividend_yield_cursor:
-            missing_years.append(b)
-            price_5y= fetch_price_fmp(ticker,mode='5y')
-
-    if not 'close' in price_5y:
-        price_5y=pd.Series(0)    
     for i in range(actual_year-5,actual_year+1):
+        market_cap=0
+        dividends=0
         new_doc={'calculated_from':{}}
         dividends_yield_cursor=fetch_metric(
             collection,
             ticker.upper(),
-            metric=dividends_yield_metric,
+            metric=dividends_yield_metrics,
             mode='year',
             calendar_yr=str(i),
             unique_metric=False
         )
         if dividends_yield_cursor:
-            for a in dividends_yield_cursor and i in missing_years:
-                new_doc['date']=a.get('date','')
-                new_doc['form']=a.get('form','')
-                new_doc['fp']=a.get('fp','')
-                new_doc['ticker']=ticker.upper()
-                new_doc['frame']=a.get('frame','')
-                new_doc['entity']=a.get('entity','')
+            for a in dividends_yield_cursor:
+                if a['metric']=='dividend_yield':
+                    print('dividend yield exists for ',ticker)
+                    break
+                else:
+                    new_doc['date']=a.get('date','')
+                    new_doc['form']=a.get('form','')
+                    new_doc['fp']=a.get('fp','')
+                    new_doc['ticker']=ticker.upper()
+                    new_doc['frame']=a.get('frame','')
+                    new_doc['entity']=a.get('entity','')
                 val = a.get('value',0) or 0
-                if a.get('metric') in dividends_yield_metric and val>0:
+                if a['metric']=='market_cap' and val>0:
                     new_doc['calculated_from'][a.get('metric')]=val
-            market_cap=new_doc['calculated_from'].get('market_cap',0)
-            dividends=new_doc['calculated_from'].get('PaymentsOfDividendsCommonStock',0)
-            if market_cap >0 and dividends!=0:
-                new_doc['metric']='dividend_yield'
-                new_doc['value']=dividends/market_cap
-                if 'value' in new_doc:
-                    dividends_yield_obj.append(new_doc)
+                    market_cap=new_doc['calculated_from'].get('market_cap',0)
+                if a['metric']=='PaymentsOfDividendsCommonStock'and val>0:
+                    new_doc['calculated_from'][a.get('metric')]=val
+                    dividends=new_doc['calculated_from'].get('PaymentsOfDividendsCommonStock',0)
+    if market_cap >0 and dividends!=0:
+        new_doc['metric']='dividend_yield'
+        new_doc['value']=dividends/market_cap
+        if 'value' in new_doc:
+            dividends_yield_obj.append(new_doc)
     return(dividends_yield_obj)
 if __name__=='__main__':
 # write the raw edgar db
@@ -821,7 +794,6 @@ if __name__=='__main__':
     edgar_collection = db['rawEdgarCollection']
     cik_collection=db['tickerCIK']
     #line for testing functions
-    # tickers=['abt','air']
 # define metrics
     fcf_metric=['fcf']
     fcf_cagr_metric=['fcf_cagr']
@@ -845,7 +817,7 @@ if __name__=='__main__':
     #     index_list=index_params
     #     )
     tickers = fetch_tickers(cik_collection)
-    # tickers=['MOV']
+    # tickers=['MSFT']
     for ticker in tickers:
 # # calculate short term debt
 #         short_term_debt_obj=total_short_term_debt_calc(ticker,edgar_collection)
@@ -867,22 +839,22 @@ if __name__=='__main__':
 #         if fcf_object:
 #             print('writing fcf',ticker)
 #             write_object(edgar_collection,fcf_object,mode='many')
-# # extract first and last fcf to calculate cagr
-#         first_fcf=fetch_metric(edgar_collection,ticker,metric=fcf_metric,mode='first')
-#         last_fcf=fetch_metric(edgar_collection,ticker,metric=fcf_metric,mode='last')
-#         if first_fcf and last_fcf:
-            
-#             cagr_obj=calculate_historical_growth_rate(first_fcf,last_fcf,edgar_collection)
-#         else:
-#             cagr_obj={}
-#         if cagr_obj:
-#             print('writing fcf_cagr',ticker)
-#             write_object(edgar_collection,cagr_obj)
+# # # extract first and last fcf to calculate cagr
+        first_fcf=fetch_metric(edgar_collection,ticker,metric=fcf_metric,mode='first')
+        last_fcf=fetch_metric(edgar_collection,ticker,metric=fcf_metric,mode='last')
+        if first_fcf and last_fcf:
+            cagr_obj=calculate_historical_growth_rate(first_fcf,last_fcf,edgar_collection)
+        else:
+            cagr_obj={}
+        if cagr_obj:
+            print('writing fcf_cagr',ticker)
+            print('object towrite',cagr_obj)
+            write_object(edgar_collection,cagr_obj)
 # # get price and shares for last 5y and calculate market cap
-#         market_cap_obj=market_cap_calc(ticker,edgar_collection)
-#         if market_cap_obj:
-#             print('writing markeT_cap',ticker)
-#             write_object(edgar_collection,market_cap_obj,mode='many')
+        # market_cap_obj=market_cap_calc(ticker,edgar_collection)
+        # if market_cap_obj:
+        #     print('writing markeT_cap',ticker)
+        #     write_object(edgar_collection,market_cap_obj,mode='many')
 
 # # calculate total assets
 #         total_assets_obj=total_assets_calc(ticker,edgar_collection)
@@ -914,31 +886,32 @@ if __name__=='__main__':
 #             write_object(edgar_collection,book_value_obj,mode='many')
             
 # # calculate pb_ratio
-#         pb_ratio_obj=pb_ratio_calc(ticker,edgar_collection)
-#         if pb_ratio_obj:
-#             print('writing pb_ratio',ticker)
-#             write_object(edgar_collection,pb_ratio_obj,mode='many')
-# # calculate pe_ratio
-#         pe_ratio_obj=pe_ratio_calc(ticker,edgar_collection)
-#         if pe_ratio_obj:
-#             print('writing pe_ratio',ticker)
-#             write_object(edgar_collection,pe_ratio_obj,mode='many')
-# # calculate debt to fcf ratio
-#             debt_fcf_ratio_obj=debt_fcf_ratio_calc(ticker,edgar_collection)
-#             if debt_fcf_ratio_obj:
-#                 print('writing debt_fcf_ratio',ticker)
-#                 write_object(edgar_collection,debt_fcf_ratio_obj,mode='many')
-# # calculate earnings yield to pps ratio
-#             earning_yield_obj=earnings_yield_calc(ticker,edgar_collection)
-#             if earning_yield_obj:
-#                 print('writing earnings_yeild',ticker)
-#                 write_object(edgar_collection,earning_yield_obj,mode='many')
-# # calculate dividend yields
-#             dividends_yield_obj=dividends_yield_calc(ticker,edgar_collection)
-#             if dividends_yield_obj:
-#                 print('writing dividends_yield',ticker)
-#                 write_object(edgar_collection,dividends_yield_obj,mode='many')
+        # pb_ratio_obj=pb_ratio_calc(ticker,edgar_collection)
+        # if pb_ratio_obj:
+        #     print('writing pb_ratio',ticker)
+        #     write_object(edgar_collection,pb_ratio_obj,mode='many')
+# calculate pe_ratio
 
-# get stock price
-            price_obj=fetch_price_fmp(edgar_collection,ticker,mode='5y')
-            print(price_obj)
+        # pe_ratio_obj=pe_ratio_calc(ticker,edgar_collection)
+        # if pe_ratio_obj:
+        #     print('writing pe_ratio',ticker)
+        #     write_object(edgar_collection,pe_ratio_obj,mode='many')
+# # calculate debt to fcf ratio
+            # debt_fcf_ratio_obj=debt_fcf_ratio_calc(ticker,edgar_collection)
+            # if debt_fcf_ratio_obj:
+            #     print('writing debt_fcf_ratio',ticker)
+            #     write_object(edgar_collection,debt_fcf_ratio_obj,mode='many')
+# # calculate earnings yield to pps ratio
+            # earning_yield_obj=earnings_yield_calc(ticker,edgar_collection)
+            # if earning_yield_obj:
+            #     print('writing earnings_yield',ticker)
+            #     write_object(edgar_collection,earning_yield_obj,mode='many')
+# # calculate dividend yields
+            # dividends_yield_obj=dividends_yield_calc(ticker,edgar_collection)
+            # if dividends_yield_obj:
+            #     print('writing dividends_yield',ticker)
+            #     write_object(edgar_collection,dividends_yield_obj,mode='many')
+
+# # get stock price
+#             price_obj=fetch_price_fmp(edgar_collection,ticker,mode='5y')
+#             print(price_obj)

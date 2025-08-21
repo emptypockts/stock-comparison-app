@@ -19,6 +19,7 @@ URL_BASE = os.getenv('TWELVE_URI')
 def compile_stockData(tickers):
     db = client['test']
     collection = db['QtrStockData']
+    raw_edgar=db['rawEdgarCollection']
     
     if not isinstance(tickers, list):
         return {}
@@ -32,7 +33,7 @@ def compile_stockData(tickers):
                 'ticker':object.get('ticker',''),
                 'name':object.get('entity','unknown'),
                 'last_filing':object.get('date',''),
-                'current_price': fetch_price_fmp(ticker,mode='last')
+                'current_price': fetch_price_fmp(raw_edgar,ticker,mode='last')
             }
     return stock_info
 

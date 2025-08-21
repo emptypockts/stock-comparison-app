@@ -9,6 +9,17 @@ import os
 load_dotenv()
 KY = os.getenv('TWELVE_API_KY')
 URL_BASE = os.getenv('TWELVE_URI')
+def fetch_tickers(collection:Collection)->list:
+    path = r"C:\\Users\\ejujo\\Downloads\\companyfacts\\"
+    files = os.listdir(path)
+    nasdaq =pd.read_csv(r"C:\\Users\ejujo\\coding\\nasdaq.csv")
+    ciks=[int(e[:-5].lstrip("CIK").lstrip("0"))for e in files]
+    tickers=fetch_ticker(ciks,collection)
+    stock_list=[]
+    for e in tickers:
+        if e in nasdaq['ticker'].values:
+            stock_list.append(e)
+    return stock_list
 def get_metric_keys():
  return {
         "RevenueFromContractWithCustomerExcludingAssessedTax":"revenue",
@@ -203,6 +214,7 @@ def fetch_price_fmp(
         ticker,
         mode:Literal["last","5y","calendar_yr"]="last",
         calendar_yr:int=None,
+        maintenance:bool=False
         ):
     import calendar
     import time
@@ -210,7 +222,6 @@ def fetch_price_fmp(
     if mode=='last':
         URL = f"{URL_BASE}/price?symbol={ticker.upper()}&apikey={KY}&source=docs"
         response = requests.get(URL)
-        time.sleep(7.5)
         try:
             price = float(response.json()['price'])
         except Exception as e:
@@ -233,7 +244,7 @@ def fetch_price_fmp(
         cursor= collection.find(query).sort("date",DESCENDING)
         collection_count=collection.count_documents(query)
         price_series=[]
-        if collection_count!=len(years_list):
+        if collection_count!=len(years_list) and maintenance==True:
             print(f"doc count {collection_count} not matching list of years {years_list}")
             years_cursor=[]
             for a in cursor:
@@ -252,6 +263,7 @@ def fetch_price_fmp(
                 try:
                     historic_stock_prices = response.json()
                     if 'code' in historic_stock_prices:
+                        print("code error",historic_stock_prices)
                         return pd.Series(0)
                     if 'values' in historic_stock_prices:      
                         values= historic_stock_prices['values']
@@ -266,6 +278,8 @@ def fetch_price_fmp(
                             price_series.append(price_object)
                 except Exception as e:
                     print(f"error calling api: {str(e)}")
+        else:
+            price_series=list(cursor)  
         return price_series
                 
                             
@@ -286,7 +300,7 @@ def fetch_price_fmp(
             end_date=datetime(year=calendar_yr,month=12,day=31).date()
             URL = f"{URL_BASE}/time_series?start_date={start_date}&end_date={end_date}&symbol={ticker.upper()}&interval=1day&apikey={KY}"
             response = requests.get(URL)
-            time.sleep(7.5)
+            # time.sleep(7.5)
             print('status code',response.status_code)
             print('ticker',ticker)
             try:
@@ -342,16 +356,35 @@ def fetch_metric(
     elif mode=='year'and unique_metric:
         if not calendar_yr or len(calendar_yr)!=4:
             raise ValueError('year most be provided in format yyyy for example 2024')
-        query['date']={'$regex':f'^{calendar_yr}'}
+        query['$or']=[
+            {
+                "date":int(calendar_yr)
+            },
+            {
+                "date":{
+                    "$regex":f"^{calendar_yr}"
+                }
+            }
+        ]
         year_doc=collection.find_one(query,sort=[("date",-1)])
         return year_doc if year_doc else {}
     elif mode=='year' and not unique_metric:
         if not calendar_yr or len(calendar_yr)!=4:
             raise ValueError('year most be provided in format yyyy for example 2024')
-        query['date']={'$regex':f'^{calendar_yr}'}
+        query['$or']=[
+            {
+                "date":int(calendar_yr)
+            },
+            {
+                "date":{
+                    "$regex":f"^{calendar_yr}"
+                }
+            }
+        ]
         year_doc=collection.find(query).sort("date",DESCENDING)
         return year_doc if collection.count_documents(query)>0 else {}
-    
+        
+
     return []
 
 

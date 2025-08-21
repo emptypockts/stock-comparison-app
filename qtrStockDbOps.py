@@ -18,18 +18,18 @@ def aggregateScoreToQtrRevTrend(collection:Collection):
         '$lookup':{
             'from':'StockScore',
             'localField':'ticker',
-            'foreignField':'Symbol',
-            'let':{'tickerSymbol':'$ticker'},
+            'foreignField':'ticker',
+            'let':{'ticker':'$ticker'},
             'pipeline':[
                 {
                     '$match':{
-                        '$expr':{'$eq':['$Symbol','$$tickerSymbol']}
+                        '$expr':{'$eq':['$ticker','$$ticker']}
                     }
                 },
                 {
                     '$project':{
                         '_id':0,
-                        'totalScore':'$Total Score'
+                        'total_score':'$total_score'
                     }
                 }
             ],
@@ -44,7 +44,7 @@ def aggregateScoreToQtrRevTrend(collection:Collection):
         jsonObject.append(
             UpdateOne(
             {"ticker":item["ticker"]},
-            {"$set":{"score":(',').join(str(score["totalScore"]) for score in item["result"])}},
+            {"$set":{"total_score":(',').join(str(score["total_score"]) for score in item["result"])}},
             upsert=False
         )
         )
@@ -62,38 +62,40 @@ def fetch_Stock_Info():
     for file in files:
         # use to debug
     # for file in files[:3:]: 
-        cik_integer = int(file[:-5].lstrip("CIK").lstrip("0"))
-        ticker=fetch_ticker(cik_integer,collection)
-        if ticker and ticker in nasdaq['ticker'].values:
-            with open(path + file) as f:
-                item = json.loads(f.read())
+        cik_integer = [int(file[:-5].lstrip("CIK").lstrip("0"))]
+        tickers=fetch_ticker(cik_integer,collection)
+        if tickers:
+            for ticker in tickers:
+                if ticker in nasdaq['ticker'].values:
+                    with open(path + file) as f:
+                        item = json.loads(f.read())
 
-        # Iterate through items in the dataset
-                if item and 'entityName' in item and 'facts' in item and 'us-gaap' in item['facts'] and 'cik' in item:
-                    for metric_name, key_value in metric_keys.items():
-                        # Check if the metric exists in the current item
-                        if metric_name in item['facts']['us-gaap']:
-                            if 'USD' in item['facts']['us-gaap'][metric_name]['units'] or 'USD/shares' in item['facts']['us-gaap'][metric_name]['units']:
-                                if metric_name=='EarningsPerShareBasic' or metric_name=='EarningsPerShareDiluted':
-                                    metrics = item['facts']['us-gaap'][metric_name]['units']['USD/shares']
-                                else:
-                                    metrics = item['facts']['us-gaap'][metric_name]['units']['USD']
-                                for metric in metrics:
-                                    # Process only 10-Q forms with a frame
-                                    endDate=datetime.strptime(metric['end'],'%Y-%m-%d')
-                                    if metric['form'] == '10-Q' and (endDate.year>2023)  :
-                                        qtr_obj.append({
-                                                'ticker':ticker,
-                                                'entity':item['entityName'],
-                                                'metric':metric_name,
-                                                'value':metric['val'],
-                                                'date':metric['end'],
-                                                'form':metric['form'],
-                                                'fp':metric.get('fp',None),
-                                                'frame':metric.get('frame',None)
-                                                })
-                                  
-    # Convert the deduplicated frames into a list
+                # Iterate through items in the dataset
+                        if item and 'entityName' in item and 'facts' in item and 'us-gaap' in item['facts'] and 'cik' in item:
+                            for metric_name, key_value in metric_keys.items():
+                                # Check if the metric exists in the current item
+                                if metric_name in item['facts']['us-gaap']:
+                                    if 'USD' in item['facts']['us-gaap'][metric_name]['units'] or 'USD/shares' in item['facts']['us-gaap'][metric_name]['units']:
+                                        if metric_name=='EarningsPerShareBasic' or metric_name=='EarningsPerShareDiluted':
+                                            metrics = item['facts']['us-gaap'][metric_name]['units']['USD/shares']
+                                        else:
+                                            metrics = item['facts']['us-gaap'][metric_name]['units']['USD']
+                                        for metric in metrics:
+                                            # Process only 10-Q forms with a frame
+                                            endDate=datetime.strptime(metric['end'],'%Y-%m-%d')
+                                            if metric['form'] == '10-Q' and (endDate.year>2023)  :
+                                                qtr_obj.append({
+                                                        'ticker':ticker,
+                                                        'entity':item['entityName'],
+                                                        'metric':metric_name,
+                                                        'value':metric['val'],
+                                                        'date':metric['end'],
+                                                        'form':metric['form'],
+                                                        'fp':metric.get('fp',None),
+                                                        'frame':metric.get('frame',None)
+                                                        })
+                                        
+            # Convert the deduplicated frames into a list
     return qtr_obj
 def fetch_dei_info():
     path = f"C:\\Users\\ejujo\\Downloads\\companyfacts\\"
@@ -316,20 +318,20 @@ if __name__=="__main__":
     # # Flow to update stock info from json files  (GAAP)
     # object = fetch_Stock_Info()
     # push_StockData(db,object,collection='QtrStockData')    
-    # print(object)
+    
 
 
-    # # function to update main revenue trends per quarter in the db   
+    # function to update main revenue trends per quarter in the db   
     # for skip in range((collectionSize//limit_size)+1):
     #     response =PullProcessMergeRevenueGrowthQtrStockData(db['QtrStockData'],skip,limit_size)
-    #     print(response)
+        
     #     pushMergedRevenueGrowthQtrStockData(response,db['temp_QtrStockRevTrend'])
     # swap_temp_prod(db,collection='QtrStockRevTrend')
     
-    #join the qtr stock rev trend with the stock value score
+    # join the qtr stock rev trend with the stock value score
     aggregateScoreToQtrRevTrend(db['QtrStockRevTrend'])
 
-    #create index for each collection
+    # create index for each collection
     # create_index(db)
     
         
