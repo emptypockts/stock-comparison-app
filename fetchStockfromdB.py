@@ -42,22 +42,6 @@ def stockFetch(db,page=1, items_per_page=100):
     grouped_stocks = {}
     for stock in stocks:
         stock['_id'] = str(stock['_id'])  # Convert ObjectId to string
-                # Apply formatting to each relevant field
-        stock['Basic Average Shares'] = stock.get('EarningsPerShareBasic')
-        stock['Tangible Book Value'] = stock.get('book_value')
-        stock['Free Cash Flow'] = stock.get('fcf')
-        stock['Basic EPS'] = stock.get('EarningsPerShareBasic')
-        stock['Diluted EPS'] = stock.get('EarningsPerShareDiluted')
-        stock['Total Debt'] = stock.get('total_debt')
-        stock['Dividends'] = stock.get('PaymentsOfDividendsCommonStock')
-        stock['Price Per Share'] = stock.get('price_close')
-        stock['p/b ratio'] = stock.get('pb_ratio')
-        stock['p/e ratio'] = stock.get('pe_ratio')
-        stock['Debt FCF ratio'] = stock.get('debt_fcf_ratio')
-        stock['Dividends Yield'] = stock.get('dividend_yield')
-        stock['Earnings Yield'] = stock.get('earnings_yield')
-        stock['Market Cap'] = stock.get('market_cap')
-        stock['Growth']=stock.get('fcf_cagr')
         symbol = stock['ticker']
         if symbol not in grouped_stocks:
             grouped_stocks[symbol] = []

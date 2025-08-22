@@ -15,7 +15,7 @@ export default defineConfig({
         target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false, // This allows for self-signed certificates or localhost
-        logLevel: 'debug'
+        
       }
     }
   }

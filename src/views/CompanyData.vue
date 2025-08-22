@@ -26,7 +26,7 @@
             <strong>
             Current price:
           </strong> 
-          ${{ e.current_price }} 
+          ${{ e.current_price.toFixed(2) }} 
           <strong>
             Last Filing :
           </strong> {{ e.last_filing }}

@@ -17,7 +17,10 @@ collection = db['rawEdgarCollection']
 cik_collection=db['tickerCIK']
 
 def format_currency(value):
-    return "${:,.2f}".format(value)
+    if value:
+        return "${:,.2f}".format(value)
+    else:
+        return 0
 
 def format_number(value):
     return "{:,.0f}".format(value)
@@ -70,7 +73,6 @@ def fetch_5y_data(ticker):
             stock_data.append(b)
 
     combined_df= pd.DataFrame(stock_data)
-
     # Calculate metrics
     combined_df['market_cap_score'] = combined_df.apply(check_market_cap, axis=1)
     if 'pe_ratio' in combined_df.columns:
@@ -108,7 +110,7 @@ def fetch_5y_data(ticker):
             + combined_df['pe_ratio_score'] + combined_df['market_cap_score']
 
     # remove $nan for 0
-    combined_df=combined_df.fillna(0.01)
+    combined_df=combined_df.fillna(0.001)
     # Formats
     if 'WeightedAverageNumberOfSharesOutstandingBasic' in combined_df.columns:
         combined_df['WeightedAverageNumberOfSharesOutstandingBasic'] = combined_df['WeightedAverageNumberOfSharesOutstandingBasic'].apply(format_number)
@@ -139,19 +141,19 @@ def fetch_5y_data(ticker):
     if 'market_cap' in combined_df.columns:
         combined_df['market_cap'] = combined_df['market_cap'].apply(format_currency)
 
-
+    
     return combined_df
 # Example function call
 if __name__ == "__main__":
  
-    tickers= fini.fetch_tickers(collection=cik_collection)
+    # tickers= fini.fetch_tickers(collection=cik_collection)
     json_obj=[]
-    
+    tickers=['AXP','MSFT','NVDA']
     for ticker in tickers:
         response=fetch_5y_data(ticker)
         for idx,e in response.iterrows():
             json_obj.append(dict(e))
     print(json_obj)
-    fini.push_StockData(db,json_obj,'StockScore')
+    # fini.push_StockData(db,json_obj,'StockScore')
 
             

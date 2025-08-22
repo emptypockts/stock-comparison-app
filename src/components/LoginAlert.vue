@@ -16,6 +16,9 @@
           investment or financial decisions.
           <br><br>
           p/b ratio is calculated using the Stockholders Equity instead of the tangible book value.
+          the fcf cagr is calculated based on the first and last value available. this could be 2 years up to 5 years
+          the data provided is calculated based on the sec edgar db
+          the price history is provided by twelvedata.com
         </p>
         <button @click="dismissAlert">OK, got it</button>
       </div>

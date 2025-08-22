@@ -41,7 +41,6 @@ def compile_stockData(tickers):
 if __name__ == "__main__":
     db = client['test']
     collection = db['QtrStockData']
-    tickers= ['air','abt']
-
+    tickers= ['msft']
     stock_info=compile_stockData(tickers)
     print(stock_info)

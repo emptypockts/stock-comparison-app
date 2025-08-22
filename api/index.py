@@ -59,7 +59,8 @@ def fetch_company_data():
     if not tickers:
         return jsonify({'error': 'No tickers provided'}), 400
     company_data = companyData.compile_stockData(tickers)
-    return jsonify(company_data)
+
+    return company_data
 #fetch the stock price
 @app.route('/api/stock_price', methods=['GET'])
 def fetch_stock_price():
@@ -92,14 +93,13 @@ def fetch_5y_financial_data():
     if not all_data:
         return jsonify({"error": "Failed to fetch any data"}), 500
     try:
-        combined_data = pd.concat(all_data, ignore_index=False)
+        combined_data = pd.concat(all_data, ignore_index=False).fillna(0)
     except:
         return jsonify({"error": "Failed to fetch any data"}), 500
     
     combined_data.reset_index(inplace=True) 
     # Convert DataFrame to JSON serializable format
     result = combined_data.to_dict(orient='records')
-
     return jsonify(result),200
 #Rittenhouse Analysis API
 @app.route('/api/fetch_sec_reports', methods=['GET'])
@@ -239,7 +239,6 @@ def gemini_post():
 def gemini_generate_pdf():
     data= request.json
     task_id=data.get('task_id')
-    print('task_id',task_id)
     try:
         pdf_report = PDFReport(task_id)
         pdf_buffer,today=pdf_report.generate()
