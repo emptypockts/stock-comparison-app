@@ -309,7 +309,7 @@ if __name__=="__main__":
     uri = os.getenv('MONGODB_URI')
     client = MongoClient(uri, server_api=ServerApi('1'))
     db = client["test"]
-    tickers = ['CVS','ROST']
+    # tickers = ['CVS','ROST']
     collectionSize=CountAggRecordPipeline(db['QtrStockData'])
     limit_size=10000
     skip=0

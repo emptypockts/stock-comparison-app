@@ -89,16 +89,19 @@ def get_metric_keys():
     }
 def fetch_ticker(cik:list,collection:Collection):
     query={
-        'cik_str':
-        {"$in":cik}
+        'cik_str':{
+            "$in":cik
+        }
     }
     
     
-    ticker=collection.find(
+    new_doc=collection.find(
         query
     )
     if collection.count_documents(query)>0:
-        tickers=[e['ticker'] for e in ticker] 
+        tickers=[]
+        for a in new_doc:
+            tickers.append(a['ticker'])
         return tickers
     else:
         return []

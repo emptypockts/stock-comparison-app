@@ -145,15 +145,15 @@ def fetch_5y_data(ticker):
     return combined_df
 # Example function call
 if __name__ == "__main__":
- 
-    # tickers= fini.fetch_tickers(collection=cik_collection)
+    # tickers=['AXP','MSFT','NVDA']
+    tickers= fini.fetch_tickers(collection=cik_collection)
     json_obj=[]
-    tickers=['AXP','MSFT','NVDA']
+    
     for ticker in tickers:
         response=fetch_5y_data(ticker)
         for idx,e in response.iterrows():
             json_obj.append(dict(e))
     print(json_obj)
-    # fini.push_StockData(db,json_obj,'StockScore')
+    fini.push_StockData(db,json_obj,'StockScore')
 
             

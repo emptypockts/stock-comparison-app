@@ -58,7 +58,7 @@ def fetch_yearly_data():
                             if 'USD' in item['facts']['us-gaap'][metric_name]['units'] or 'USD/shares' in item['facts']['us-gaap'][metric_name]['units'] or 'shares' in item['facts']['us-gaap'][metric_name]['units']:
                                 if metric_name=='EarningsPerShareBasic' or metric_name=='EarningsPerShareDiluted':
                                     metrics = item['facts']['us-gaap'][metric_name]['units']['USD/shares']
-                                elif metric_name=='WeightedAverageNumberOfSharesOutstandingBasic' or metric_name=='CommonStockSharesOutstanding':
+                                elif metric_name=='WeightedAverageNumberOfSharesOutstandingBasic' or metric_name=='CommonStockSharesOutstanding' or metric_name=='EntityCommonStockSharesOutstanding':
                                     metrics = item['facts']['us-gaap'][metric_name]['units']['shares']
                                 else:
                                     metrics = item['facts']['us-gaap'][metric_name]['units']['USD']
@@ -288,7 +288,7 @@ def total_debt_calc(ticker,collection:Collection):
     return total_debt_obj
 def market_cap_calc(ticker,collection:Collection):
     market_cap_metric=[
-        'EntityCommonStockSharesOutstanding',
+        'CommonStockSharesOutstanding',
         'market_cap',
         'price_close']
     market_cap_obj=[]
@@ -318,7 +318,7 @@ def market_cap_calc(ticker,collection:Collection):
                     new_doc['frame']=a.get('frame','')
                     new_doc['entity']=a.get('entity','')
                     val = a.get('value',0) or 0
-                    if a['metric']=='EntityCommonStockSharesOutstanding' and val>0:
+                    if a['metric']=='CommonStockSharesOutstanding' and val>0:
                         new_doc['calculated_from'][a.get('metric')]=val
                         shares=val
                     if a['metric']=='price_close' and val!=0:
@@ -816,9 +816,12 @@ if __name__=='__main__':
     #     ordered_mode=False,
     #     index_list=index_params
     #     )
-    # tickers = fetch_tickers(cik_collection)
-    tickers=['NTNX']
+    tickers = fetch_tickers(cik_collection)
+    # tickers=['NTNX']
     for ticker in tickers:
+        # price_obj=fetch_price_fmp(collection=edgar_collection,ticker=ticker,mode='5y',maintenance=True)
+        # print(price_obj)
+
 # # calculate short term debt
 #         short_term_debt_obj=total_short_term_debt_calc(ticker,edgar_collection)
 #         if short_term_debt_obj:
@@ -840,17 +843,18 @@ if __name__=='__main__':
 #             print('writing fcf',ticker)
 #             write_object(edgar_collection,fcf_object,mode='many')
 # # # extract first and last fcf to calculate cagr
-        # first_fcf=fetch_metric(edgar_collection,ticker,metric=fcf_metric,mode='first')
-        # last_fcf=fetch_metric(edgar_collection,ticker,metric=fcf_metric,mode='last')
-        # if first_fcf and last_fcf:
-        #     cagr_obj=calculate_historical_growth_rate(first_fcf,last_fcf,edgar_collection)
-        # else:
-        #     cagr_obj={}
-        # if cagr_obj:
-        #     print('writing fcf_cagr',ticker)
-        #     print('object towrite',cagr_obj)
-        #     write_object(edgar_collection,cagr_obj)
-# # get price and shares for last 5y and calculate market cap
+#         first_fcf=fetch_metric(edgar_collection,ticker,metric=fcf_metric,mode='first')
+#         last_fcf=fetch_metric(edgar_collection,ticker,metric=fcf_metric,mode='last')
+#         if first_fcf and last_fcf:
+#             cagr_obj=calculate_historical_growth_rate(first_fcf,last_fcf,edgar_collection)
+#         else:
+#             cagr_obj={}
+#         if cagr_obj:
+#             print('writing fcf_cagr',ticker)
+#             print('object towrite',cagr_obj)
+#             write_object(edgar_collection,cagr_obj)
+
+# # # get price and shares for last 5y and calculate market cap
         market_cap_obj=market_cap_calc(ticker,edgar_collection)
         if market_cap_obj:
             print('writing markeT_cap',ticker)
@@ -886,32 +890,30 @@ if __name__=='__main__':
 #             write_object(edgar_collection,book_value_obj,mode='many')
             
 # # calculate pb_ratio
-        # pb_ratio_obj=pb_ratio_calc(ticker,edgar_collection)
-        # if pb_ratio_obj:
-        #     print('writing pb_ratio',ticker)
-        #     write_object(edgar_collection,pb_ratio_obj,mode='many')
-# calculate pe_ratio
+#         pb_ratio_obj=pb_ratio_calc(ticker,edgar_collection)
+#         if pb_ratio_obj:
+#             print('writing pb_ratio',ticker)
+#             write_object(edgar_collection,pb_ratio_obj,mode='many')
+# # calculate pe_ratio
 
-        # pe_ratio_obj=pe_ratio_calc(ticker,edgar_collection)
-        # if pe_ratio_obj:
-        #     print('writing pe_ratio',ticker)
-        #     write_object(edgar_collection,pe_ratio_obj,mode='many')
+#         pe_ratio_obj=pe_ratio_calc(ticker,edgar_collection)
+#         if pe_ratio_obj:
+#             print('writing pe_ratio',ticker)
+#             write_object(edgar_collection,pe_ratio_obj,mode='many')
 # # calculate debt to fcf ratio
-            # debt_fcf_ratio_obj=debt_fcf_ratio_calc(ticker,edgar_collection)
-            # if debt_fcf_ratio_obj:
-            #     print('writing debt_fcf_ratio',ticker)
-            #     write_object(edgar_collection,debt_fcf_ratio_obj,mode='many')
+#             debt_fcf_ratio_obj=debt_fcf_ratio_calc(ticker,edgar_collection)
+#             if debt_fcf_ratio_obj:
+#                 print('writing debt_fcf_ratio',ticker)
+#                 write_object(edgar_collection,debt_fcf_ratio_obj,mode='many')
 # # calculate earnings yield to pps ratio
-            # earning_yield_obj=earnings_yield_calc(ticker,edgar_collection)
-            # if earning_yield_obj:
-            #     print('writing earnings_yield',ticker)
-            #     write_object(edgar_collection,earning_yield_obj,mode='many')
+#             earning_yield_obj=earnings_yield_calc(ticker,edgar_collection)
+#             if earning_yield_obj:
+#                 print('writing earnings_yield',ticker)
+#                 write_object(edgar_collection,earning_yield_obj,mode='many')
 # # calculate dividend yields
-            # dividends_yield_obj=dividends_yield_calc(ticker,edgar_collection)
-            # if dividends_yield_obj:
-            #     print('writing dividends_yield',ticker)
-            #     write_object(edgar_collection,dividends_yield_obj,mode='many')
+#             dividends_yield_obj=dividends_yield_calc(ticker,edgar_collection)
+#             if dividends_yield_obj:
+#                 print('writing dividends_yield',ticker)
+#                 write_object(edgar_collection,dividends_yield_obj,mode='many')
 
 # # get stock price
-#             price_obj=fetch_price_fmp(edgar_collection,ticker,mode='5y')
-#             print(price_obj)
