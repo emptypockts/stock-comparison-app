@@ -10,7 +10,6 @@
     <!-- Display the company names based on the tickers -->
     <div v-if="tickers.length" class="chart-container">
       <!-- Stock Price (Last 5 Years) -->
-       {{ pickStockPriceSeries }}
       <div class="chart-box">
         <h2>{{isYearlyView? "Stock Price (Last 5 Years)":"Stock Price (Last 4 Quarters)"}}</h2>
         <apexcharts v-if="pickStockPriceSeries.length" type="line" :options="chartOptionsPrice" :series="pickStockPriceSeries">
@@ -379,9 +378,7 @@ export default {
           return{
             name:ticker,
             data:
-              // x:Object.keys(values).map(year=>parseInt(year)),
-              // y:Object.values(values).map(price=>parseFloat(price))
-              Object.entries(values).map(([year,price])=>({
+              Object.entries(values).sort(([a],[b])=>Number(a)-Number(b)).map(([year,price])=>({
                 x:year,
                 y:price
               }))

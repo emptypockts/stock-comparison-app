@@ -220,6 +220,13 @@ def fetch_price_fmp(
             price = 0
         return price
     elif mode=='5y':
+        URL = f"{URL_BASE}/price?symbol={ticker.upper()}&apikey={KY}&source=docs"
+        response = requests.get(URL)
+        try:
+            last_price = float(response.json()['price'])
+        except Exception as e:
+            print('error: ',str(e))
+            last_price = 0
         years_list=[]
         end_date = datetime.now().date()
         start_date = end_date-timedelta(days=365*5)
@@ -271,8 +278,15 @@ def fetch_price_fmp(
                     except Exception as e:
                         print(f"error calling api: {str(e)}")
             else:
-                price_series=list(cursor)  
-            return price_series
+                price_series=list(cursor)
+                price_series.append({
+                    'date':end_date.year,
+                    'value':last_price
+                    })
+                
+                
+                
+            return price_series       
         except Exception as e:
             print('error ',str(e))
             return pd.Series(0)

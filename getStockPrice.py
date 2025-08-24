@@ -1,4 +1,3 @@
-import yfinance as yf
 from financialUtils import fetch_price_fmp,fetch_metric
 import pandas as pd
 from pymongo.server_api import ServerApi
