@@ -10,13 +10,13 @@
     <!-- Display the company names based on the tickers -->
     <div v-if="tickers.length" class="chart-container">
       <!-- Stock Price (Last 5 Years) -->
+       {{ pickStockPriceSeries }}
       <div class="chart-box">
         <h2>{{isYearlyView? "Stock Price (Last 5 Years)":"Stock Price (Last 4 Quarters)"}}</h2>
-        <apexcharts v-if="pickStockPriceSeries.length" type="line" :options="chartOptions" :series="pickStockPriceSeries">
+        <apexcharts v-if="pickStockPriceSeries.length" type="line" :options="chartOptionsPrice" :series="pickStockPriceSeries">
         </apexcharts>
         <p>This chart shows the stock price movements.</p>
       </div>
-
       <!-- Revenue and Assets -->
       <div class="chart-box">
         <h2>{{isYearlyView? "Revenue and Assets (Last 5 Years)":"Revenue and Assets (Last 4 Quarters)"}}</h2>
@@ -24,7 +24,6 @@
         <p>If assets grow faster than revenue, it could mean that inventory is growing fast. It could be a sales
           forecast warning.</p>
       </div>
-
       <!-- Cash and Liabilities -->
       <div class="chart-box">
         <h2>{{isYearlyView? "Cash and Liabilities (Last 5 Years)":"Cash and Liabilities (Last 4 Quarters)"}}</h2>
@@ -118,6 +117,7 @@ export default {
       financialData: {}, // Object to store multiple tickers' data
       stockPriceData: [], // Array for stock price data
       chartOptions: null,
+      chartOptionsPrice:null,
       percentageChartOptions: null,
       EPSChartOptions: null,
       errorMessage: '',
@@ -173,7 +173,6 @@ export default {
         width: '2',
       },
     };
-
     this.chartOptions = {
       chart: {
         type: 'line',
@@ -186,6 +185,34 @@ export default {
         type: 'datetime',
         min: this.chartMinDate,
         max: this.chartMaxDate,
+      
+
+      },
+
+      yaxis: {
+        labels: {
+          formatter: (val) => {
+            if (val === null || val === undefined) return '';
+            if (Math.abs(val) >= 1e9) return `$${(val / 1e9).toFixed(2)}B`;
+            if (Math.abs(val) >= 1e6) return `$${(val / 1e6).toFixed(2)}M`;
+            return `$${val.toFixed(2)}`;
+          },
+        },
+      },
+      stroke: {
+        width: '2',
+      },
+    };
+    this.chartOptionsPrice = {
+      chart: {
+        type: 'line',
+        height: 350,
+        zoom: {
+          enabled: true,
+        },
+      },
+      xaxis: {
+        type: 'string',
       
 
       },
@@ -266,7 +293,6 @@ export default {
     },
   },
   computed: {
-    
     pickStockPriceSeries() {
       return this.isYearlyView ? this.stockPriceData : this.stockPriceDataQtr;  
     },
@@ -300,7 +326,6 @@ export default {
 
   },
   methods: {
-    
     toggleView(){
     this.isYearlyView= !this.isYearlyView;
     },
@@ -317,18 +342,14 @@ export default {
             return acc;
           }, {}),
         });
-
         const financialResponse = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/financial_data`, {
           params: tickers.reduce((acc, ticker, index) => {
             acc[`ticker${index + 1}`] = ticker;
             return acc;
           }, {}),
         });
-
         this.financialData = financialResponse.data.financial_data;
         this.financialDataQtr=financialResponseQtr;
-
-
         const stockPriceResponse = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/stock_price`, {
           params: tickers.reduce((acc, ticker, index) => {
             acc[`ticker${index + 1}`] = ticker;
@@ -338,6 +359,7 @@ export default {
         const currentDate = new Date(); 
       const twelveMonthsAgo = new Date();
       twelveMonthsAgo.setFullYear(currentDate.getFullYear() - 1); // Set to 12 months ago
+
 
       this.stockPriceDataQtr = Object.keys(stockPriceResponse.data).map(ticker => {
           const datePricePairs = stockPriceResponse.data[ticker];
@@ -351,19 +373,22 @@ export default {
             }))
           }
         }); 
-
-        this.stockPriceData = Object.keys(stockPriceResponse.data).map(ticker => {
-          const datePricePairs = stockPriceResponse.data[ticker];
-          return {
-            name: `${ticker}`,
-            data: Object.entries(datePricePairs).map(([date, price]) => ({
-              x: new Date(date).toISOString(), // Convert the date to ISO string format
-              y: parseFloat(price) // Ensure the price is a float
-            }))
+      this.stockPriceData=stockPriceResponse.data.map(e=>{
+          const [ticker,values]=Object.entries(e)[0]
+          
+          return{
+            name:ticker,
+            data:
+              // x:Object.keys(values).map(year=>parseInt(year)),
+              // y:Object.values(values).map(price=>parseFloat(price))
+              Object.entries(values).map(([year,price])=>({
+                x:year,
+                y:price
+              }))
+              
+            
           }
-        }); 
-        
-
+        })
       } catch (error) {
         this.errorMessage = error.response ? error.response.data : error.message; // Update here
         console.error('Error fetching data:', error.response ? error.response.data : error.message);

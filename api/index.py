@@ -36,7 +36,8 @@ CERT_KYS = requests.get(CF_CERT_URL).json()
 CF_AUDIENCE_ID = os.getenv('CF_AUD_ID')
 uri = os.getenv('MONGODB_URI')
 client = MongoClient(uri, server_api=ServerApi('1'))
-db = client["test"]
+db=client['test']
+edgar_collection=db['rawEdgarCollection']
 app = Flask(__name__)
 app.config.from_object(app_constants)
 CORS(app)
@@ -64,11 +65,14 @@ def fetch_company_data():
 #fetch the stock price
 @app.route('/api/stock_price', methods=['GET'])
 def fetch_stock_price():
+    price=[]
     tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
     if not tickers:
         return jsonify({'error': 'No tickers provided'}), 400
-    data = {ticker: getStockPrice.fetch_stock_price_data(ticker) for ticker in tickers}
-    return jsonify(data)
+    for ticker in tickers:
+        stock=getStockPrice.fetch_stock_price_data(ticker)
+        price.append({ticker:{str(e['date']):e['value'] for e in stock if e}})
+    return jsonify(price)
 #fetch other metrics for value for plots
 @app.route('/api/financial_data', methods=['GET'])
 def fetch_financial_data():

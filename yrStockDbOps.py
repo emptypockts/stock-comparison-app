@@ -3,7 +3,7 @@ import os
 import pandas as pd
 from dotenv import load_dotenv
 from pymongo.server_api import ServerApi
-from pymongo import MongoClient,UpdateOne
+from pymongo import MongoClient
 from companyData import fetch_metric,fetch_price_fmp
 from financialUtils import (
     get_metric_keys,fetch_ticker,

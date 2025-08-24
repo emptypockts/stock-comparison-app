@@ -1,6 +1,6 @@
 from typing import Literal
 from pymongo.collection import Collection,Cursor
-from pymongo import errors,DESCENDING,MongoClient
+from pymongo import errors,DESCENDING
 from datetime import datetime,timedelta
 import pandas as pd
 import requests
@@ -87,7 +87,6 @@ def get_metric_keys():
         "LiabilitiesNoncurrentExcludingLongTermDebt":"LiabilitiesLongTerm",
         "OtherEmployeeRelatedLiabilitiesNoncurrent":"LiabilitiesLongTerm"
     }
-
 def fetch_ticker(cik:list,collection:Collection):
     query={
         'cik_str':
@@ -103,7 +102,6 @@ def fetch_ticker(cik:list,collection:Collection):
         return tickers
     else:
         return []
-    
 def fetch_cik(ticker,collection):
     filter={
         'ticker':ticker.upper()
@@ -121,7 +119,6 @@ def fetch_cik(ticker,collection):
         return cik['cik_str'] 
     else:
         return None
-    
 def Transform_Obj_and_Date(Object):
     import pandas as pd
     index = pd.to_datetime(Object.index)
@@ -134,7 +131,6 @@ def Transform_Obj_and_Date(Object):
     except:
         return Object_df
     return Object_df
-
 def serialize_cursor(cursor:Cursor,key:str,value:str,series_name:str,index_name:str=None):
     index=[]
     values=[]
@@ -142,7 +138,6 @@ def serialize_cursor(cursor:Cursor,key:str,value:str,series_name:str,index_name:
         index.append(e.get(key,''))
         values.append(e.get(value,''))
     return pd.Series(data=values,index=index,name=series_name)
-
 def write_object(collection:Collection,object,mode:Literal['one','many']='one'):
     try:
         if mode=='one':
@@ -151,7 +146,6 @@ def write_object(collection:Collection,object,mode:Literal['one','many']='one'):
             collection.insert_many(object)
     except Exception as e:
         print('error updating collection: ',str(e))
-
 def push_StockData(db, objects, collection:str,ordered_mode:bool=True,index_list:list=[]):
     today = datetime.now().strftime("%m_%d_%y_%H_%M_%S")
     prod_collection = collection
@@ -177,7 +171,6 @@ def push_StockData(db, objects, collection:str,ordered_mode:bool=True,index_list
         print(f"Operation failure: {ofe}")
     except Exception as e:
         print(f"An error occurred: {e}")
-
 def swap_temp_prod(db,collection):
     today = datetime.now().strftime("%m_%d_%y_%H_%M_%S")
     prod_collection = collection
@@ -194,7 +187,6 @@ def swap_temp_prod(db,collection):
         print(f"Connection failure: {cf}")
     except errors.OperationFailure as ofe:
         print(f"Operation failure: {ofe}")
-
 def create_index(db):
     try:
         # db['aiTasks']
@@ -208,10 +200,9 @@ def create_index(db):
 
     except Exception as e:
         print('error creating collection',str(e))
-
 def fetch_price_fmp(
-        collection:Collection,
-        ticker,
+        collection:Collection=None,
+        ticker:str='',
         mode:Literal["last","5y","calendar_yr"]="last",
         calendar_yr:int=None,
         maintenance:bool=False
@@ -232,7 +223,7 @@ def fetch_price_fmp(
         years_list=[]
         end_date = datetime.now().date()
         start_date = end_date-timedelta(days=365*5)
-        for i in range(start_date.year,end_date.year):
+        for i in range(start_date.year,(end_date.year)):
             years_list.append(i)
         query={
             "ticker":ticker.upper(),
@@ -241,68 +232,75 @@ def fetch_price_fmp(
                 "$in":years_list
             }
         }
-        cursor= collection.find(query).sort("date",DESCENDING)
-        collection_count=collection.count_documents(query)
-        price_series=[]
-        if collection_count!=len(years_list) and maintenance==True:
-            print(f"doc count {collection_count} not matching list of years {years_list}")
-            years_cursor=[]
-            for a in cursor:
-                years_cursor.append(a.get('date'))
-                a.pop("_id")
-                price_series.append(a)
-            missing_years=list(set(years_list)-set(years_cursor))
-            print('missing years are ',missing_years)
-            for year in missing_years:
-                missing_start_date=str(year)+'-12-30'
-                missing_end_date=str(year)+'-12-31'
-                URL = f"{URL_BASE}/time_series?start_date={missing_start_date}&end_date={missing_end_date}\
-                    &symbol={ticker.upper()}&interval=1day&apikey={KY}"
-                response = requests.get(URL)
-                time.sleep(7.5)
-                try:
-                    historic_stock_prices = response.json()
-                    if 'code' in historic_stock_prices:
-                        print("code error",historic_stock_prices)
-                        return pd.Series(0)
-                    if 'values' in historic_stock_prices:      
-                        values= historic_stock_prices['values']
-                        price_object={}
-                        for e in values:
-                            price_object['ticker']=historic_stock_prices['meta'].get('symbol')
-                            price_object['date']=datetime.fromisoformat(e.get('datetime')).year
-                            price_object['metric']='price_close'
-                            price_object['value']=float(e.get('close'))
-                        if price_object:
-                            write_object(collection,price_object)
-                            price_series.append(price_object)
-                except Exception as e:
-                    print(f"error calling api: {str(e)}")
-        else:
-            price_series=list(cursor)  
-        return price_series
-                
+        try:
+            cursor= collection.find(query).sort("date",DESCENDING)
+            collection_count=collection.count_documents(query)
+            price_series=[]
+            if collection_count!=len(years_list) and maintenance==True:
+                print(f"doc count {collection_count} not matching list of years {years_list}")
+                years_cursor=[]
+                for a in cursor:
+                    years_cursor.append(a.get('date'))
+                    a.pop("_id")
+                    price_series.append(a)
+                missing_years=list(set(years_list)-set(years_cursor))
+                print('missing years are ',missing_years)
+                for year in missing_years:
+                    missing_start_date=str(year)+'-12-30'
+                    missing_end_date=str(year)+'-12-31'
+                    URL = f"{URL_BASE}/time_series?start_date={missing_start_date}&end_date={missing_end_date}\
+                        &symbol={ticker.upper()}&interval=1day&apikey={KY}"
+                    response = requests.get(URL)
+                    time.sleep(7.5)
+                    try:
+                        historic_stock_prices = response.json()
+                        if 'code' in historic_stock_prices:
+                            print("code error",historic_stock_prices)
+                            return pd.Series(0)
+                        if 'values' in historic_stock_prices:      
+                            values= historic_stock_prices['values']
+                            price_object={}
+                            for e in values:
+                                price_object['ticker']=historic_stock_prices['meta'].get('symbol')
+                                price_object['date']=datetime.fromisoformat(e.get('datetime')).year
+                                price_object['metric']='price_close'
+                                price_object['value']=float(e.get('close'))
+                            if price_object:
+                                write_object(collection,price_object)
+                                price_series.append(price_object)
+                    except Exception as e:
+                        print(f"error calling api: {str(e)}")
+            else:
+                price_series=list(cursor)  
+            return price_series
+        except Exception as e:
+            print('error ',str(e))
+            return pd.Series(0)
                             
 
     elif mode=='calendar_yr':
         if calendar_yr==datetime.now().year:
             URL = f"{URL_BASE}/price?symbol={ticker.upper()}&apikey={KY}&source=docs"
             response = requests.get(URL)
-            time.sleep(7.5)
             try:
                 price = float(response.json()['price'])
+                stock_price=pd.Series(data=[price],index=[datetime.now()],name='close')
+                stock_price.index.name='date'
+                df=Transform_Obj_and_Date(stock_price)
+                if df is None:
+                    return pd.Series(0)
+                else:
+                    return df
             except Exception as e:
                 print('error: ',str(e))
-                price = 0
-            return price
+                return pd.Series(0)
+
+            
         else:
             start_date = datetime(year=calendar_yr,month=12,day=30).date()
             end_date=datetime(year=calendar_yr,month=12,day=31).date()
             URL = f"{URL_BASE}/time_series?start_date={start_date}&end_date={end_date}&symbol={ticker.upper()}&interval=1day&apikey={KY}"
             response = requests.get(URL)
-            # time.sleep(7.5)
-            print('status code',response.status_code)
-            print('ticker',ticker)
             try:
                 historic_stock_prices = response.json()
                 if 'code' in historic_stock_prices:
@@ -325,7 +323,6 @@ def fetch_price_fmp(
 
             except Exception as e:
                 print(f"error calling api: {str(e)}")
-
 def fetch_metric(
         collection:Collection,
         ticker:str,
@@ -386,12 +383,8 @@ def fetch_metric(
         
 
     return []
-
-
-
-
 if __name__=="__main__":
         current_y=datetime.now().year
         for i in range(current_y-5,current_y+1):
-            price=fetch_price_fmp('MSFT',mode='calendar_yr',calendar_yr=i)
+            price=fetch_price_fmp(ticker='msft',mode='calendar_yr',calendar_yr=i)
             print(price)

@@ -1,27 +1,27 @@
 import yfinance as yf
+from financialUtils import fetch_price_fmp,fetch_metric
 import pandas as pd
-def fetch_stock_price_data(ticker):
-    stock = yf.Ticker(ticker)
-    data = stock.history(period="5y")
-    return ({str(date): round(price,2)for date, price in data['Close'].dropna().items()})
+from pymongo.server_api import ServerApi
+import os
+from dotenv import load_dotenv
+from pymongo import MongoClient
+load_dotenv()
+uri = os.getenv('MONGODB_URI')
+client = MongoClient(uri, server_api=ServerApi('1'))
+def fetch_stock_price_data(ticker,collection=None):
+    db=client['test']
+    collection=db['rawEdgarCollection']
+    data = fetch_price_fmp(collection=collection,ticker=ticker,mode='5y')
+    return data
 
 if __name__ == "__main__":
+    
 
     price = []
     
-    tickers = ['hci','intc']  # Example ticker
+    tickers = ['axp','intc']  # Example ticker
     for ticker in tickers:
-        try:
-            data= fetch_stock_price_data(ticker)
-            price.append(data)
-            
-        except:
-            print(f"Cannot fetch stock {ticker}.")
-            price.append(None)
-
-    stock_prices = pd.DataFrame({
-    'symbol' : tickers,
-    'price' : price,
-    })
-
-    print(stock_prices)
+        stock=fetch_stock_price_data(ticker)
+        price.append({ticker:{str(e['date']):e['value'] for e in stock if e}})
+    print(price)
+    
