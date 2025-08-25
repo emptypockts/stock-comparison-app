@@ -321,12 +321,12 @@ if __name__=="__main__":
     
 
 
-    # function to update main revenue trends per quarter in the db   
-    # for skip in range((collectionSize//limit_size)+1):
-    #     response =PullProcessMergeRevenueGrowthQtrStockData(db['QtrStockData'],skip,limit_size)
+    # # function to update main revenue trends per quarter in the db   
+    for skip in range((collectionSize//limit_size)+1):
+        response =PullProcessMergeRevenueGrowthQtrStockData(db['QtrStockData'],skip,limit_size)
         
-    #     pushMergedRevenueGrowthQtrStockData(response,db['temp_QtrStockRevTrend'])
-    # swap_temp_prod(db,collection='QtrStockRevTrend')
+        pushMergedRevenueGrowthQtrStockData(response,db['temp_QtrStockRevTrend'])
+    swap_temp_prod(db,collection='QtrStockRevTrend')
     
     # join the qtr stock rev trend with the stock value score
     aggregateScoreToQtrRevTrend(db['QtrStockRevTrend'])
