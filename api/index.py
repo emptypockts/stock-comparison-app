@@ -10,7 +10,7 @@ import rittenhouse
 import fetch5yData
 import stockPlotData
 import companyData
-import getStockPrice
+from financialUtils import fetch_price_realtime
 import stockIntrinsicVal
 import geminiChat
 from dotenv import load_dotenv
@@ -70,8 +70,8 @@ def fetch_stock_price():
     if not tickers:
         return jsonify({'error': 'No tickers provided'}), 400
     for ticker in tickers:
-        stock=getStockPrice.fetch_stock_price_data(ticker)
-        price.append({ticker:{str(e['date']):e['value'] for e in stock if e}})
+        stock=fetch_price_realtime(ticker)
+        price.append({ticker:{str(e['datetime']):e['close'] for e in stock if e}})
     return jsonify(price)
 #fetch other metrics for value for plots
 @app.route('/api/financial_data', methods=['GET'])

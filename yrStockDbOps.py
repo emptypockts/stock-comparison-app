@@ -45,10 +45,12 @@ def fetch_yearly_data():
         # use to debug
     # for file in files[:3:]: 
         cik_integer = int(file[:-5].lstrip("CIK").lstrip("0"))
-        ticker=fetch_ticker(cik_integer,collection)
+        ticker=fetch_ticker([cik_integer],collection)
         print(ticker)
-        tickers.append(ticker)
+        if len(ticker)>1:
+            ticker=ticker[0]
         if ticker and ticker in nasdaq['ticker'].values:
+            tickers.append(ticker[0])
             with open(path + file) as f:
                 item = json.loads(f.read())
         # Iterate through items in the dataset
@@ -66,8 +68,8 @@ def fetch_yearly_data():
                                 for metric in metrics:
                                     # Process only 10-K forms with a frame
                                     endDate=datetime.strptime(metric['end'],'%Y-%m-%d')
-                                    if metric['form'] == '10-K' and (endDate.year>2019):
-                                        concat_index=(ticker,metric_name,metric['val'],metric['end'])
+                                    if metric['form'] == '10-K' and (endDate.year>endDate.year-5):
+                                        concat_index=(ticker[0],metric_name,metric['val'],metric['end'])
                                         if concat_index not in is_stored:
                                             is_stored.add(concat_index)
                                             yrly_obj.append({
@@ -817,8 +819,7 @@ if __name__=='__main__':
     #     ordered_mode=False,
     #     index_list=index_params
     #     )
-    tickers = fetch_tickers(cik_collection)
-    # tickers=['NTNX']
+    tickers=['NTNX']
     # for ticker in tickers:
         # price_obj=fetch_price_fmp(collection=edgar_collection,ticker=ticker,mode='5y',maintenance=True)
         # print(price_obj)

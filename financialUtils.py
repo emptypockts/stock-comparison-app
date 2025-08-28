@@ -400,8 +400,25 @@ def fetch_metric(
         
 
     return []
+def fetch_price_realtime(ticker:str,period:int=5):
+    prices=[]
+    end_date=datetime.now().date()
+    start_date=str(end_date.year-period)+'-01-01'
+    URL = f"{URL_BASE}/time_series?start_date={start_date}&end_date={str(end_date)}\
+        &symbol={ticker.upper()}&interval=1day&apikey={KY}"
+    response = requests.get(URL)
+    try:
+        historic_stock_prices = response.json()
+        if 'code' in historic_stock_prices:
+            print("code error",historic_stock_prices)
+            return pd.Series(0)
+        if 'values' in historic_stock_prices:      
+            return historic_stock_prices['values']
+    except Exception as e:
+        print(str(e))
+        return pd.Series(0)
+    
+    
+
 if __name__=="__main__":
-        current_y=datetime.now().year
-        for i in range(current_y-5,current_y+1):
-            price=fetch_price_fmp(ticker='msft',mode='calendar_yr',calendar_yr=i)
-            print(price)
+    print(fetch_price_realtime('nvda'))

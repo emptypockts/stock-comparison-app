@@ -12,7 +12,7 @@
       <!-- Stock Price (Last 5 Years) -->
       <div class="chart-box">
         <h2>{{isYearlyView? "Stock Price (Last 5 Years)":"Stock Price (Last 4 Quarters)"}}</h2>
-        <apexcharts v-if="pickStockPriceSeries.length" type="line" :options="chartOptionsPrice" :series="pickStockPriceSeries">
+        <apexcharts v-if="pickStockPriceSeries.length" type="line" :options="chartOptions" :series="pickStockPriceSeries">
         </apexcharts>
         <p>This chart shows the stock price movements.</p>
       </div>
@@ -358,20 +358,25 @@ export default {
         const currentDate = new Date(); 
       const twelveMonthsAgo = new Date();
       twelveMonthsAgo.setFullYear(currentDate.getFullYear() - 1); // Set to 12 months ago
-
-
-      this.stockPriceDataQtr = Object.keys(stockPriceResponse.data).map(ticker => {
-          const datePricePairs = stockPriceResponse.data[ticker];
-          return {
-            name: `${ticker}`,
-            data: Object.entries(datePricePairs)
-            .filter(([date])=>new Date(date)>=twelveMonthsAgo)
-            .map(([date, price]) => ({
-              x: new Date(date).toISOString(), // Convert the date to ISO string format
-              y: parseFloat(price) // Ensure the price is a float
-            }))
+        
+      this.stockPriceDataQtr=stockPriceResponse.data.map(f=>{
+          const [tickerq,valuesq]=Object.entries(f)[0]
+          
+          return{
+            name:tickerq,
+            data:
+              Object.entries(valuesq).sort(([a],[b])=>Number(a)-Number(b))
+              .filter(([dates])=>new Date(dates)>=twelveMonthsAgo)
+              .map(([dates,priceq])=>({
+                x:new Date(dates),
+                y:priceq
+              }))
+              
+            
           }
-        }); 
+        })
+
+      
       this.stockPriceData=stockPriceResponse.data.map(e=>{
           const [ticker,values]=Object.entries(e)[0]
           
@@ -379,7 +384,7 @@ export default {
             name:ticker,
             data:
               Object.entries(values).sort(([a],[b])=>Number(a)-Number(b)).map(([year,price])=>({
-                x:year,
+                x:new Date(year),
                 y:price
               }))
               
