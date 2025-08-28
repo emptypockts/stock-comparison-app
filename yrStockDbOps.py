@@ -46,6 +46,7 @@ def fetch_yearly_data():
     # for file in files[:3:]: 
         cik_integer = int(file[:-5].lstrip("CIK").lstrip("0"))
         ticker=fetch_ticker(cik_integer,collection)
+        print(ticker)
         tickers.append(ticker)
         if ticker and ticker in nasdaq['ticker'].values:
             with open(path + file) as f:
@@ -804,7 +805,7 @@ if __name__=='__main__':
     short_term_debt_metric=['ShortTermBorrowings','ShortTermDebt','CurrentPortionOfLongTermDebt','CurrentDebtAndCapitalLeaseObligation','DebtCurrent']
     long_term_debt_metric=['LongTermDebtNoncurrent','LongTermBorrowings','LongTermDebt','DebtNoncurrent','LongTermDebtAndCapitalLeaseObligation']
 # # # fetch companyfacts and create the rawEdgarCollection
-    # object,tickers= fetch_yearly_data()
+    object,tickers= fetch_yearly_data()
     # index_params=[{
     #     "fields":[("ticker",1),("metric",1),("date",1),("value",1)],
     #     "unique":True
@@ -818,7 +819,7 @@ if __name__=='__main__':
     #     )
     tickers = fetch_tickers(cik_collection)
     # tickers=['NTNX']
-    for ticker in tickers:
+    # for ticker in tickers:
         # price_obj=fetch_price_fmp(collection=edgar_collection,ticker=ticker,mode='5y',maintenance=True)
         # print(price_obj)
 
@@ -855,10 +856,10 @@ if __name__=='__main__':
 #             write_object(edgar_collection,cagr_obj)
 
 # # # get price and shares for last 5y and calculate market cap
-        market_cap_obj=market_cap_calc(ticker,edgar_collection)
-        if market_cap_obj:
-            print('writing markeT_cap',ticker)
-            write_object(edgar_collection,market_cap_obj,mode='many')
+        # market_cap_obj=market_cap_calc(ticker,edgar_collection)
+        # if market_cap_obj:
+        #     print('writing markeT_cap',ticker)
+        #     write_object(edgar_collection,market_cap_obj,mode='many')
 
 # # calculate total assets
 #         total_assets_obj=total_assets_calc(ticker,edgar_collection)
