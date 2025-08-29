@@ -51,12 +51,15 @@ export default {
   },
   created() {
     this.chartOptions = {
-      chart: { type: 'line', height: 350, zoom: { enabled: true } },
+      chart: { type: 'line', height: 350, zoom: { enabled: true,autoScaleYaxis:true } },
       xaxis: { type: 'datetime' },
       yaxis: {
         labels: {
           formatter: (val) => (val !== null && val !== undefined) ? val.toFixed(2) : '',
         },
+        forceNiceScale:true,
+        min:undefined,
+        max:undefined
       },
       stroke: { width: '2' },
     };
@@ -79,7 +82,11 @@ export default {
         "PNGASEUUSDM": "Natural Gas Prices in Europe (USD per MMBtu). Represents the price of natural gas in Europe, quoted in U.S. dollars per Million British Thermal Units (MMBtu), providing insights into energy market trends, weather effects, and geopolitical factors that impact supply and demand for natural gas.",
         "PNGASUSUSDM": "Natural Gas Prices in the U.S. (USD per MMBtu). Reflects the price of natural gas in the United States, quoted in U.S. dollars per Million British Thermal Units (MMBtu). This price trend can influence energy consumption, inflation, and the cost of living in the U.S.",
         "MNGLCP": "U.S. Natural Gas Liquid Composite Price. Measures the average price of natural gas liquids (NGLs) in the U.S. NGL",
-        "RRPONTSYD": "high value indicates excess liquidity where institutions prefer the safety of parking cash, so check for supportive central bank policies, lower alternative yields, and market caution. Conversely, a low value suggests limited excess cash or redirection to higher-yielding investments; monitor repo rates, broader liquidity metrics, and relevant economic indicators for potential funding stress."
+        "RRPONTSYD": "high value indicates excess liquidity where institutions prefer the safety of parking cash, so check for supportive central bank policies, lower alternative yields, and market caution. Conversely, a low value suggests limited excess cash or redirection to higher-yielding investments; monitor repo rates, broader liquidity metrics, and relevant economic indicators for potential funding stress.",
+        "FPCPITOTLZGUSA": "Inflation, consumer prices for the United States. Measures the annual percentage change in consumer prices (headline CPI). A rising value signals higher inflation, eroding purchasing power, pressuring households and businesses, and prompting potential central bank tightening. A declining value suggests easing inflation, improved stability, and possible policy loosening. Watch for spikes during economic shocks (e.g., 1970s oil crisis, 2022 supply chain disruptions) and normalization afterward as indicators of economic health and policy effectiveness.",
+        "DGS10":"Daily 10-year U.S. Treasury yield. Not seasonally adjusted; source: Fed’s H.15 release. Use it to gauge long-term interest rate expectations, growth/inflation outlook, and risk sentiment. Watch for volatility in daily data. Complement with T10YIE for inflation expectations, real yield (DGS10–T10YIE) for inflation-adjusted returns, and yield curve spreads (e.g. vs. 2-year) for recession signals.",
+        "T10YIE":"The inflation-adjusted yield on Treasuries, calculated by subtracting breakeven inflation (T10YIE) from the nominal 10-year yield (DGS10). Higher real yields raise the cost of capital and can pressure equities and gold; lower or negative real yields tend to support risk assets and borrowing. Key gauge of financial conditions and growth sentiment",
+        "DGS2":"Measures the slope of the yield curve. A steepening curve (spread widening) signals growth optimism and rising inflation expectations; a flattening or inverted curve (spread narrowing/negative) is a classic recession warning indicator. Closely watched as a predictor of U.S. business cycle turning points."
       };
       this.loading = true;
       try {
