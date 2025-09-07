@@ -437,7 +437,7 @@ export default {
       return this.tickers.map(ticker => {
         const financialData = this.financialDataQtr.data[ticker]?.['financial_data_qtr'] ||{x:'1900-01-01',y:0};
         const cash = financialData["CashAndCashEquivalentsAtCarryingValue"] || {x:'1900-01-01',y:0};
-        const liabilities = financialData["Liabilities"] || {x:'1900-01-01',y:0};
+        const liabilities = financialData["Liabilities"]||financialData["LiabilitiesCurrent"] || {x:'1900-01-01',y:0};
         return [
           {
             name: `${ticker} Cash`,
