@@ -29,7 +29,7 @@ from pymongo.server_api import ServerApi
 from stockPlotDataQtr import fetch_4qtr_data
 from PDFReport import PDFReport
 import requests
-from worker import generate_ai_report,celery
+from worker import generate_ai_report,celery, generate_ai_7powers
 load_dotenv()
 CF_CERT_URL = f"https://{os.getenv('CF_URL_CDN_CGI_CERTS')}/cdn-cgi/access/certs"
 CERT_KYS = requests.get(CF_CERT_URL).json()
@@ -213,12 +213,20 @@ def verify_token():
         return jsonify({'success': False, 'message': 'Invalid token'}), 401
 @app.route('/api/v1/seven_p', methods=['POST'])
 def messageBot():
+    
     data = request.json
-    tickers = data.get('tickers')
-    try:
-        response = geminiChat.seven_powers(tickers)
+    tickers = data.get('tickers',[])
+    user_id=data.get('user_id','')
+    print (data)
+    if 'tickers' not in data or 'user_id' not in data:
         return jsonify({
-            'assistant':response,
+            'error':'missing fields'
+        }),400
+    try:
+        task = generate_ai_7powers.delay(tickers,user_id)
+        return jsonify({
+            'task_id':task.id,
+            'status':'processing'
             }),200
     except Exception as e:
         return jsonify({'error':e}),400

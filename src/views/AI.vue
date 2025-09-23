@@ -55,6 +55,7 @@ const messages = ref([
 
 async function get_seven_p_analysis() {
     tickers.value = tickerStore.currentTickers
+    const user_id = localStorage.getItem('user_id')
 
     if (tickers.length === 0) {
 
@@ -74,7 +75,8 @@ async function get_seven_p_analysis() {
 
                     loading.value = true
                     const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/seven_p`, {
-                        tickers: allowedTickers.value
+                        tickers: allowedTickers.value,
+                        user_id:user_id
                     });
                     let formattedResponse = response.data['assistant'];
                     rawMessage.value = formattedResponse;
@@ -137,6 +139,7 @@ const get7pPdf = async () => {
     if (rawMessage.value.length > 0) {
         loading.value = true;
         try {
+            console.log('rawMessage',rawMessage.value)
             await downloadPdfReport(rawMessage.value, tickerStore.currentTickers, "7powers")
         } catch (err) {
             console.error('error generating report ', err)
