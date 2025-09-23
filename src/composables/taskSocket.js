@@ -16,10 +16,10 @@ export function useSocket() {
         console.log('my guy, you are no longer on')
     })
     socket.on('task_done', (data) => {
-        console.log('my guy, task completed: ', data)
+        console.log('my guy, task_done is completed. downloading report ', data)
         taskData.value = data
             try {
-        downloadPdfReport(taskData.value.task_id, taskData.value.tickers, "overall")
+        downloadPdfReport(taskData.value.task_id, taskData.value.tickers, taskData.value.report_type)
     }
     catch (err) {
         console.error('error trying to generate report', err)

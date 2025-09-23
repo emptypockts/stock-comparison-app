@@ -8,7 +8,7 @@ ws_server = SocketIO(app,cors_allowed_origins="*",message_queue='redis://localho
 
 @ws_server.on("connect")
 def handle_connect():
-    print('dropping ai result')
+    print('server connected',ws_server)
 
 @ws_server.on("disconnect")
 def handle_disconnect():

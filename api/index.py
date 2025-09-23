@@ -213,21 +213,22 @@ def verify_token():
         return jsonify({'success': False, 'message': 'Invalid token'}), 401
 @app.route('/api/v1/seven_p', methods=['POST'])
 def messageBot():
-    
     data = request.json
-    tickers = data.get('tickers',[])
-    user_id=data.get('user_id','')
+    tickers = data.get('tickers')
+    user_id=data.get('user_id')
+    report_type=data.get("report_type")
     print (data)
-    if 'tickers' not in data or 'user_id' not in data:
+    if 'tickers' not in data or 'user_id' not in data or 'report_type' not in data:
         return jsonify({
             'error':'missing fields'
         }),400
     try:
-        task = generate_ai_7powers.delay(tickers,user_id)
+        task = generate_ai_7powers.delay(tickers,user_id,report_type)
         return jsonify({
             'task_id':task.id,
-            'status':'processing'
-            }),200
+            'status':'processing',
+            'report_type':report_type
+            }),202
     except Exception as e:
         return jsonify({'error':e}),400
 @app.route('/api/v1/gemini',methods=['POST'])
@@ -235,15 +236,17 @@ def gemini_post():
     data=request.json
     tickers = data.get('tickers')
     user_id = data.get('user_id')
-    if 'user_id' not in data or 'tickers' not in data:
+    report_type=data.get('report_type')
+    if 'user_id' not in data or 'tickers' not in data or 'report_type' not in data:
         return jsonify({
             'error':'missing fields'
         }),400
     try:
-        task =generate_ai_report.delay(tickers,user_id)
+        task =generate_ai_report.delay(tickers,user_id,report_type)
         return jsonify({
             'task_id':task.id,
-            'status':'processing'
+            'status':'processing',
+            'report_type':report_type
         }),202
     except Exception as e:
             return jsonify({'error':str(e)}),400

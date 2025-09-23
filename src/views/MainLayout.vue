@@ -69,7 +69,8 @@ const get_report = async () => {
             try {
                 const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/gemini`, {
                     tickers: allowedTickers.value,
-                    user_id:user_id
+                    user_id:user_id,
+                    report_type:"overall"
                 })
             }
 

@@ -6,16 +6,8 @@
         <div>
             <CompanyData />
         </div>
-
-        <div class="chat-messages">
-            <div v-for="(message, index) in messages" :key="index" :class="{ 'user-message': message.isUser }"
-                v-html="message.text">
-            </div>
-        </div>
-        <button @click="get_seven_p_analysis">7powers</button>
+        <button @click="get_seven_p_analysis">7powers pdf report</button>
         <small> ⚠️warning it takes around 30 sec per ticker <br></small>
-
-        <button @click="get7pPdf">get pdf</button>
         <div>
             <Navigation />
         </div>
@@ -76,28 +68,10 @@ async function get_seven_p_analysis() {
                     loading.value = true
                     const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/seven_p`, {
                         tickers: allowedTickers.value,
-                        user_id:user_id
+                        user_id:user_id,
+                        report_type:"7_powers"
                     });
-                    let formattedResponse = response.data['assistant'];
-                    rawMessage.value = formattedResponse;
-                    setTimeout(() => {
-
-                        const jsonToTextResponse = formattedResponse.map(section => {
-                            switch (section.type) {
-                                case "title":
-                                    return `<h2 class="text-xl font-bold mb-2">${section.content}</h2>`;
-                                case "paragraph":
-                                    return `<p class="text-base mb 3">${section.content}</p>`;
-                                case "bullets":
-                                    return `<ul class="mb-3">${section.content.map(e => `<li>${e}</li>`).join('').trim()}</ul>`
-                                default:
-                                    return '';
-                            }
-                        }
-                        ).join('');
-
-                        messages.value.push({ text: jsonToTextResponse, isUser: true });
-                    }, 1000);
+                    
 
                 }
                 catch (error) {

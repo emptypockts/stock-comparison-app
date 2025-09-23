@@ -14,11 +14,18 @@ celery = Celery(
     backend='redis://localhost:6379/0'
 )
 
-sio = socketio.Client()
+def notify_task_done(event_name,payload):
+    sio = socketio.Client()
+    try:
+        sio.connect(WS_SOCKET_URI)
+        sio.emit(event_name,payload,namespace='/')
+        sio.sleep(0)
+    finally:
+        sio.disconnect()
 
 
 @celery.task(bind=True)
-def generate_ai_report(self,tickers,user_id):
+def generate_ai_report(self,tickers,user_id,report_type):
     
     from aiReport import compile
     try:
@@ -34,22 +41,20 @@ def generate_ai_report(self,tickers,user_id):
             ai_report_collections.insert_one({
             "user_id":user_id,
             "task_id":task_id,
-            "assistant":result
+            "assistant":result,
+            "report_type":report_type
             })
 
 
         try:
             print('notifying server of completion')
-            if not sio.connected:      
-                sio.connect(
-                    WS_SOCKET_URI,
-                    )
-            sio.emit('task_done',{
+            notify_task_done('task_done',{
                 'user_id':user_id,
                 'task_id':task_id,
-                'tickers':tickers
-            },namespace='/')
-            print('emit done')
+                'tickers':tickers,
+                'report_type':report_type
+            })
+            print(f"task {task_id} completed emitting task_done")
         except Exception as e:
             print('ws issue',str(e))
         return result
@@ -58,7 +63,7 @@ def generate_ai_report(self,tickers,user_id):
         return str(e)
 
 @celery.task(bind=True)
-def generate_ai_7powers(self,tickers,user_id):
+def generate_ai_7powers(self,tickers,user_id,report_type):
     from geminiChat import seven_powers
     try:
         if not user_id:
@@ -72,20 +77,18 @@ def generate_ai_7powers(self,tickers,user_id):
             ai_report_collections.insert_one({
                 "user_id":user_id,
                 "task_id":task_id,
-                "assistant":result
+                "assistant":result,
+                "report_type":report_type
             })
             try:
                 print("notifying server of completion")
-                if not sio.connected:
-                    sio.connect(
-                        WS_SOCKET_URI
-                    )
-                sio.emit('task done',{
-                    "user_id":user_id,
-                    "task_id":task_id,
-                    "tickers":tickers
-                },namespace='/')
-                print("emit done")
+                notify_task_done('task_done',{
+                'user_id':user_id,
+                'task_id':task_id,
+                'tickers':tickers,
+                'report_type':report_type
+                })
+                print(f"task {task_id} completed emitting task_done")
             except Exception as e:
                 print("error trying to notify task completion: ", str(e))
             return result
