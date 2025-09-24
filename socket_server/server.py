@@ -2,8 +2,11 @@ import eventlet
 eventlet.monkey_patch()
 from flask import Flask
 from flask_socketio import SocketIO,send,emit
+from dotenv import load_dotenv
+load_dotenv()
+import os
 app = Flask(__name__)
-ws_server = SocketIO(app,cors_allowed_origins="*",message_queue='redis://localhost:6379/0',async_mode='eventlet')
+ws_server = SocketIO(app,cors_allowed_origins="*",message_queue=os.getenv('REDIS_SERVER'),async_mode='eventlet')
 
 
 @ws_server.on("connect")

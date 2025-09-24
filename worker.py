@@ -10,16 +10,20 @@ WS_SOCKET_URI=os.getenv('VITE_WS_SERVER')
 
 celery = Celery(
     'ai_reports',
-    broker='redis://localhost:6379/0',
-    backend='redis://localhost:6379/0'
+    broker=os.getenv('REDIS_SERVER'),
+    backend=os.getenv('REDIS_SERVER')
 )
 
 def notify_task_done(event_name,payload):
+    print('calling task')
     sio = socketio.Client()
     try:
+        print(WS_SOCKET_URI)
         sio.connect(WS_SOCKET_URI)
         sio.emit(event_name,payload,namespace='/')
         sio.sleep(0)
+    except Exception as e:
+        print(f"error trying to connect to the ws socket {sio} error {str(e)}")
     finally:
         sio.disconnect()
 
@@ -28,6 +32,7 @@ def notify_task_done(event_name,payload):
 def generate_ai_report(self,tickers,user_id,report_type):
     
     from aiReport import compile
+    
     try:
         if not user_id:
             raise ValueError("missing user_id")
