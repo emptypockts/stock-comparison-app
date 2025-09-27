@@ -23,6 +23,7 @@
               <th v-if="!collapsed">Total Debt</th>
               <th v-if="!collapsed">Dividends</th>
               <th v-if="!collapsed">Price Per Share</th>
+              <th v-if="!collapsed">Tangible Book Value Per Share</th>
               <th v-if="!collapsed">p/b ratio</th>
               <th v-if="!collapsed">p/e ratio</th>
               <th v-if="!collapsed">Debt FCF ratio</th>
@@ -40,30 +41,31 @@
           </thead>
           <tbody>
             <tr v-for="(item, index) in financialData" :key="index">
-              <td>{{ item['date'] }}</td>
-              <td>{{ item['total_score'] }}</td>
-              <td>{{ item['ticker'] }}</td>
-              <td v-if="!collapsed">{{ item['WeightedAverageNumberOfSharesOutstandingBasic'] }}</td>
-              <td v-if="!collapsed">{{ item['book_value'] }}</td>
-              <td v-if="!collapsed">{{ item['fcf'] }}</td>
-              <td v-if="!collapsed">{{ item['EarningsPerShareBasic'] }}</td>
-              <td v-if="!collapsed">{{ item['EarningsPerShareDiluted'] }}</td>
-              <td v-if="!collapsed">{{ item['total_debt'] }}</td>
-              <td v-if="!collapsed">{{ item['PaymentsOfDividendsCommonStock'] }}</td>
-              <td v-if="!collapsed">{{ item['price_close'] }}</td>
-              <td v-if="!collapsed">{{ item['pb_ratio'] }}</td>
-              <td v-if="!collapsed">{{ item['pe_ratio'] }}</td>
-              <td v-if="!collapsed">{{ item['debt_fcf_ratio'] }}</td>
-              <td v-if="!collapsed">{{ item['dividend_yield'] }}</td>
-              <td v-if="!collapsed">{{ item['earnings_yield'] }}</td>
-              <td v-if="!collapsed">{{ item['market_cap'] }}</td>
-              <td v-if="!collapsed">{{ item['market_cap_score'] }}</td>
-              <td v-if="!collapsed">{{ item['pe_ratio_score'] }}</td>
-              <td v-if="!collapsed">{{ item['pb_ratio_score'] }}</td>
-              <td v-if="!collapsed">{{ item['sum_debt_fcf_ratio_score'] }}</td>
-              <td v-if="!collapsed">{{ item['earnings_yield_score'] }}</td>
-              <td v-if="!collapsed">{{ item['1.3x_earnings_yield_score'] }}</td>
-              <td v-if="!collapsed">{{ item['dividend_yield_score'] }}</td>
+              <td>{{ item['Date'] }}</td>
+              <td>{{ item['Total Score'] }}</td>
+              <td>{{ item['Symbol'] }}</td>
+              <td v-if="!collapsed">{{ item['Basic Average Shares'] }}</td>
+              <td v-if="!collapsed">{{ item['Tangible Book Value'] }}</td>
+              <td v-if="!collapsed">{{ item['Free Cash Flow'] }}</td>
+              <td v-if="!collapsed">{{ item['Basic EPS'] }}</td>
+              <td v-if="!collapsed">{{ item['Diluted EPS'] }}</td>
+              <td v-if="!collapsed">{{ item['Total Debt'] }}</td>
+              <td v-if="!collapsed">{{ item['Dividends'] }}</td>
+              <td v-if="!collapsed">{{ item['Price Per Share'] }}</td>
+              <td v-if="!collapsed">{{ item['Tangible Book Value Per Share'] }}</td>
+              <td v-if="!collapsed">{{ item['p/b ratio'] }}</td>
+              <td v-if="!collapsed">{{ item['p/e ratio'] }}</td>
+              <td v-if="!collapsed">{{ item['Debt FCF ratio'] }}</td>
+              <td v-if="!collapsed">{{ item['Dividends Yield'] }}</td>
+              <td v-if="!collapsed">{{ item['Earnings Yield'] }}</td>
+              <td v-if="!collapsed">{{ item['Market Cap'] }}</td>
+              <td v-if="!collapsed">{{ item['Market Cap Score'] }}</td>
+              <td v-if="!collapsed">{{ item['p/e ratio Score'] }}</td>
+              <td v-if="!collapsed">{{ item['p/b ratio Score'] }}</td>
+              <td v-if="!collapsed">{{ item['Sum of Debt/FCF ratio Score'] }}</td>
+              <td v-if="!collapsed">{{ item['Earnings Yield Score'] }}</td>
+              <td v-if="!collapsed">{{ item['1.3 Earnings Yield Score'] }}</td>
+              <td v-if="!collapsed">{{ item['Dividends Yield Score'] }}</td>
             </tr>
           </tbody>
         </table>
