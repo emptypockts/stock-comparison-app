@@ -7,7 +7,7 @@ import os
 load_dotenv()
 uri = os.getenv('MONGODB_URI')
 WS_SOCKET_URI=os.getenv('VITE_WS_SERVER')
-
+sio = socketio.Client()
 celery = Celery(
     'ai_reports',
     broker=os.getenv('REDIS_SERVER'),
@@ -16,16 +16,16 @@ celery = Celery(
 
 def notify_task_done(event_name,payload):
     print('calling task')
-    sio = socketio.Client()
+    if not sio.connected:
+        sio.connect(WS_SOCKET_URI)
+        
     try:
         print(WS_SOCKET_URI)
-        sio.connect(WS_SOCKET_URI)
+        
         sio.emit(event_name,payload,namespace='/')
         sio.sleep(0)
     except Exception as e:
         print(f"error trying to connect to the ws socket {sio} error {str(e)}")
-    finally:
-        sio.disconnect()
 
 
 @celery.task(bind=True)

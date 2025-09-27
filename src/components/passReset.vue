@@ -13,7 +13,6 @@ const sendEmail = async()=>{
 
     }
     else{
-        console.log('email sent',data.value)
     }
 }
 

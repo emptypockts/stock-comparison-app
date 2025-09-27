@@ -72,8 +72,6 @@ import { showTempMessage } from '@/utils/timeout';
             return acc;
           }, {}),
         });
-        console.log('tickers',tickers)
-
         companyData.value = response.data;
         if (!companyData.value || Object.keys(companyData.value).length === 0) {
           errorMessage.value = 'No data found. this app is doing data collection of american companies only';

@@ -179,14 +179,11 @@ export default {
         const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/fetchStockfromDB`, {
           params: { page, page_size: props.itemsPerPage },
         });
-        console.log('response',response)
-
         // Assign fetched data to stocks
         if (response.data.data && typeof response.data.data === 'object') {
           stocks.value = response.data.data;
           totalSymbols.value = response.data.total_symbols;
           totalPages.value=Math.ceil(totalSymbols.value/100)
-          console.log('stocks',stocks.value)
           // Flatten the structure
           flatRecords.value = Object.entries(stocks.value).flatMap(([symbol, records]) => {
             return records.map(record => ({ symbol, ...record }));

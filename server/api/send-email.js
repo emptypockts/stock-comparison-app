@@ -50,7 +50,6 @@ export default defineEventHandler (async(event)=>{
             message,
             saveTosentItems:true
         });
-        console.log('email sent successfully')
             return { success: true };
 
     }

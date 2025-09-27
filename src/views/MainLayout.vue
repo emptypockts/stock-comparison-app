@@ -82,7 +82,6 @@ const get_report = async () => {
 
             }
             finally {
-                loading.stopLoading();
                 tickers.value.forEach(t=>tickerHistory.value.add(t.toLowerCase()));
                 
             }

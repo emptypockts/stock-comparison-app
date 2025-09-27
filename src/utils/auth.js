@@ -25,7 +25,6 @@ export const verifyCfToken = async () => {
   const flag = import.meta.env.VITE_DEV_FLAG
   
   if (flag==1){
-    console.log('dev mode')
     return true
   }
   try {

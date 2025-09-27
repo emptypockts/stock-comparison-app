@@ -6,7 +6,9 @@
         <div>
             <CompanyData />
         </div>
-        <button @click="get_seven_p_analysis">7powers pdf report</button>
+        <button @click="get_seven_p_analysis">
+        7powers ai report
+        </button>
         <small> ⚠️warning it takes around 30 sec per ticker <br></small>
         <div>
             <Navigation />
@@ -16,30 +18,42 @@
                 <strong>ticker history:</strong> {{ [...tickerHistory].join(',') }}
             </small>
         </div>
-        <div v-if="loading" class="loading-overlay">
+        <div v-if="isLoading" class="loading-overlay">
             <div class="loading-throbber">
                 <div class="spinner"></div>
                 <p>Sending query...powered by google gemini flash please wait...</p>
             </div>
         </div>
+    <div>
+    <p v-if="isConnected">🟢 ai analysis available</p>
+    <p v-else>🔴 ai analysis not available</p>
+  </div>
     </div>
 
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, computed } from 'vue';
 import Navigation from '@/components/Navigation.vue';
 import axios from 'axios';
 import { useTickerStore } from '@/stores/tickerStore';
+import { useLoadingStore } from '@/stores/loadingStore';
 import CompanyData from './CompanyData.vue';
-import { downloadPdfReport } from '@/utils/downloadReport';
-
-const loading = ref(false);
+import {useSocket} from '@/composables/taskSocket'
+const {isConnected, taskData}=useSocket();
 const rawMessage = ref('');
 const tickerHistory = ref(new Set())
 const tickerStore = useTickerStore();
+const loading = useLoadingStore();
 const allowedTickers = ref([]);
 const tickers = ref([]);
+
+const isLoading = computed(()=>loading.isLoading)
+
+
+
+
+
 
 const messages = ref([
     { text: 'I will conduct the 7power analysis for this ticker. If you want analysis for another, ticker just change the first ticker field in the main page. Hit send to start. ', isUser: false }
@@ -64,8 +78,9 @@ async function get_seven_p_analysis() {
 
             if (allowedTickers.value.length > 0) {
                 try {
-
-                    loading.value = true
+                    // starting ai report. updating loading store
+                    
+                    loading.startLoading();
                     const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/seven_p`, {
                         tickers: allowedTickers.value,
                         user_id:user_id,
@@ -109,30 +124,7 @@ async function get_seven_p_analysis() {
         }
     }
 }
-const get7pPdf = async () => {
-    if (rawMessage.value.length > 0) {
-        loading.value = true;
-        try {
-            console.log('rawMessage',rawMessage.value)
-            await downloadPdfReport(rawMessage.value, tickerStore.currentTickers, "7powers")
-        } catch (err) {
-            console.error('error generating report ', err)
-            messages.value.push({
-                text: err,
-                isUser: false
-            })
-        }
-        finally {
-            loading.value = false;
-        }
-    }
-    else {
-        messages.value.push({
-            text: 'ticker analysis is empty. there must be an analysis and 7powers analysis generated first',
-            isUser: false
-        })
-    }
-}
+
 
 
 
@@ -184,8 +176,6 @@ button {
 button:hover {
     background-color: #468eda;
 }
-
-
 
 @media (max-width: 768px) {
     h1 {

@@ -1,8 +1,9 @@
 import axios from "axios";
+import { useLoadingStore } from "@/stores/loadingStore";
 
 export async function downloadPdfReport(task,fileName=[],type=''){
-        console.log('calling api pdf',task,fileName)
      try{
+              
             const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/gemini/report`,{
                 task_id:task
             },
@@ -21,9 +22,15 @@ export async function downloadPdfReport(task,fileName=[],type=''){
             link.click()
             URL.revokeObjectURL(objectUrl)
             document.body.removeChild(link)
-        }catch(err){
+        }
+        catch(err){
             console.error('error generating report ',err)
             throw err
             }
+        finally{
+            const loading = useLoadingStore(); 
+            loading.stopLoading()
+        }
+
         
 }
