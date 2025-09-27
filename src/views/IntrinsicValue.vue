@@ -188,13 +188,13 @@ export default {
 </script>
 
 <style scoped>
-/* Same styles with an added error message style */
+
 
 .input-container {
+  flex-direction: row;
+  display: flex;
   align-items: center;
   gap: 10px;
-
-  /* Add space between inputs and button */
 }
 
 input {
@@ -247,7 +247,7 @@ button:hover {
 
 
 .table-container {
-  overflow-x: auto; /* Enable horizontal scrolling if the table is too wide */
+  overflow-x: auto; 
 }
 
 table {
@@ -259,30 +259,30 @@ thead th, tbody td {
   padding: 10px;
   border: 1px solid #ddd;
   text-align: left;
-  user-select: text; /* Ensure text can be selected */
+  user-select: text;
 }
 
 
 tbody tr:hover {
-  background-color: #f9f9f9; /* Optional: highlight row on hover */
+  background-color: #f9f9f9; 
 }
 
-/* Add CSS class to allow easy selection and copying */
+
 .copyable-table {
-  user-select: text; /* Ensure that table text can be selected for copying */
+  user-select: text; 
 }
 
 .title-container {
-  justify-content: auto; /* Adjusts space between the title and the button */
-  align-items: center; /* Vertically aligns the button and title */
+  justify-content: auto; 
+  align-items: center; 
 }
 
 .title-container h1 {
-  margin-right: 10px; /* Optional: adds some space between the title and button */
+  margin-right: 10px; 
 }
 
 .title-container button {
-  margin-left: 10px; /* Optional: adds some space between the button and title */
+  margin-left: 10px; 
   margin-top: 5px;
 }
 </style>
