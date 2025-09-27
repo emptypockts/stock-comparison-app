@@ -3,8 +3,6 @@
   </h1>    
   <div class="input-container">
     <input v-model="ticker1" placeholder="@ticker1" id="ticker 1" />
-    <input v-model="ticker2" placeholder="@ticker2" id="ticker 2" />
-    <input v-model="ticker3" placeholder="@ticker3" id="ticker 3" />
   </div>
   <div>
     <button @click="verifyAndFetchCompanyData">Analyse</button>
@@ -21,15 +19,16 @@
         <li v-for="(e,ticker) in companyData" :key="ticker">
           <strong>
             Company:
+            {{  }}
           </strong> 
-            {{ e.ticker }}: {{ e.name }}. 
+            {{ e.gStockData.symbol }}: {{ e.gStockData.name }}. 
             <strong>
             Current price:
           </strong> 
-          ${{ e.current_price.toFixed(2) }} 
+          ${{ e.gStockData.current_price}} 
           <strong>
             Last Filing :
-          </strong> {{ e.last_filing }}
+          </strong> {{ e.last_filing_date  }}
           <br><br>
         </li>
       </ul>
