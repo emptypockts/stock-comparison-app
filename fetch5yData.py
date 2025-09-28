@@ -86,7 +86,7 @@ def fetch_5y_data(ticker):
     combined_df['Sum of Debt/FCF ratio Score'] = int(combined_df['Debt FCF ratio'].sum() > 0)
     combined_df['Earnings Yield Score'] = int(combined_df['Earnings Yield'].gt(0).all())
     initial_value = combined_df['Earnings Yield'].iloc[-1]  # 2020
-    last_value = combined_df['Earnings Yield'].iloc[0]  # 2023
+    last_value = combined_df['Earnings Yield'].iloc[0]  
     # Calculate the percentage change from 2020 to 2023
     growth = (last_value - initial_value) / abs(initial_value)
     # Check if the growth is greater than or equal to 1.3x (130%)

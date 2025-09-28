@@ -4,7 +4,7 @@
             <h1 class="app-title">Hamilton H's Seven Powers.</h1>
         </div>
         <button @click="get_seven_p_analysis">
-        7powers ai report
+            7powers ai report
         </button>
         <small> ⚠️warning it takes around 30 sec per ticker <br></small>
         <div>
@@ -15,10 +15,13 @@
                 <strong>ticker history:</strong> {{ [...tickerHistory].join(',') }}
             </small>
         </div>
-    <div>
-    <p v-if="isConnected">🟢 ai analysis available</p>
-    <p v-else>🔴 ai analysis not available</p>
-  </div>
+        <div class="error-message">
+            {{ errorMessage }}
+        </div>
+        <div>
+            <p v-if="isConnected">🟢 ai analysis available</p>
+            <p v-else>🔴 ai analysis not available</p>
+        </div>
     </div>
 
 </template>
@@ -30,22 +33,17 @@ import axios from 'axios';
 import { useTickerStore } from '@/stores/tickerStore';
 import { useLoadingStore } from '@/stores/loadingStore';
 import CompanyData from './CompanyData.vue';
-import {useSocket} from '@/composables/taskSocket'
-const {isConnected, taskData}=useSocket();
+import { useSocket } from '@/composables/taskSocket'
+import { showTempMessage } from '@/utils/timeout';
+const { isConnected, taskData } = useSocket();
 const rawMessage = ref('');
 const tickerHistory = ref(new Set())
 const tickerStore = useTickerStore();
 const loading = useLoadingStore();
 const allowedTickers = ref([]);
 const tickers = ref([]);
-
-const isLoading = computed(()=>loading.isLoading)
-
-
-
-
-
-
+const errorMessage = ref('');
+const isLoading = computed(() => loading.isLoading)
 const messages = ref([
     { text: 'I will conduct the 7power analysis for this ticker. If you want analysis for another, ticker just change the first ticker field in the main page. Hit send to start. ', isUser: false }
 ]);
@@ -53,13 +51,14 @@ const messages = ref([
 async function get_seven_p_analysis() {
     tickers.value = tickerStore.currentTickers
     const user_id = localStorage.getItem('user_id')
-
-    if (tickers.length === 0) {
-
+    if (tickers.value.length === 0) {
+        
         messages.value.push({
             text: 'ticker analysis is empty. there must be an analysis and 7powers analysis generated first',
             isUser: false
         })
+        errorMessage.value = 'ticker analysis is empty. there must be an analysis and 7powers analysis generated first'
+        showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 2000);
 
     }
     else {
@@ -70,18 +69,21 @@ async function get_seven_p_analysis() {
             if (allowedTickers.value.length > 0) {
                 try {
                     // starting ai report. updating loading store
-                    
+
                     loading.startLoading();
                     const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/seven_p`, {
                         tickers: allowedTickers.value,
-                        user_id:user_id,
-                        report_type:"7_powers"
+                        user_id: user_id,
+                        report_type: "7_powers"
                     });
-                    
+
 
                 }
                 catch (error) {
                     console.error('Error sending query', error);
+
+                    errorMessage.value = 'Error sending query'
+                    showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 2000);
                 }
                 finally {
                     loading.value = false;
@@ -89,13 +91,15 @@ async function get_seven_p_analysis() {
 
                 }
             }
-        else{
-                        messages.value.push({
+            else {
+                messages.value.push({
                     text: "ticker analysis is empty or these tickers were already analysed in this session. analyse the ticker and then generate the 7 power report again or go to the main page and return to this page to get a new report",
                     isUser: false,
                     type: "error"
                 })
-        }
+                errorMessage.value = 'ticker analysis is empty or these tickers were already analysed in this session. analyse the ticker and then generate the 7 power report again or go to the main page and return to this page to get a new report'
+                showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 3000);
+            }
         }
         else {
             if (!rawMessage.value) {
@@ -104,6 +108,8 @@ async function get_seven_p_analysis() {
                     isUser: false,
                     type: "error"
                 })
+                errorMessage.value = 'analysis already done for this ticker, go back to the main page and return to this section to get a new analysis'
+                showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 3000);
             }
             else {
                 messages.value.push({
@@ -111,6 +117,8 @@ async function get_seven_p_analysis() {
                     isUser: false,
                     type: "error"
                 })
+                errorMessage.value = 'analysis already done for this ticker, go back to the main page and return to this section to get a new analysis'
+                showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 3000);
             }
         }
     }

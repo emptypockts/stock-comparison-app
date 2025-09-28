@@ -13,62 +13,65 @@
           <table class="copyable-table">
             <thead>
               <tr>
-                <th @click="sortTable('symbol')">ticker<span class="sortClass"></span></th>
-                <th @click="sortTable('date')">date<span class="sortClass"></span></th>
-                <th @click="sortTable('entity')">entity<span class="sortClass"></span></th>
-                <th @click="sortTable('total_score')">total score<span class="sortClass"></span></th>
-                <th @click="sortTable('fcf_cagr')">fcf compound growth 5y<span class="sortClass"></span></th>
-                <th v-if="!collapsed">basic average shares</th>
-                <th v-if="!collapsed">basic eps</th>
-                <th v-if="!collapsed">diluted eps</th>
-                <th v-if="!collapsed">dividends</th>
-                <th v-if="!collapsed">dividends yield</th>
-                <th v-if="!collapsed">earnings yield</th>
-                <th v-if="!collapsed">fcf</th>
-                <th v-if="!collapsed">market cap</th>
-                <th v-if="!collapsed">price close</th>
-                <th v-if="!collapsed">book value</th>
-                <th v-if="!collapsed">total debt</th>
-                <th v-if="!collapsed">pb ratio</th>
-                <th v-if="!collapsed">pe ratio</th>
-                <th v-if="!collapsed">debt fcf ratio</th>
-                <th v-if="!collapsed">sum of debt/fcf ratio Score</th>
-                <th v-if="!collapsed">market cap score</th>
-                <th v-if="!collapsed">pb ratio score</th>
-                <th v-if="!collapsed">pe ratio score</th>
-                <th v-if="!collapsed">1.3 earnings yield score</th>
-                <th v-if="!collapsed">dividends yield score</th>
-                <th v-if="!collapsed">earnings yield score</th>
+                <th @click="sortTable('Symbol')">Symbol<span class="sortClass"></span></th>
+                <th @click="sortTable('Name')">Name<span class="sortClass"></span></th>
+                <th @click="sortTable('Date')">Date<span class="sortClass"></span></th>
+                <th @click="sortTable('Total Score')">Total Score<span class="sortClass"></span></th>
+                <th @click="sortTable('Growth')">E_Growth 1Y<span class="sortClass"></span></th>
+                <th v-if="!collapsed">Basic Average Shares</th>
+                <th v-if="!collapsed">Basic EPS</th>
+                <th v-if="!collapsed">Diluted EPS</th>
+                <th v-if="!collapsed">Dividends</th>
+                <th v-if="!collapsed">Dividends Yield</th>
+                <th v-if="!collapsed">Earnings Yield</th>
+                <th v-if="!collapsed">Free Cash Flow</th>
+                <th v-if="!collapsed">Market Cap</th>
+                <th v-if="!collapsed">Price Per Share</th>
+                <th v-if="!collapsed">Tangible Book Value</th>
+                <th v-if="!collapsed">Tangible Book Value Per Share</th>
+                <th v-if="!collapsed">Total Debt</th>
+                <th v-if="!collapsed">p/b ratio</th>
+                <th v-if="!collapsed">p/e ratio</th>
+                <th v-if="!collapsed">Debt FCF ratio</th>
+                <th v-if="!collapsed">Sum of Debt/FCF ratio &gt 0 Score</th>
+                <th v-if="!collapsed">Market Cap Score &gt 2B</th>
+                <th v-if="!collapsed">p/b ratio &lt 2 Score</th>
+                <th v-if="!collapsed">p/e ratio &lt 15 Score</th>
+                <th v-if="!collapsed">1.3 Earnings Yield Score</th>
+                <th v-if="!collapsed">Dividends Yield &gt 0 Score</th>
+                <th v-if="!collapsed">Earnings Yield &gt 0 Score</th>
               </tr>
             </thead>
             <tbody>
+              
               <tr v-for="(record, index) in paginatedRecords" :key="index">
-                <td>{{ record['ticker'] }}</td>
-                <td>{{ String(record['date']).slice(0,4) }}</td>
-                <td>{{ record['entity'] }}</td>
-                <td>{{ record['total_score'] }}</td>
-                <td>{{ record['fcf_cagr'].toFixed(2) }}%</td>
-                <td v-if="!collapsed">{{ record['WeightedAverageNumberOfSharesOutstandingBasic'] }}</td>
-                <td v-if="!collapsed">{{ record['EarningsPerShareBasic'] }}</td>
-                <td v-if="!collapsed">{{ record['EarningsPerShareDiluted'] }}</td>
-                <td v-if="!collapsed">{{ record['PaymentsOfDividendsCommonStock'] }}</td>
-                <td v-if="!collapsed">{{ record['dividend_yield'] }}</td>
-                <td v-if="!collapsed">{{ record['earnings_yield'] }}</td>
-                <td v-if="!collapsed">{{ record['fcf'] }}</td>
-                <td v-if="!collapsed">{{ record['market_cap'] }}</td>
-                <td v-if="!collapsed">{{ record['price_close'] }}</td>
-                <td v-if="!collapsed">{{ record['book_value'] }}</td>
-                <td v-if="!collapsed">{{ record['total_debt'] }}</td>
-                <td v-if="!collapsed">{{ record['pb_ratio'] }}</td>
-                <td v-if="!collapsed">{{ record['pe_ratio'] }}</td>
-                <td v-if="!collapsed">{{ record['debt_fcf_ratio'] }}</td>
-                <td v-if="!collapsed">{{ record['sum_debt_fcf_ratio_score'] }}</td>
-                <td v-if="!collapsed">{{ record['market_cap_score'] }}</td>
-                <td v-if="!collapsed">{{ record['pb_ratio_score'] }}</td>
-                <td v-if="!collapsed">{{ record['pe_ratio_score'] }}</td>
-                <td v-if="!collapsed">{{ record['1.3x_earnings_yield_score'] }}</td>
-                <td v-if="!collapsed">{{ record['dividend_yield_score'] }}</td>
-                <td v-if="!collapsed">{{ record['earnings_yield_score'] }}</td>
+                <td>{{ record['Symbol'] }}</td>
+                <td>{{ record['Name'] }}</td>
+                <td>{{ record['Date'] }}</td>
+                <td>{{ record['Total Score'] }}</td>
+                <td>{{ record['Growth'] }}</td>
+                <td v-if="!collapsed">{{ record['Basic Average Shares'] }}</td>
+                <td v-if="!collapsed">{{ record['Basic EPS'] }}</td>
+                <td v-if="!collapsed">{{ record['Diluted EPS'] }}</td>
+                <td v-if="!collapsed">{{ record['Dividends'] }}</td>
+                <td v-if="!collapsed">{{ record['Dividends Yield'] }}</td>
+                <td v-if="!collapsed">{{ record['Earnings Yield'] }}</td>
+                <td v-if="!collapsed">{{ record['Free Cash Flow'] }}</td>
+                <td v-if="!collapsed">{{ record['Market Cap'] }}</td>
+                <td v-if="!collapsed">{{ record['Price Per Share'] }}</td>
+                <td v-if="!collapsed">{{ record['Tangible Book Value'] }}</td>
+                <td v-if="!collapsed">{{ record['Tangible Book Value Per Share'] }}</td>
+                <td v-if="!collapsed">{{ record['Total Debt'] }}</td>
+                <td v-if="!collapsed">{{ record['p/b ratio'] }}</td>
+                <td v-if="!collapsed">{{ record['p/e ratio'] }}</td>
+                <td v-if="!collapsed">{{ record['Debt FCF ratio'] }}</td>
+                <td v-if="!collapsed">{{ record['Sum of Debt/FCF ratio Score'] }}</td>
+                <td v-if="!collapsed">{{ record['Market Cap Score'] }}</td>
+                <td v-if="!collapsed">{{ record['p/b ratio Score'] }}</td>
+                <td v-if="!collapsed">{{ record['p/e ratio Score'] }}</td>
+                <td v-if="!collapsed">{{ record['130pcnt_Earnings Yield Score'] }}</td>
+                <td v-if="!collapsed">{{ record['Dividends Yield Score'] }}</td>
+                <td v-if="!collapsed">{{ record['Earnings Yield Score'] }}</td>
               </tr>
             </tbody>
           </table>
