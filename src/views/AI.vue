@@ -1,10 +1,7 @@
 <template>
     <div>
         <div>
-            <h1>7power Analysis Framework from Helmer Hamilton.</h1>
-        </div>
-        <div>
-            <CompanyData />
+            <h1 class="app-title">Hamilton H's Seven Powers.</h1>
         </div>
         <button @click="get_seven_p_analysis">
         7powers ai report
@@ -17,12 +14,6 @@
             <small>
                 <strong>ticker history:</strong> {{ [...tickerHistory].join(',') }}
             </small>
-        </div>
-        <div v-if="isLoading" class="loading-overlay">
-            <div class="loading-throbber">
-                <div class="spinner"></div>
-                <p>Sending query...powered by google gemini flash please wait...</p>
-            </div>
         </div>
     <div>
     <p v-if="isConnected">🟢 ai analysis available</p>
@@ -129,7 +120,7 @@ async function get_seven_p_analysis() {
 
 
 </script>
-<style scoped>
+<style>
 h1 {
     text-align: center;
     font-size: 2em;

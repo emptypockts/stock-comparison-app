@@ -43,7 +43,7 @@ async function goToIdx(){
 .tooltip-container {
     position: fixed;
     width: auto;
-    bottom: 170px;
+    bottom: 165px;
     /* Distance from the bottom of the screen */
     right: 140px;
     background: transparent;

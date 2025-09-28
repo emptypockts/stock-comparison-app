@@ -1,5 +1,5 @@
 <template>
-  <h1>Ticker Data 
+  <h1 class="app-title">Ticker Data 
   </h1>    
   <div class="input-container">
     <input v-model="ticker1" placeholder="@ticker1" id="ticker 1" />
@@ -19,7 +19,6 @@
         <li v-for="(e,ticker) in companyData" :key="ticker">
           <strong>
             Company:
-            {{  }}
           </strong> 
             {{ e.gStockData.symbol }}: {{ e.gStockData.name }}. 
             <strong>
@@ -130,6 +129,7 @@ import { showTempMessage } from '@/utils/timeout';
 
 .input-container{
 width: auto;
+margin-left: 10px;
 background: transparent;
 
 }
@@ -160,6 +160,7 @@ button {
   cursor: pointer;
   margin-top: 10px;
   background-color: #8bb4e0;
+  margin-left: 10px;
 }
 
 button:hover {

@@ -25,9 +25,9 @@ function goBack(){
 <style scoped>
 .goBack-container {
     position: fixed;
-    bottom: 60px;
+    bottom: 100px;
     /* Distance from the bottom of the screen */
-    right: 20px;
+    right: 25px;
     /* Distance from the right of the screen */
     cursor: pointer;
     color: #6e6e6e8f;
@@ -44,9 +44,9 @@ function goBack(){
 .tooltip-container {
     position: fixed;
     width: auto;
-    bottom: 85px;
+    bottom: 125px;
     /* Distance from the bottom of the screen */
-    right: 110px;
+    right: 120px;
     background: transparent;
 }
 

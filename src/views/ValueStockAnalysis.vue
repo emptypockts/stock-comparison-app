@@ -1,13 +1,16 @@
 <template>
   <div>
-    <h1>Value Stock Analysis</h1>
+    <h1 class="app-title">Value Stock Analysis</h1>
     <!-- Error message display -->
     <div v-if="errorMessage" class="error-message">
       <p>{{ errorMessage }}</p>
     </div>
   </div>
+  <button @click="toggleCollapse">
+    Click to expand or collapse
+  </button>
     <div v-if="financialData.length" class="table-container" >
-      <button @click="toggleCollapse">Click to expand or collapse</button>
+      
       <div class="table-scroll">
         <table class="copyable-table">
           <thead>
@@ -154,7 +157,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style>
 .table-container {
   overflow-x: auto;
   /* Enable horizontal scrolling if the table is too wide */
@@ -228,22 +231,4 @@ tbody tr:hover {
   z-index: 1000;
 }
 
-
-button {
-  position: relative;
-  width: auto;
-  justify-content: left;
-  padding: 8px;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-top: 10px;
-  background-color: #8bb4e0;
-  margin-right: 10px;
-}
-
-button:hover {
-    background-color: #468eda;
-}
 </style>

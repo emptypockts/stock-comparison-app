@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %
 strategic_keywords = ['growth', 'innovation', 'vision', 'strategy', 'expansion', 'development', 'future', 'opportunity', 'direction', 'goals']
 financial_keywords = ['revenue', 'profit', 'loss', 'investment', 'performance', 'earnings', 'margin', 'cost', 'budget', 'capital', 'assets', 'liabilities','inflation']
 leadership_keywords = ['leadership', 'management', 'team', 'culture', 'development', 'strategy', 'efficiency', 'talent', 'motivation', 'governance']
-risk_management_keywords = ['risk', 'compliance', 'challenges', 'mitigation', 'uncertainty', 'contingency', 'safeguard', 'threat', 'lawsuit','litigation']
+risk_management_keywords = ['tariffs','risk', 'compliance', 'challenges', 'mitigation', 'uncertainty', 'contingency', 'safeguard', 'threat', 'lawsuit','litigation']
 operational_excellence_keywords = ['efficiency', 'process', 'improvement', 'quality', 'productivity', 'benchmark', 'optimization', 'execution', 'operations', 'systems']
 customer_market_keywords = ['customer', 'market', 'demand', 'engagement', 'satisfaction', 'segmentation', 'trends', 'positioning', 'brand', 'service']
 technology_innovation_keywords = ['technology', 'digital', 'innovation', 'disruption', 'tools', 'platforms', 'automation', 'advancement', 'research', 'development',' AI ','gpt']
@@ -35,7 +35,7 @@ def load_and_preprocess(file_path):
 # Function to perform sentiment analysis using TextBlob
 def analyze_sentiment(text):
     blob = TextBlob(text)
-    polarity = round(blob.sentiment.polarity, 2)  # Ranges from -1 (negative) to 1 (positive)
+    polarity = round(blob.sentiment.polarity,2)  # Ranges from -1 (negative) to 1 (positive)
     subjectivity = round(blob.sentiment.subjectivity, 2)  # Ranges from 0 (objective) to 1 (subjective)
     return polarity, subjectivity
 

@@ -1,8 +1,8 @@
 <template>
     <div>
-      <h1>Rittenhouse Framework Analysis</h1>
+      <h1 class="app-title">Rittenhouse</h1>
       <button @click="fetchAnalysisReports" :disabled="localIsProcessing">  
-        Make Rittenhouse Analysis
+        Make Analysis
       </button>
       <small> ⚠️warning it takes around 30 sec per ticker <br></small>
       <!-- Legend for Sentiment Polarity and Subjectivity -->
@@ -205,6 +205,7 @@
   </script>
   
   <style scoped>
+  
   :root {
     --primary-color: #007bff;
     --header-bg-color: var(--primary-color);

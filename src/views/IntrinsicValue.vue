@@ -1,10 +1,10 @@
 <template>
 
-    <h1>Intrinsic Value Analysis</h1>
-    <div v-if="tickers.length">
-    <button  @click="calculateIntrinsicValue">Calculate new value</button>
+  <h1 class="app-title">Intrinsic Value Analysis</h1>
+  <div v-if="tickers.length">
+    <button @click="calculateIntrinsicValue">Calculate new value</button>
   </div>
-    <div>
+  <div>
     <!-- Input fields for each ticker -->
     <div v-for="(ticker, index) in tickers" :key="index" class="input-container">
       <h3>Ticker: {{ ticker }}</h3>
@@ -20,22 +20,19 @@
       </div>
       <div class="input-group">
         <label for="terminalGrowthRate">Terminal Growth Rate (%) default 2%</label>
-        <input v-model.number="intrinsicParams[ticker].terminalGrowthRate" id="terminalGrowthRate" type="number" step="0.1" />
+        <input v-model.number="intrinsicParams[ticker].terminalGrowthRate" id="terminalGrowthRate" type="number"
+          step="0.1" />
         <span v-if="!intrinsicParams[ticker].terminalGrowthRate">Empty</span>
       </div>
       <div class="input-group">
         <label for="projectionYears">Projection Years default 5y</label>
-        <input v-model.number="intrinsicParams[ticker].projectionYears" id="projectionYears" type="number" step="1" min="1" />
+        <input v-model.number="intrinsicParams[ticker].projectionYears" id="projectionYears" type="number" step="1"
+          min="1" />
         <span v-if="!intrinsicParams[ticker].projectionYears">Empty</span>
-        
+
       </div>
-      
+
     </div>
-
-    
-
-
-
     <!-- Error Message Display -->
     <div v-if="errorMessage" class="error-message">
       <p>{{ errorMessage }}</p>
@@ -132,9 +129,9 @@ export default {
       // Check if tickers array is empty
       if (!tickers || tickers.length === 0) {
         if (!firstLogin.value) {
-        errorMessage.value = 'No tickers provided. Please enter valid tickers.';
-              }
-        return ;
+          errorMessage.value = 'No tickers provided. Please enter valid tickers.';
+        }
+        return;
       }
 
       loading.startLoading();
@@ -156,7 +153,7 @@ export default {
         });
 
         intrinsicData.value = response.data;
-        
+
       } catch (error) {
         console.error('Error fetching intrinsic value data:', error);
         errorMessage.value = `Failed to fetch intrinsic value data: ${error.response ? error.response.data : error.message}`;
@@ -186,17 +183,13 @@ export default {
   },
 };
 </script>
-
 <style scoped>
-
-
 .input-container {
   flex-direction: row;
   display: flex;
   align-items: center;
   gap: 10px;
 }
-
 input {
   width: 50px;
   padding: 8px;
@@ -205,10 +198,10 @@ input {
   border: 1px solid #f1f0f0;
   background-color: #adadad1c;
 
-  input::placeholder{
-  background-color: transparent;
-}
-  
+  input::placeholder {
+    background-color: transparent;
+  }
+
 }
 button {
   position: relative;
@@ -221,68 +214,53 @@ button {
   cursor: pointer;
   margin-top: 10px;
   background-color: #8bb4e0;
-  margin-right: 10px;
 }
-
 button:hover {
-    background-color: #468eda;
+  background-color: #468eda;
 }
-
-
-
 /* Error message style */
 .error-message {
   color: red;
   margin-top: 10px;
 }
-
 @media screen and (max-width: 768px) {
-  th, td {
+
+  th,
+  td {
     padding: 3px;
     font-size: 10px;
     background-color: transparent;
   }
 }
-
-
-
 .table-container {
-  overflow-x: auto; 
+  overflow-x: auto;
 }
-
 table {
   width: 100%;
   border-collapse: collapse;
 }
-
-thead th, tbody td {
+thead th,
+tbody td {
   padding: 10px;
   border: 1px solid #ddd;
   text-align: left;
   user-select: text;
 }
-
-
 tbody tr:hover {
-  background-color: #f9f9f9; 
+  background-color: #f9f9f9;
 }
-
-
 .copyable-table {
-  user-select: text; 
+  user-select: text;
 }
-
 .title-container {
-  justify-content: auto; 
-  align-items: center; 
+  justify-content: auto;
+  align-items: center;
 }
-
 .title-container h1 {
-  margin-right: 10px; 
+  margin-right: 10px;
 }
-
 .title-container button {
-  margin-left: 10px; 
+  margin-left: 10px;
   margin-top: 5px;
 }
 </style>

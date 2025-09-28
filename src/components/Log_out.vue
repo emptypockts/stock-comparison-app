@@ -34,9 +34,9 @@ export default {
 <style scoped>
 .logout-container {
     position: fixed;
-    bottom: 20px;
+    bottom: 60px;
     /* Distance from the bottom of the screen */
-    right: 20px;
+    right: 25px;
     /* Distance from the right of the screen */
     cursor: pointer;
     color: #6e6e6e8f;
@@ -54,9 +54,9 @@ export default {
 .tooltip-container {
     position: fixed;
     width: auto;
-    bottom: 45px;
+    bottom: 85px;
     /* Distance from the bottom of the screen */
-    right: 100px;
+    right: 120px;
     background: transparent;
 }
 

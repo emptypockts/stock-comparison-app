@@ -1,27 +1,43 @@
 <template>
-    <h1 class="app-title">Welcome to Honcho</h1>
+    <h1 class="app-title">Honcho Financials®</h1>
+    <div class="container">
+    <h1 class="app-title">
+    Financials Overview
+    </h1>
+    
     <CompanyData @tickers-updated="updateTickers" />
     <ValueStockAnalysis :tickers="tickers" />
     <StockFinancialCharts :tickers="tickers" />
     <IntrinsicValue :tickers="tickers" />
-    <RittenhouseAnalysis Analyis :tickers="tickers" />
-    <Navigation />
-    <CookieBanner />
-    <LoginAlert />
-    <button :disabled="tickers.length === 0" @click="get_report">ai report</button>
+    
+    
+        <button :disabled="tickers.length === 0" @click="get_report">Analyse with ai</button>
     <small> ⚠️warning it takes around 40 sec per ticker <br></small>
     <div v-if="tickerHistory.size > 0">
         <small>
             <strong>ticker history:</strong> {{[...tickerHistory].join(',')}}
             </small>
     </div>
-      <div>
+          <div>
     <p v-if="isConnected">🟢 ai analysis available</p>
     <p v-else>🔴 ai analysis not available</p>
   </div>
     <div class="error-message">
         {{ errorMessage }}
     </div>
+</div>
+<div class="container">
+    <h2 class="app-title">
+    Framework and AI Analysis
+    </h2>
+    <RittenhouseAnalysis Analysis :tickers="tickers" />
+    <AI Analysis :tickers="tickers"/>
+    </div>
+    <Navigation />
+    <CookieBanner />
+    <LoginAlert />
+
+
 
 </template>
 <script setup>
@@ -31,6 +47,7 @@ import CompanyData from '@/views/CompanyData.vue';
 import StockFinancialCharts from '@/views/StockFinancialCharts.vue';
 import ValueStockAnalysis from '@/views/ValueStockAnalysis.vue';
 import RittenhouseAnalysis from "@/views/RittenhouseAnalysis.vue";
+import AI from "@/views/AI.vue"
 import { useTickerStore } from '@/stores/tickerStore';
 import Navigation from '@/components/Navigation.vue';
 import CookieBanner from '@/components/CookieBanner.vue';
@@ -99,6 +116,14 @@ const get_report = async () => {
 }
 </script>
 <style>
+.container{
+    box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 4px 6px rgba(0, 0, 0, 0.1),
+    0 10px 15px rgba(0, 0, 0, 0.08);
+  border-radius: 1rem; /* rounded corners */
+  background: #f8f3f3;
+}
 .error-message {
     color: red;
     margin-top: 10px;

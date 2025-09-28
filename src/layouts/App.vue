@@ -66,6 +66,10 @@ position: fixed;
   color: white;
 }
 
+p,ul{
+  margin-left: 10px;
+}
+
 .spinner {
   border: 4px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
@@ -106,10 +110,11 @@ button {
   cursor: pointer;
   margin-top: 10px;
   background-color: #8bb4e0;
-  margin-right: 10px;
+  margin-left: 10px;
 }
 
 button:hover {
     background-color: #468eda;
 }
+
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <h1>Charts</h1>
+  <h1 class="app-title">Charts</h1>
   <div>
     <button @click="toggleView">
       {{ isYearlyView ? "Switch to Quartetly View" : "Switch to Yearly View" }}
