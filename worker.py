@@ -15,18 +15,16 @@ celery = Celery(
 )
 
 def notify_task_done(event_name,payload):
-    print('calling task')
     if not sio.connected:
         sio.connect(WS_SOCKET_URI)
-        
     try:
-        print(WS_SOCKET_URI)
-        
         sio.emit(event_name,payload,namespace='/')
         sio.sleep(0)
     except Exception as e:
         print(f"error trying to connect to the ws socket {sio} error {str(e)}")
 
+def connect_to_ws_server():
+    sio.connect(WS_SOCKET_URI)
 
 @celery.task(bind=True)
 def generate_ai_report(self,tickers,user_id,report_type):

@@ -90,9 +90,9 @@ def fetch_5y_data(ticker):
     # Calculate the percentage change from 2020 to 2023
     growth = (last_value - initial_value) / abs(initial_value)
     # Check if the growth is greater than or equal to 1.3x (130%)
-    combined_df['1.3 Earnings Yield Score'] = (growth >= 1.3).astype(int)
+    combined_df['130pcnt_Earnings Yield Score'] = (growth >= 1.3).astype(int)
     combined_df['Dividends Yield Score'] = int(combined_df['Dividends Yield'].gt(0).all())
-    combined_df['Total Score'] = combined_df['Dividends Yield Score'] + combined_df['Earnings Yield Score'] + combined_df['1.3 Earnings Yield Score'] + combined_df['Sum of Debt/FCF ratio Score'] + combined_df['p/b ratio Score'] + combined_df['p/e ratio Score'] + combined_df['Market Cap Score']
+    combined_df['Total Score'] = combined_df['Dividends Yield Score'] + combined_df['Earnings Yield Score'] + combined_df['130pcnt_Earnings Yield Score'] + combined_df['Sum of Debt/FCF ratio Score'] + combined_df['p/b ratio Score'] + combined_df['p/e ratio Score'] + combined_df['Market Cap Score']
 
     # remove $nan for 0
     combined_df=combined_df.fillna(0.01)

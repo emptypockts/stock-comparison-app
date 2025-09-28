@@ -6,6 +6,8 @@ const socket = io(import.meta.env.VITE_WS_SERVER,{
 });
 const isConnected = ref(false);
 const taskData = ref(null);
+
+
 export function useSocket() {
     socket.on('connect', () => {
         isConnected.value = true;
@@ -23,7 +25,6 @@ export function useSocket() {
         console.error('error trying to generate report', err)
     }
     })
-
     return {socket,isConnected,taskData}
 }
 

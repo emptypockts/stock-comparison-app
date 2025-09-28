@@ -1,37 +1,41 @@
 <template>
     <h1 class="app-title">Honcho Financials®</h1>
     <div class="container">
-    <h1 class="app-title">
-    Financials Overview
-    </h1>
-    
-    <CompanyData @tickers-updated="updateTickers" />
-    <ValueStockAnalysis :tickers="tickers" />
-    <StockFinancialCharts :tickers="tickers" />
-    <IntrinsicValue :tickers="tickers" />
-    
-    
+        <h1 class="app-title">
+            Financials Overview
+        </h1>
+
+        <CompanyData @tickers-updated="updateTickers" />
+        <ValueStockAnalysis :tickers="tickers" />
+        <StockFinancialCharts :tickers="tickers" />
+        <IntrinsicValue :tickers="tickers" />
+
+
         <button :disabled="tickers.length === 0" @click="get_report">Analyse with ai</button>
-    <small> ⚠️warning it takes around 40 sec per ticker <br></small>
-    <div v-if="tickerHistory.size > 0">
-        <small>
-            <strong>ticker history:</strong> {{[...tickerHistory].join(',')}}
+        <small> ⚠️warning it takes around 40 sec per ticker <br></small>
+        <div v-if="tickerHistory.size > 0">
+            <small>
+                <strong>ticker history:</strong> {{ [...tickerHistory].join(',') }}
             </small>
-    </div>
-          <div>
+        </div>
+                  <div>
     <p v-if="isConnected">🟢 ai analysis available</p>
     <p v-else>🔴 ai analysis not available</p>
   </div>
-    <div class="error-message">
-        {{ errorMessage }}
+        <div class="error-message">
+            {{ errorMessage }}
+        </div>
     </div>
-</div>
-<div class="container">
-    <h2 class="app-title">
-    Framework and AI Analysis
-    </h2>
-    <RittenhouseAnalysis Analysis :tickers="tickers" />
-    <AI Analysis :tickers="tickers"/>
+    <div class="container">
+        <h2 class="app-title">
+            Framework and AI Analysis
+        </h2>
+        <RittenhouseAnalysis Analysis :tickers="tickers" />
+        <AI Analysis :tickers="tickers" />
+                  <div>
+    <p v-if="isConnected">🟢 ai analysis available</p>
+    <p v-else>🔴 ai analysis not available</p>
+  </div>
     </div>
     <Navigation />
     <CookieBanner />
@@ -54,16 +58,15 @@ import CookieBanner from '@/components/CookieBanner.vue';
 import LoginAlert from '@/components/LoginAlert.vue';
 import { showTempMessage } from '@/utils/timeout';
 import { useLoadingStore } from '@/stores/loadingStore';
+import { useSocket } from '@/composables/taskSocket';
 import axios from 'axios';
-import {useSocket} from '@/composables/taskSocket'
-const {isConnected, taskData}=useSocket();
-
+const isConnected=useSocket()
 const tickers = ref([]);
 const errorMessage = ref('');
 const tickerStore = useTickerStore();
 const loading = useLoadingStore();
 const tickerHistory = ref(new Set());
-const allowedTickers=ref([]);
+const allowedTickers = ref([]);
 const updateTickers = (newTickers) => {
     tickerStore.updateTickers(newTickers)
     tickers.value = tickerStore.currentTickers
@@ -78,16 +81,16 @@ const get_report = async () => {
         showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 2000);
     }
     else {
-        allowedTickers.value=tickers.value.filter(e=>!tickerHistory.value.has(e.toLowerCase()))
-        
-        if (allowedTickers.value.length>0) {
+        allowedTickers.value = tickers.value.filter(e => !tickerHistory.value.has(e.toLowerCase()))
+
+        if (allowedTickers.value.length > 0 && isConnected) {
             loading.startLoading();
             const user_id = localStorage.getItem('user_id')
             try {
                 const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/gemini`, {
                     tickers: allowedTickers.value,
-                    user_id:user_id,
-                    report_type:"overall"
+                    user_id: user_id,
+                    report_type: "overall"
                 })
             }
 
@@ -99,31 +102,33 @@ const get_report = async () => {
 
             }
             finally {
-                tickers.value.forEach(t=>tickerHistory.value.add(t.toLowerCase()));
-                
+                tickers.value.forEach(t => tickerHistory.value.add(t.toLowerCase()));
+
             }
 
 
         }
-        else{
-        
-        errorMessage.value = 'ticker previously analysed. refresh your broweser if you need to analyse it again'
-        showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 2000);
+        else {
+
+            errorMessage.value = 'ticker previously analysed. refresh your broweser if you need to analyse it again'
+            showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 2000);
+        }
     }
-    }
-    
+
 
 }
 </script>
 <style>
-.container{
-    box-shadow: 
-    0 1px 2px rgba(0, 0, 0, 0.08),
-    0 4px 6px rgba(0, 0, 0, 0.1),
-    0 10px 15px rgba(0, 0, 0, 0.08);
-  border-radius: 1rem; /* rounded corners */
-  background: #f8f3f3;
+.container {
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.08),
+        0 4px 6px rgba(0, 0, 0, 0.1),
+        0 10px 15px rgba(0, 0, 0, 0.08);
+    border-radius: 1rem;
+    /* rounded corners */
+    background: #f8f3f3;
 }
+
 .error-message {
     color: red;
     margin-top: 10px;

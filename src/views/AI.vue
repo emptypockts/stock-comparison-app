@@ -18,10 +18,6 @@
         <div class="error-message">
             {{ errorMessage }}
         </div>
-        <div>
-            <p v-if="isConnected">🟢 ai analysis available</p>
-            <p v-else>🔴 ai analysis not available</p>
-        </div>
     </div>
 
 </template>
@@ -33,9 +29,8 @@ import axios from 'axios';
 import { useTickerStore } from '@/stores/tickerStore';
 import { useLoadingStore } from '@/stores/loadingStore';
 import CompanyData from './CompanyData.vue';
-import { useSocket } from '@/composables/taskSocket'
 import { showTempMessage } from '@/utils/timeout';
-const { isConnected, taskData } = useSocket();
+
 const rawMessage = ref('');
 const tickerHistory = ref(new Set())
 const tickerStore = useTickerStore();
