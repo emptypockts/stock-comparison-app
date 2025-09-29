@@ -1,6 +1,6 @@
 import eventlet
 eventlet.monkey_patch()
-from flask import Flask,request
+from flask import Flask,request 
 from flask_socketio import SocketIO,send,emit,join_room
 from dotenv import load_dotenv
 load_dotenv()
@@ -20,6 +20,8 @@ def handle_disconnect():
 @ws_server.on("task_done")
 def handle_task_completed(data):
     print("task is completed dropping result,",data)
+    join_room(room=data.get('task_id',''))
+    print(f"client {data.get('user_id','')} joined the room {data.get('task_id','')} with sid {request.sid}")
     ws_server.emit('task_done',data)
 
 @ws_server.on("message")

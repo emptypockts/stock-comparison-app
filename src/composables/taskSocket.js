@@ -17,13 +17,16 @@ export function useSocket() {
         console.log('my guy, you are no longer on')
     })
     socket.on('task_done', (data) => {
+        const user_id = localStorage.getItem('user_id')
         taskData.value = data
+        if (data.user_id==user_id){
             try {
         downloadPdfReport(taskData.value.task_id, taskData.value.tickers, taskData.value.report_type)
     }
     catch (err) {
         console.error('error trying to generate report', err)
     }
+}
     })
     return {socket,isConnected,taskData}
 }
