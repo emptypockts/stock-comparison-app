@@ -28,7 +28,6 @@ import Navigation from '@/components/Navigation.vue';
 import axios from 'axios';
 import { useTickerStore } from '@/stores/tickerStore';
 import { useLoadingStore } from '@/stores/loadingStore';
-import CompanyData from './CompanyData.vue';
 import { showTempMessage } from '@/utils/timeout';
 
 const rawMessage = ref('');
@@ -38,7 +37,6 @@ const loading = useLoadingStore();
 const allowedTickers = ref([]);
 const tickers = ref([]);
 const errorMessage = ref('');
-const isLoading = computed(() => loading.isLoading)
 const messages = ref([
     { text: 'I will conduct the 7power analysis for this ticker. If you want analysis for another, ticker just change the first ticker field in the main page. Hit send to start. ', isUser: false }
 ]);
@@ -66,10 +64,10 @@ async function get_seven_p_analysis() {
                     // starting ai report. updating loading store
 
                     loading.startLoading();
-                    const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/seven_p`, {
+                     await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/seven_p`, {
                         tickers: allowedTickers.value,
                         user_id: user_id,
-                        report_type: "7_powers"
+                        report_type: "seven-powers"
                     });
 
 

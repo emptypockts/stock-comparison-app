@@ -40,12 +40,38 @@
     <Navigation />
     <CookieBanner />
     <LoginAlert />
+    <div>
+    <div v-if="ai_reports">
+        <table>
+                <thead>
+            <tr>
+              <th>Report Type</th>
+              <th>Ticker</th>
+              <th>Timestamp</th>
+              <th>Download</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(k,v) in ai_reports" :key="k">
+                <td> {{ k['report_type'] }}</td>
+                <td> {{ k['tickers'][0] }}</td>
+                <td> {{ formatDateAgo(new Date (k['timestamp'])) }}</td>
+                <td>
+                    <a href="#" @click.prevent="download_s3_report(k['report_type'],k['task_id'])">
+                        Download
+                    </a>
+                </td>
+            </tr>
+          </tbody>
+          </table>
+      </div>
+  </div>
 
 
 
 </template>
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, onMounted } from 'vue';
 import IntrinsicValue from '@/views/IntrinsicValue.vue';
 import CompanyData from '@/views/CompanyData.vue';
 import StockFinancialCharts from '@/views/StockFinancialCharts.vue';
@@ -59,7 +85,10 @@ import LoginAlert from '@/components/LoginAlert.vue';
 import { showTempMessage } from '@/utils/timeout';
 import { useLoadingStore } from '@/stores/loadingStore';
 import { useSocket } from '@/composables/taskSocket';
+import { formatDateAgo } from '@/utils/formateTime';
+
 import axios from 'axios';
+
 const isConnected=useSocket()
 const tickers = ref([]);
 const errorMessage = ref('');
@@ -71,6 +100,30 @@ const updateTickers = (newTickers) => {
     tickerStore.updateTickers(newTickers)
     tickers.value = tickerStore.currentTickers
 }
+
+const ai_reports=ref({})
+
+async function fetch_reports(){
+    loading.startLoading()
+    try{
+        const data = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/v1/user_reports`,{
+            params:{
+                user_id:localStorage.getItem('user_id'),
+            }
+        })
+        console.log(data)
+        ai_reports.value=data.data.data
+
+    }catch (err){
+        console.error("error: ",err)
+    }
+    finally{
+        loading.stopLoading()
+    }
+}
+onMounted(()=>{
+    fetch_reports()
+})
 
 
 
@@ -87,10 +140,10 @@ const get_report = async () => {
             loading.startLoading();
             const user_id = localStorage.getItem('user_id')
             try {
-                const response = await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/gemini`, {
+                await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/gemini`, {
                     tickers: allowedTickers.value,
                     user_id: user_id,
-                    report_type: "overall"
+                    report_type: "overall-reports"
                 })
             }
 
@@ -115,7 +168,14 @@ const get_report = async () => {
         }
     }
 
-
+}
+async function download_s3_report(bucket_name,file_name){
+    try{
+        console.log(`calling download report ${bucket_name} and ${file_name}`)
+    }
+    catch (err){
+        console.error("error: ",err)
+    }
 }
 </script>
 <style>

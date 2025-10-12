@@ -8,16 +8,19 @@
     "serve": "vite preview"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.901.0",
     "@azure/msal-node": "^3.6.1",
     "@microsoft/microsoft-graph-client": "^3.0.7",
     "@vitejs/plugin-vue": "^5.1.4",
-    "apexcharts": "^3.52.0",
     "axios": "^1.9.0",
     "bcryptjs": "^2.4.3",
     "bootstrap": "^5.3.7",
     "core-js": "^3.8.3",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
+    "dayjs": "^1.11.18",
+    "dotenv": "^16.6.1",
     "express": "^4.19.2",
     "form-data": "^4.0.4",
     "isomorphic-fetch": "^3.0.0",
@@ -33,9 +36,8 @@
     "socket.io-client": "^4.8.1",
     "vite": "^5.4.8",
     "vue": "^3.2.13",
-    "vue-apexcharts": "^1.6.2",
     "vue-router": "^4.4.3",
-    "vue3-apexcharts": "^1.5.3"
+    "vue3-apexcharts": "^1.8.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",
@@ -64,6 +66,7 @@
     },
     "rules": {}
   },
+  "type": "module",
   "browserslist": [
     "> 1%",
     "last 2 versions",

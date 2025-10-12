@@ -4,6 +4,8 @@ from pymongo.server_api import ServerApi
 from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
+from datetime import datetime
+
 load_dotenv()
 uri = os.getenv('MONGODB_URI')
 WS_SOCKET_URI=os.getenv('VITE_WS_SERVER')
@@ -36,6 +38,7 @@ def generate_ai_report(self,tickers,user_id,report_type):
             raise ValueError("missing user_id")
         result= compile(tickers)
         task_id = self.request.id
+        now=datetime.now()
 
         if result:
             client = MongoClient(uri, server_api=ServerApi('1'))
@@ -45,7 +48,9 @@ def generate_ai_report(self,tickers,user_id,report_type):
             "user_id":user_id,
             "task_id":task_id,
             "assistant":result,
-            "report_type":report_type
+            "report_type":report_type,
+            "tickers":tickers,
+            "timestamp":now
             })
 
 
@@ -55,7 +60,9 @@ def generate_ai_report(self,tickers,user_id,report_type):
                 'user_id':user_id,
                 'task_id':task_id,
                 'tickers':tickers,
-                'report_type':report_type
+                'report_type':report_type,
+                "tickers":tickers,
+                "timestamp":datetime.now().isoformat()+"Z"
             })
             print(f"task {task_id} completed emitting task_done")
         except Exception as e:
@@ -73,6 +80,7 @@ def generate_ai_7powers(self,tickers,user_id,report_type):
             raise ValueError("missing user_id")
         result= seven_powers(tickers)
         task_id=self.request.id
+        now=datetime.now()
         if result:
             client = MongoClient(uri, server_api=ServerApi('1'))
             db = client["test"]
@@ -81,7 +89,9 @@ def generate_ai_7powers(self,tickers,user_id,report_type):
                 "user_id":user_id,
                 "task_id":task_id,
                 "assistant":result,
-                "report_type":report_type
+                "report_type":report_type,
+                "tickers":tickers,
+                "timestamp":now
             })
             try:
                 print("notifying server of completion")
@@ -89,7 +99,9 @@ def generate_ai_7powers(self,tickers,user_id,report_type):
                 'user_id':user_id,
                 'task_id':task_id,
                 'tickers':tickers,
-                'report_type':report_type
+                'report_type':report_type,
+                "tickers":tickers,
+                "timestamp":datetime.now().isoformat()+"Z"
                 })
                 print(f"task {task_id} completed emitting task_done")
             except Exception as e:

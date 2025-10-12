@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 import { ref } from "vue";
-import { downloadPdfReport } from "@/utils/downloadReport";
+import { generatePdfReport } from "@/utils/pdfOps";
 const socket = io(import.meta.env.VITE_WS_SERVER,{
     secure:true
 });
@@ -21,11 +21,12 @@ export function useSocket() {
         taskData.value = data
         if (data.user_id==user_id){
             try {
-        downloadPdfReport(taskData.value.task_id, taskData.value.tickers, taskData.value.report_type)
+          generatePdfReport(taskData.value.task_id, taskData.value.tickers, taskData.value.report_type)
+
     }
     catch (err) {
         console.error('error trying to generate report', err)
-    }
+    }   
 }
     })
     return {socket,isConnected,taskData}

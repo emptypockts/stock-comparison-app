@@ -30,6 +30,7 @@ from stockPlotDataQtr import fetch_4qtr_data
 from PDFReport import PDFReport
 import requests
 from worker import generate_ai_report,celery, generate_ai_7powers
+from s3_bucket_ops import s3_upload
 load_dotenv()
 CF_CERT_URL = f"https://{os.getenv('CF_URL_CDN_CGI_CERTS')}/cdn-cgi/access/certs"
 CERT_KYS = requests.get(CF_CERT_URL).json()
@@ -249,20 +250,28 @@ def gemini_post():
     except Exception as e:
             return jsonify({'error':str(e)}),400
 @app.route('/api/v1/gemini/report',methods=['POST'])
-def gemini_generate_pdf():
+def report_generate_and_upload():
     data= request.json
     task_id=data.get('task_id')
-    try:
-        pdf_report = PDFReport(task_id)
-        pdf_buffer,today=pdf_report.generate()
-        return send_file(pdf_buffer,as_attachment=True,
-                         download_name=f"{today}.pdf",
-                         mimetype='application/pdf',
-                         ),200
-    except Exception as e:
+    file_name=task_id
+    bucket_name=data.get('bucket_name')
+    if not file_name or not bucket_name:
         return jsonify({
-            "error":str(e)
-        }),500
+            "error":"missing fields"
+        }),400
+    else:
+        try:
+            pdf_report = PDFReport(task_id)
+            pdf_buffer,today=pdf_report.generate()
+            s3_upload(bucket_name=bucket_name,file_name=file_name)
+            return send_file(pdf_buffer,as_attachment=True,
+                            download_name=f"{today}.pdf",
+                            mimetype='application/pdf',
+                            ),200
+        except Exception as e:
+            return jsonify({
+                "error":str(e)
+            }),500
 @app.route('/api/fetchStockfromDB', methods=['GET'])
 def MongoFetchStock():
     try:
@@ -397,5 +406,48 @@ def gemini_task_status(task_id):
         return jsonify({
             'error':e
         })
+@app.route('/api/v1/user_reports',methods=['GET'])
+def query_reports():
+    user_id=request.args.get('user_id')
+    if not user_id:
+        return jsonify({
+            "error":"missing fields"
+        }),400
+    try:
+        filter={
+            "user_id":user_id.strip(),
+        }
+        project={
+            "assistant":0
+        }
+        sort=list({
+            'timestamp':-1
+        }.items())
+        limit=10
+        docs=db['aiTasks'].find(
+            filter=filter,
+            projection=project,
+            sort=sort,
+            limit=limit
+            )
+        collection=[]
+        for doc in docs:
+            doc["_id"]=str(doc["_id"])
+            if 'timestamp' in doc:
+                doc["timestamp"]=doc["timestamp"].isoformat()+ "Z"
+            collection.append(doc)
+        if not collection:
+            return jsonify({
+                "message":"no reports found"
+            }),404
+        return jsonify({
+            "status":"ok",
+            "count":len(collection),
+            "data":collection
+        }),200
+    except Exception as e:
+        return jsonify({
+            "error":str(e)
+        }),500
 if __name__ == '__main__':
     app.run(debug=True)

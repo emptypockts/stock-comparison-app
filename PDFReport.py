@@ -26,6 +26,7 @@ class PDFReport(FPDF):
         if not report or 'assistant' not in report:
            raise ValueError(f"my guy, check the task_id, i did not find any report with {task_id}")
         self.ai_report=report['assistant']
+        self.task_id=task_id
         print(FONT_PATH)
         self.add_font('DejaVu','',FONT_PATH)
         self.add_font('DejaVu', 'B', FONT_PATH)
@@ -96,7 +97,7 @@ class PDFReport(FPDF):
       pdf_buffer= BytesIO()
       self.output(pdf_buffer)
       today= str(datetime.now()).replace(':','_')
-      self.output(f"{BASE_DIR}/ai_reports/{today}.pdf")
+      self.output(f"{BASE_DIR}/ai_reports/{self.task_id}.pdf")
       pdf_buffer.seek(0)
 
       return pdf_buffer,today

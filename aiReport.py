@@ -8,8 +8,6 @@ from stockPlotDataQtr import fetch_4qtr_data
 from stockIntrinsicVal import getAllIntrinsicValues
 import pandas as pd
 import json
-from fpdf import FPDF
-from datetime import datetime
 load_dotenv()
 API_KEY = os.getenv("GEMINI_API")
 url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
