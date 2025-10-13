@@ -70,7 +70,7 @@ router.beforeEach(async (to, from) => {
     return {path:'login'}
     }
     else{
-      window.location.href=`${import.meta.env.VITE_PROD_URL}/cdn-cgi/access/logout`
+      window.location.href='www.dahoncho.com/cdn-cgi/access/logout'
       return false
     }
   }
