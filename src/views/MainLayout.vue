@@ -4,12 +4,10 @@
         <h1 class="app-title">
             Financials Overview
         </h1>
-
         <CompanyData @tickers-updated="updateTickers" />
         <ValueStockAnalysis :tickers="tickers" />
         <StockFinancialCharts :tickers="tickers" />
         <IntrinsicValue :tickers="tickers" />
-
 
         <button :disabled="tickers.length === 0" @click="get_report">Analyse with ai</button>
         <small> ⚠️warning it takes around 40 sec per ticker <br></small>
@@ -18,10 +16,10 @@
                 <strong>ticker history:</strong> {{ [...tickerHistory].join(',') }}
             </small>
         </div>
-                  <div>
-    <p v-if="isConnected">🟢 ai analysis available</p>
-    <p v-else>🔴 ai analysis not available</p>
-  </div>
+        <div>
+            <p v-if="isConnected">🟢 ai analysis available</p>
+            <p v-else>🔴 ai analysis not available</p>
+        </div>
         <div class="error-message">
             {{ errorMessage }}
         </div>
@@ -32,42 +30,45 @@
         </h2>
         <RittenhouseAnalysis Analysis :tickers="tickers" />
         <AI Analysis :tickers="tickers" />
-                  <div>
-    <p v-if="isConnected">🟢 ai analysis available</p>
-    <p v-else>🔴 ai analysis not available</p>
-  </div>
+        <div>
+            <p v-if="isConnected">🟢 ai analysis available</p>
+            <p v-else>🔴 ai analysis not available</p>
+        </div>
     </div>
     <Navigation />
     <CookieBanner />
     <LoginAlert />
     <div>
-    <div v-if="ai_reports">
-        <table>
+        <div v-if="ai_reports">
+            <table>
                 <thead>
-            <tr>
-              <th>Report Type</th>
-              <th>Ticker</th>
-              <th>Timestamp</th>
-              <th>Download</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(k,v) in ai_reports" :key="k">
-                <td> {{ k['report_type'] }}</td>
-                <td> {{ k['tickers'][0] }}</td>
-                <td> {{ formatDateAgo(new Date (k['timestamp'])) }}</td>
-                <td>
-                    <a href="#" @click.prevent="download_s3_report(k['report_type'],k['task_id'])">
-                        Download
-                    </a>
-                </td>
-            </tr>
-          </tbody>
-          </table>
-      </div>
-  </div>
-
-
+                    <tr>
+                        <th>Report Type</th>
+                        <th>Ticker</th>
+                        <th>Timestamp</th>
+                        <th>Download</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(k, v) in ai_reports" :key="k">
+                        <td> {{ k['report_type'] }}</td>
+                        <td> {{ k['tickers'][0] }}</td>
+                        <td> {{ formatDateAgo(new Date(k['timestamp'])) }}</td>
+                        <td>
+                            <a href="#" @click.prevent="download_s3_report(k['report_type'], k['task_id'])">
+                                Download
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div v-else>
+            <strong>
+                You have no reports stored in our records.
+            </strong>
+        </div>
+    </div>
 
 </template>
 <script setup>
@@ -86,10 +87,9 @@ import { showTempMessage } from '@/utils/timeout';
 import { useLoadingStore } from '@/stores/loadingStore';
 import { useSocket } from '@/composables/taskSocket';
 import { formatDateAgo } from '@/utils/formateTime';
-
+import { fetch_reports,ai_reports } from '@/utils/fetch_reports';
 import axios from 'axios';
-
-const isConnected=useSocket()
+const isConnected = useSocket()
 const tickers = ref([]);
 const errorMessage = ref('');
 const tickerStore = useTickerStore();
@@ -101,31 +101,10 @@ const updateTickers = (newTickers) => {
     tickers.value = tickerStore.currentTickers
 }
 
-const ai_reports=ref({})
 
-async function fetch_reports(){
-    loading.startLoading()
-    try{
-        const data = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/v1/user_reports`,{
-            params:{
-                user_id:localStorage.getItem('user_id'),
-            }
-        })
-        console.log(data)
-        ai_reports.value=data.data.data
-
-    }catch (err){
-        console.error("error: ",err)
-    }
-    finally{
-        loading.stopLoading()
-    }
-}
-onMounted(()=>{
-    fetch_reports()
+onMounted(async ()=>{
+    ai_reports.value= await fetch_reports();
 })
-
-
 
 const get_report = async () => {
     if (tickers.value.length == 0) {
@@ -135,7 +114,6 @@ const get_report = async () => {
     }
     else {
         allowedTickers.value = tickers.value.filter(e => !tickerHistory.value.has(e.toLowerCase()))
-
         if (allowedTickers.value.length > 0 && isConnected) {
             loading.startLoading();
             const user_id = localStorage.getItem('user_id')
@@ -146,36 +124,46 @@ const get_report = async () => {
                     report_type: "overall-reports"
                 })
             }
-
-
-
-
             catch (err) {
                 console.error('error trying to generate report:', err)
-
             }
             finally {
-                tickers.value.forEach(t => tickerHistory.value.add(t.toLowerCase()));
-
+                tickers.value.forEach(t => tickerHistory.value.add(t.toLowerCase()))
+                ai_reports.value= await fetch_reports();
             }
-
-
         }
         else {
-
             errorMessage.value = 'ticker previously analysed. refresh your broweser if you need to analyse it again'
             showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 2000);
         }
     }
-
 }
-async function download_s3_report(bucket_name,file_name){
-    try{
-        console.log(`calling download report ${bucket_name} and ${file_name}`)
+async function download_s3_report(bucket_name, file_name) {
+    try {
+        const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/v1/user_report`,{
+           params:
+           { 
+            bucket_name:bucket_name,
+            file_name:file_name,
+            client_method:"get_object"
+           }
+           
+        });
+        
+        const signed_url=response.data.signed_url
+        if (signed_url){
+            window.open(signed_url,'_blank')
+        }
+        else{
+            errorMessage.value = 'no signed url available. try again later'
+            showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 2000);
+            console.error('no signed url available. try again later')
+        }
     }
-    catch (err){
-        console.error("error: ",err)
+    catch (err) {
+        console.error("error: ", err)
     }
+    
 }
 </script>
 <style>
@@ -188,12 +176,10 @@ async function download_s3_report(bucket_name,file_name){
     /* rounded corners */
     background: #f8f3f3;
 }
-
 .error-message {
     color: red;
     margin-top: 10px;
 }
-
 
 button {
     position: relative;
@@ -208,11 +194,9 @@ button {
     background-color: #8bb4e0;
     margin-right: 10px;
 }
-
 button:hover {
     background-color: #468eda;
 }
-
 button:disabled {
     background-color: #999;
     /* Gray out */

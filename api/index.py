@@ -30,7 +30,7 @@ from stockPlotDataQtr import fetch_4qtr_data
 from PDFReport import PDFReport
 import requests
 from worker import generate_ai_report,celery, generate_ai_7powers
-from s3_bucket_ops import s3_upload
+from s3_bucket_ops import s3_upload,s3_presigned_url
 load_dotenv()
 CF_CERT_URL = f"https://{os.getenv('CF_URL_CDN_CGI_CERTS')}/cdn-cgi/access/certs"
 CERT_KYS = requests.get(CF_CERT_URL).json()
@@ -216,7 +216,6 @@ def messageBot():
     tickers = data.get('tickers')
     user_id=data.get('user_id')
     report_type=data.get("report_type")
-    print (data)
     if 'tickers' not in data or 'user_id' not in data or 'report_type' not in data:
         return jsonify({
             'error':'missing fields'
@@ -439,7 +438,7 @@ def query_reports():
         if not collection:
             return jsonify({
                 "message":"no reports found"
-            }),404
+            }),200
         return jsonify({
             "status":"ok",
             "count":len(collection),
@@ -449,5 +448,26 @@ def query_reports():
         return jsonify({
             "error":str(e)
         }),500
+@app.route('/api/v1/user_report',methods=['GET'])
+def download_report():
+    bucket_name=request.args.get('bucket_name','')
+    file_name=request.args.get('file_name','')
+    client_method=request.args.get('client_method','')
+    if not bucket_name or not file_name or not client_method:
+        return jsonify({
+            "error":"missing fields"
+        }),400
+    else:
+        try:
+            params={"Bucket":bucket_name,"Key":f"{file_name}.pdf"}
+            signed_url=s3_presigned_url(client_method=client_method,method_params=params,expiration_time=30)
+            return jsonify({
+                "signed_url":signed_url
+            }),200
+        except Exception as e:
+            return jsonify({
+                "error":str(e)
+            }),400
+
 if __name__ == '__main__':
     app.run(debug=True)
