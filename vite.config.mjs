@@ -11,7 +11,7 @@ export default defineConfig({
   },
   server: {
 	  preview:{
-		  allowedHosts:['www.dahoncho.com']
+		  allowedHosts:['www.dahoncho.com','www.eacsa.us']
 	  },
 	proxy: {
       '/api': {
