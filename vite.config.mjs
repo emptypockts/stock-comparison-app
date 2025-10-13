@@ -10,7 +10,10 @@ export default defineConfig({
     },
   },
   server: {
-    proxy: {
+	  preview:{
+		  allowedHosts:['www.dahoncho.com']
+	  }
+	proxy: {
       '/api': {
         target: 'http://localhost:5000',
         changeOrigin: true,
@@ -18,5 +21,5 @@ export default defineConfig({
         
       }
     }
-  }
+  },
 });
