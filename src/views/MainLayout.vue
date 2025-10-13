@@ -53,7 +53,7 @@
                     <tr v-for="(k, v) in ai_reports" :key="k">
                         <td> {{ k['report_type'] }}</td>
                         <td> {{ k['tickers'][0] }}</td>
-                        <td> {{ formatDateAgo(new Date(k['timestamp'])) }}</td>
+                        <td> {{ formatDateAgo(k['timestamp']) }}</td>
                         <td>
                             <a href="#" @click.prevent="download_s3_report(k['report_type'], k['task_id'])">
                                 Download
