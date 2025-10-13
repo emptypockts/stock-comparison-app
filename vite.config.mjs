@@ -12,7 +12,7 @@ export default defineConfig({
   server: {
 	  preview:{
 		  allowedHosts:['www.dahoncho.com']
-	  }
+	  },
 	proxy: {
       '/api': {
         target: 'http://localhost:5000',
