@@ -1,5 +1,5 @@
 <template>
-    <h1 class="app-title">Honcho Financials®</h1>
+    <h1 class="app-title">EACSA Financials®</h1>
     <div class="container">
         <h1 class="app-title">
             Financials Overview

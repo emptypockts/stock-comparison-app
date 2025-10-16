@@ -70,7 +70,7 @@ router.beforeEach(async (to, from) => {
     return {path:'login'}
     }
     else{
-      window.location.href='www.eacsa.us/cdn-cgi/access/logout'
+      window.location.href='https://www.eacsa.us/cdn-cgi/access/logout'
       return false
     }
   }
