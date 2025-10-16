@@ -10,7 +10,7 @@ export default defineConfig({
     },
   },
   server: {
-		  allowedHosts:['www.dahoncho.com'],
+		  allowedHosts:['www.eacsa.us'],
 	proxy: {
       '/api': {
         target: 'http://localhost:5000',

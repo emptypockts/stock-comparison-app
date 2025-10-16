@@ -36,7 +36,7 @@ class PDFReport(FPDF):
         self.set_text_color(220, 220, 220)
         self.rect(0, 0, 210, 297, style='F')
         self.set_fill_color(0, 0, 0)
-        title="dahoncho financial reports"
+        title="eacsa financial reports"
         width=self.get_string_width(title)+6
         self.set_x((210-width)/2)
         self.cell(width,20,title,align="C")

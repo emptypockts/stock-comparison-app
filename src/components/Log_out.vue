@@ -17,7 +17,7 @@ export default {
         const router = useRouter();
         function logout() {
             localStorage.clear()
-            window.location.href='www.dahoncho.com/cdn-cgi/access/logout'
+            window.location.href='www.eacsa.us/cdn-cgi/access/logout'
             // Redirect to login page
             router.push('/');
         }
