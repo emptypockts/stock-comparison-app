@@ -232,12 +232,17 @@ def messageBot():
 @app.route('/api/v1/gemini',methods=['POST'])
 def gemini_post():
     data=request.json
-    tickers = data.get('tickers')
-    user_id = data.get('user_id')
-    report_type=data.get('report_type')
+    tickers = data.get('tickers','')
+    user_id = data.get('user_id','')
+    report_type=data.get('report_type','')
     if 'user_id' not in data or 'tickers' not in data or 'report_type' not in data:
         return jsonify({
-            'error':'missing fields'
+            'error':'missing one or more keys'
+        }),400
+    if not tickers or not user_id or not report_type:
+        
+        return jsonify({
+            'error':'missing values'
         }),400
     try:
         task =generate_ai_report.delay(tickers,user_id,report_type)
@@ -277,9 +282,9 @@ def MongoFetchStock():
         # Get pagination parameters
         page = int(request.args.get('page', 1))
         page_size = int(request.args.get('page_size', 10))  # Number of symbols per page
-        
+        exchange = request.args.get('exchange','')
         # Fetch grouped stock data
-        grouped_stocks,total_symbols = stockFetch(db,page,page_size)
+        grouped_stocks,total_symbols = stockFetch(db,page,page_size,exchange)
         # Pagination logic
         start = (page - 1) * page_size
         end = start + page_size

@@ -9,6 +9,7 @@ import { verifyCfToken } from '@/utils/auth';
 import App from '@/layouts/App.vue';
 import { useTickerStore } from '@/stores/tickerStore';
 import MainLayout from '@/views/MainLayout.vue';
+import StockChartHK from '@/views/StockChartHK.vue';
 
 const router = createRouter({
   history:createWebHistory(),
@@ -36,6 +37,11 @@ const router = createRouter({
     path: 'stockchart',
     name: 'StockChart',
     component: StockChart,
+  },
+  {
+    path: 'stockcharthk',
+    name: 'StockChartHk',
+    component: StockChartHK,
   },
   {
     path:'qtrtrend',

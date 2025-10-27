@@ -25,6 +25,35 @@ const isLoading=computed(()=>load_store.isLoading);
 
 
 <style>
+.tooltip-container {
+  position: relative; /* Make this the positioning context */
+  display: flex;
+  flex-direction: column; /* Stack tooltip above icon */
+  align-items: center;
+  margin: 0 1rem; /* Space between icons in a row */
+  background: transparent;
+}
+
+.tooltip-text {
+  position: absolute; /* Position relative to the container */
+  bottom: 0%; /* Place tooltip above the icon */
+  left: 50%;
+  transform: translateX(-50%);
+  visibility: hidden;
+  opacity: 0;
+  color: #0000008f;
+  padding: 4px 8px;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  transition: opacity 0.3s ease;
+  z-index: 2000;
+}
+
+.tooltip-container:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
 * {
   font-family: monospace;
 }

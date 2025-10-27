@@ -1,9 +1,13 @@
 <template>
-    <Logout/>
+      <div class="icon-bar">
+    
     <economyIdxLogo />
     <GoBack />
     <StockChartLogo />
+    <StockChartLogo route="/stockcharthk" tooltip="HK Stock Chart"/>
     <QtrStockChartLogo />
+    <Logout/>
+    </div>
     </template>
 
     <script>
@@ -25,11 +29,14 @@ import QtrStockChartLogo from "./QtrStockChartLogo.vue";
 
 </script>
 <style scoped>
-.navigation {
+.icon-bar {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
   display: flex;
-  gap: 10px;
-  padding: 10px;
-  background: rgba(76, 114, 237, 0);
+  flex-direction: column;  
+  align-items: flex-end;
+  z-index: 2000;
+  gap:0.5rem;
 }
-
 </style>

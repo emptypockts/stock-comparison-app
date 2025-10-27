@@ -1,6 +1,6 @@
 <template>
     <div class="tooltip-container">
-      <svg @click="gotoTable" class="Table-container" style="margin: 2rem; height:2em" 
+      <svg @click="gotoTable"  style="margin: 2rem; height:2em" 
       
       xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" fill="currentColor"
       title="Stock Score Table">
@@ -22,53 +22,5 @@ async function gotoTable(){
 </script>
 
 <style scoped>
-.Table-container {
-    position: fixed;
-    bottom: 220px;
-    /* Distance from the bottom of the screen */
-    right: 20px;
-    /* Distance from the right of the screen */
-    cursor: pointer;
-    color: #6e6e6e8f;
-    /* Customize the icon color */
-    z-index: 1000;
-    /* Ensure it's on top of other elements */
-    transition: color 0.3s ease;
-}
-
-.Table-container:hover {
-    color: #3e3e3ece;
-    /* Customize the icon color */
-}
-.tooltip-container {
-    position: fixed;
-    width: auto;
-    bottom: 245px;
-    /* Distance from the bottom of the screen */
-    right: 140px;
-    background: transparent;
-}
-
-.tooltip-text {
-    visibility: hidden;
-    width: 100px;
-    color: #0000004b;
-    text-align: center;
-    border-radius: 5px;
-    padding: 5px 0;
-    position: absolute;
-    z-index: 1;
-    bottom: 125%; /* Position above the icon */
-    left: 50%;
-    margin-left: -50px;
-    opacity: 0;
-    transition: opacity 0.3s;
-}
-
-.tooltip-container:hover .tooltip-text {
-    visibility: visible;
-    opacity: 1;
-}
-
 
 </style>

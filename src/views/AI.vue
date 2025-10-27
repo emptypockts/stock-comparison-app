@@ -44,10 +44,10 @@ const messages = ref([
 async function get_seven_p_analysis() {
     tickers.value = tickerStore.currentTickers
     const user_id = localStorage.getItem('user_id')
-    if (tickers.value.length === 0) {
+    if (tickers.value.length === 0 || !user_id) {
         
         messages.value.push({
-            text: 'ticker analysis is empty. there must be an analysis and 7powers analysis generated first',
+            text: 'ticker analysis or user_id empty',
             isUser: false
         })
         errorMessage.value = 'ticker analysis is empty. there must be an analysis and 7powers analysis generated first'
@@ -79,7 +79,7 @@ async function get_seven_p_analysis() {
                     showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 2000);
                 }
                 finally {
-                    loading.value = false;
+                    loading.stopLoading()
                     tickers.value.forEach(t => tickerHistory.value.add(t.toLowerCase()));
 
                 }

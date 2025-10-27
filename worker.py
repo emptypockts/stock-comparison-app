@@ -5,6 +5,8 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
 from datetime import datetime
+from celery.exceptions import Ignore
+
 
 load_dotenv()
 uri = os.getenv('MONGODB_URI')
@@ -35,10 +37,9 @@ def generate_ai_report(self,tickers,user_id,report_type):
     
     try:
         if not user_id:
-            raise ValueError("missing user_id")
-        result= compile(tickers)
+            raise Ignore()
         task_id = self.request.id
-        now=datetime.now()
+        result= compile(tickers)
 
         if result:
             client = MongoClient(uri, server_api=ServerApi('1'))
@@ -50,7 +51,7 @@ def generate_ai_report(self,tickers,user_id,report_type):
             "assistant":result,
             "report_type":report_type,
             "tickers":tickers,
-            "timestamp":now
+            "timestamp":datetime.now().isoformat()+"Z"
             })
 
 
@@ -77,7 +78,7 @@ def generate_ai_7powers(self,tickers,user_id,report_type):
     from geminiChat import seven_powers
     try:
         if not user_id:
-            raise ValueError("missing user_id")
+            raise Ignore()
         result= seven_powers(tickers)
         task_id=self.request.id
         now=datetime.now()
@@ -91,7 +92,7 @@ def generate_ai_7powers(self,tickers,user_id,report_type):
                 "assistant":result,
                 "report_type":report_type,
                 "tickers":tickers,
-                "timestamp":now
+                "timestamp":datetime.now().isoformat()+"Z"
             })
             try:
                 print("notifying server of completion")

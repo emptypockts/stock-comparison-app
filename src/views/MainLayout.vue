@@ -28,6 +28,7 @@
         <h2 class="app-title">
             Framework and AI Analysis
         </h2>
+        <!-- analysis is a prop boolean defined in the views isProcessing -->
         <RittenhouseAnalysis Analysis :tickers="tickers" />
         <AI Analysis :tickers="tickers" />
         <div>
@@ -107,16 +108,17 @@ onMounted(async ()=>{
 })
 
 const get_report = async () => {
-    if (tickers.value.length == 0) {
+    const user_id = localStorage.getItem('user_id')
+    if (tickers.value.length == 0 || !user_id) {
         console.error('missing tickers');
-        errorMessage.value = 'enter at least 1 ticker and analyse it to enable the ai report'
+        errorMessage.value = 'ticker or user_id is missing'
         showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 2000);
     }
     else {
         allowedTickers.value = tickers.value.filter(e => !tickerHistory.value.has(e.toLowerCase()))
         if (allowedTickers.value.length > 0 && isConnected) {
             loading.startLoading();
-            const user_id = localStorage.getItem('user_id')
+            
             try {
                 await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/gemini`, {
                     tickers: allowedTickers.value,
@@ -133,7 +135,7 @@ const get_report = async () => {
             }
         }
         else {
-            errorMessage.value = 'ticker previously analysed. refresh your broweser if you need to analyse it again'
+            errorMessage.value = 'ticker previously analysed. refresh your browser if you need to analyse it again'
             showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 2000);
         }
     }

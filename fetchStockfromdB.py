@@ -18,11 +18,11 @@ def format_percentage(value):
 def format_percentage_growth(value):
     return "{:.2f}%".format(value) if value is not None else "N/A"
 
-def stockFetch(db,page=1, items_per_page=100):
+def stockFetch(db,page=1, items_per_page=100,exchange=''):
     print("Page query ",page)
     print("Page size ",items_per_page)
 
-    stock_collection = db["StockScore"]
+    stock_collection = db[f"StockScore{exchange}"]
   
     # Fetch records with pagination
     stocks = stock_collection.aggregate([

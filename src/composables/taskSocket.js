@@ -2,9 +2,11 @@ import { io } from "socket.io-client";
 import { ref } from "vue";
 import { generatePdfReport } from "@/utils/pdfOps";
 import { fetch_reports } from "@/utils/fetch_reports";
+import { useLoadingStore } from "@/stores/loadingStore";
 const socket = io(import.meta.env.VITE_WS_SERVER,{
     secure:true
 });
+
 const isConnected = ref(false);
 const taskData = ref(null);
 
@@ -27,6 +29,8 @@ export function useSocket(onTaskDone) {
     }
     catch (err) {
         console.error('error trying to generate report', err)
+        const loading=useLoadingStore()
+        loading.stopLoading()
     }   
 }
     })
