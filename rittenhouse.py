@@ -6,6 +6,7 @@ import secDBFetch
 import logging
 import json
 from datetime import datetime, timedelta
+from outils import clean_edgar_text
 
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -25,11 +26,7 @@ form_types = ['10-K', '10-Q', '8-K', 'DEF 14A','20-F','6-K']
 def load_and_preprocess(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         text = file.read()
-        
-    # Remove unwanted characters, HTML tags, and excessive whitespace
-    text = re.sub(r'<.*?>', '', text)  # Remove HTML tags
-    text = re.sub(r'\s+', ' ', text)  # Replace multiple whitespace with a single space
-    text = re.sub(r'[\r\n]+', ' ', text)  # Remove newlines
+        text=clean_edgar_text(text)
     return text
 
 # Function to perform sentiment analysis using TextBlob

@@ -31,6 +31,7 @@ from PDFReport import PDFReport
 import requests
 from worker import generate_ai_report,celery, generate_ai_7powers
 from s3_bucket_ops import s3_upload,s3_presigned_url
+from quant import quant
 load_dotenv()
 CF_CERT_URL = f"https://{os.getenv('CF_URL_CDN_CGI_CERTS')}/cdn-cgi/access/certs"
 CERT_KYS = requests.get(CF_CERT_URL).json()
@@ -39,6 +40,7 @@ uri = os.getenv('MONGODB_URI')
 client = MongoClient(uri, server_api=ServerApi('1'))
 db=client['test']
 edgar_collection=db['rawEdgarCollection']
+ai_tasks_collection=db['aiTasks']
 app = Flask(__name__)
 app.config.from_object(app_constants)
 CORS(app)
@@ -473,6 +475,20 @@ def download_report():
             return jsonify({
                 "error":str(e)
             }),400
+@app.route('/api/v1/quant',methods=['POST'])
+def quantize():
+    data=request.json
+    ticker =data.get('ticker','')
+    if not ticker:
+        return jsonify({
+            "error":"missing payload"
+        }),400
+    else:
+        ticker=ticker.capitalize()
+        response=quant(ticker,ai_tasks_collection)
+        return jsonify({
+            "final_report":response
+        })
 
 if __name__ == '__main__':
     app.run(debug=True)
