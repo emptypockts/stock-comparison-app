@@ -6,7 +6,7 @@ import secDBFetch
 import logging
 import json
 from datetime import datetime, timedelta
-from outils import clean_edgar_text
+from outils import clean_edgar_text,is_new_analysis_needed
 
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -88,21 +88,7 @@ def save_analysis_report(ticker_dir, ticker, report):
     with open(report_file, 'w', encoding='utf-8') as f:
         json.dump(report, f, ensure_ascii=False, indent=4)
 
-# Function to check if a new analysis is needed and return the most recent analysis if not
-def is_new_analysis_needed(ticker_dir):
-    three_months_ago = datetime.now() - timedelta(days=90)
-    most_recent_report = None
-    for file_name in os.listdir(ticker_dir):
-        if file_name.endswith('.json'):
-            file_date_str = re.findall(r'\d{4}-\d{2}-\d{2}', file_name)
-            if file_date_str:
-                file_date = datetime.strptime(file_date_str[0], '%Y-%m-%d')
-                if file_date > three_months_ago:
-                    # Load the most recent analysis report
-                    with open(os.path.join(ticker_dir, file_name), 'r', encoding='utf-8') as f:
-                        most_recent_report = json.load(f)
-                    return False, most_recent_report
-    return True, None
+
 
 # Function to analyze all text files for a specific ticker
 def analyze_ticker(directory, ticker):

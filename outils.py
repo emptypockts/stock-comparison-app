@@ -1,7 +1,12 @@
 from bs4 import BeautifulSoup
 from lxml import etree
+from datetime import datetime,timedelta
+import os
+import json
 import re 
-
+from typing import Literal
+from secDBFetch import get_sec_filings
+form_types = ['10-K', '10-Q', '8-K', 'DEF 14A','20-F','6-K'] 
 def clean_edgar_text(content: str) -> str:
     """
     Extracts and cleans the text from only the first document (<DOCUMENT>...</DOCUMENT>)
@@ -24,3 +29,61 @@ def clean_edgar_text(content: str) -> str:
     text = re.sub(r"\s+", " ", text)
 
     return text.strip()
+
+def is_new_analysis_needed(ticker_dir,extension:Literal[".json",".quant"]):
+    three_months_ago = datetime.now() - timedelta(days=90)
+    most_recent_report = None
+    for file_name in os.listdir(ticker_dir):
+        if file_name.endswith(extension):
+            file_date_str = re.findall(r'\d{4}-\d{2}-\d{2}', file_name)
+            if file_date_str:
+                file_date = datetime.strptime(file_date_str[0], '%Y-%m-%d')
+                if file_date > three_months_ago:
+                    # Load the most recent analysis report
+                    with open(os.path.join(ticker_dir, file_name), 'r', encoding='utf-8') as f:
+                        most_recent_report = json.load(f)
+
+                    return False, most_recent_report
+    return True, None
+
+def analyze_ticker(directory, ticker,extension:Literal[".json",".quant"]):
+    reports = []
+    ticker_dir = os.path.join(directory, ticker.capitalize())
+    
+    if not os.path.exists(ticker_dir):
+        print(f"Directory for ticker '{ticker}' not found. Creating folder...")
+        os.makedirs(ticker_dir)
+        get_sec_filings(ticker=ticker, form_types=form_types)
+    
+    # Check if any .txt files are older than 3 months and delete them
+    three_months_ago = datetime.now() - timedelta(days=90)
+    txt_files_exist = False
+    
+    for file_name in os.listdir(ticker_dir):
+        if file_name.endswith('.txt'):
+            file_path = os.path.join(ticker_dir, file_name)
+            file_mod_time = datetime.fromtimestamp(os.path.getmtime(file_path))
+            if file_mod_time < three_months_ago:
+                print(f"Deleting outdated file: {file_name}")
+                os.remove(file_path)
+            else:
+                txt_files_exist = True
+    
+    # Fetch new data if no recent .txt files are left
+    if not txt_files_exist or not os.listdir(ticker_dir):
+        print(f"No recent files for '{ticker}' found. Fetching data...")
+        get_sec_filings(ticker=ticker, form_types=form_types)
+    
+    needs_analysis, existing_report = is_new_analysis_needed(ticker_dir,extension)
+
+    return needs_analysis,existing_report
+
+def save_analysis_report(ticker_dir, ticker, report,extension:Literal[".quant",".json"]):
+    today = datetime.today().strftime('%Y-%m-%d')
+    report_file = os.path.join(ticker_dir, f"{ticker.capitalize()}_analysis_{today}{extension}")
+    with open(report_file, 'w', encoding='utf-8') as f:
+        if extension==".json":
+            json.dump(report, f, ensure_ascii=False, indent=4)
+        else:
+            report = json.dumps(report,indent=4,ensure_ascii=False)
+            f.write(report)
