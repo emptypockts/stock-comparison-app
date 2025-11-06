@@ -1,10 +1,9 @@
 <template>
     <div>
       <h1 class="app-title">Rittenhouse</h1>
-      <button @click="fetchAnalysisReports" :disabled="localIsProcessing">  
+      <button :disabled="tickers.length === 0" @click="fetchAnalysisReports">  
         Make Analysis
       </button>
-      <small> ⚠️warning it takes around 30 sec per ticker <br></small>
       <!-- Legend for Sentiment Polarity and Subjectivity -->
       <div>
         <p><strong>Sentiment Polarity:</strong> Indicates the overall sentiment of the text, ranging from -1 (very negative) to 1 (very positive).</p>

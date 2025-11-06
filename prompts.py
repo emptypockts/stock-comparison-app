@@ -593,18 +593,16 @@ or operational exposures visible only from metadata, XBRL tags, or subtle langua
 3. Be concise but sharp — only include what requires investor attention.
 4. Do not quote long paragraphs — summarize implications.
 
-### Output format (strict):
+###OUTPUT FORMAT STRICT
+The output MUST be a **pure JSON array** (no wrapper object, no "report" field, etc.), where each element matches **exactly one** of the following formats:
 
-  "warnings":
-    <concise red flag or insight>
+    1. {{ "type": "title", "content": "string" }}
+    2. {{ "type": "paragraph", "content": "string" }}
+    3. {{ "type": "bullets", "content": ["bullet1", "bullet2", ..., "bulletn"] }}
 
-  "highlights":
-    "Item 1",
-    "Item 2",
-    "Item 3"
+    Do NOT include any outer object like {{ "report": [...] }}. Only return the array.
 
-  "overall diagnosis": 
-      <1–2 sentence expert conclusion>
+    Ensure the JSON is valid and ready for parsing.
 """
 
 synthesis_prompt = """
@@ -615,27 +613,18 @@ Each summary follows a similar schema containing `summary`, `key items to monito
 Your task:
 1. Integrate insights across all filings.
 2. Identify systemic risks, capital structure fragility, management credibility issues, and forward-looking warnings.
-3. Write a concise, professional "Cross-Filing Intelligence Brief" in Markdown.
+3. Write a concise, professional "Cross-Filing Intelligence Brief".
 
-### OUTPUT FORMAT
-Use the following structure exactly:
+###OUTPUT FORMAT STRICT
+The output MUST be a **pure JSON array** (no wrapper object, no "report" field, etc.), where each element matches **exactly one** of the following formats:
 
-## 🧩 Executive Synthesis
-A short paragraph summarizing the company’s overall financial and strategic health.
+    1. {{ "type": "title", "content": "string" }}
+    2. {{ "type": "paragraph", "content": "string" }}
+    3. {{ "type": "bullets", "content": ["bullet1", "bullet2", ..., "bulletn"] }}
 
-## ⚠️ Core Red Flags Across Filings
-List major red flags (1-2 sentences each) grouped by theme (e.g., Liquidity, Inventory, Profitability, Governance, Dilution).
-Use bullet points or numbered sections with **bold** headlines.
+    Do NOT include any outer object like {{ "report": [...] }}. Only return the array.
 
-## 📊 Key Metrics Snapshot
-Create a small table with key metrics from the filings (Net Loss, Cash Flow, Restricted Cash, Debt Rate, Aging Inventory, etc.)
-Add a brief interpretation of the trend column (Improving, Deteriorating, or Cosmetic).
-
-## 🔍 Forward Monitoring Priorities
-Bullet list of 4–6 critical items to monitor (maturities, governance costs, ATM usage, etc.)
-
-## 🩸 Integrated Diagnosis
-End with a short paragraph stating the *overall verdict* — include qualitative signals (fragility, dilution risk, governance health, structural profitability).
+Ensure the JSON is valid and ready for parsing.
 
 ### Style & Tone
 - Use concise, analytical, institutional-investor language.

@@ -10,7 +10,7 @@ export async function fetch_reports() {
         })
         ai_reports.value = data.data.data
     } catch (err) {
-        console.error("error: ", err)
+        console.error(`error: ${ai_reports.value}  ${err}`)
     }
     return ai_reports.value
 }

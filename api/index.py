@@ -478,7 +478,7 @@ def download_report():
 @app.route('/api/v1/quant',methods=['POST'])
 def quantize():
     data=request.json
-    ticker =data.get('ticker','')
+    ticker =data.get('tickers','')[0]
     if not ticker:
         return jsonify({
             "error":"missing payload"

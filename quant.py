@@ -70,10 +70,10 @@ def quant(ticker:str,collection:object=None)->str:
         save_analysis_report(ticker_dir, ticker, ai_final_response_json,extension=extension)
         print(f"Saved analysis report for ticker {ticker}\n")
 
-    return  final_response.content
+    return  final_response.content.replace("```json","").replace("```","").strip()
 
 
 
 if __name__=="__main__":
-    print(dedent(quant("tsla".capitalize())['final_report']))
+    print(quant("lunr".capitalize()))
 

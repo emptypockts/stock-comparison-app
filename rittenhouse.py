@@ -119,7 +119,7 @@ def analyze_ticker(directory, ticker):
         logging.warning(f"No recent files for '{ticker}' found. Fetching data...")
         secDBFetch.get_sec_filings(ticker=ticker, form_types=form_types)
     
-    needs_analysis, existing_report = is_new_analysis_needed(ticker_dir)
+    needs_analysis, existing_report = is_new_analysis_needed(ticker_dir,extension=".json")
     
     if not needs_analysis:
         logging.info(f"Analysis for ticker '{ticker}' is up to date.")

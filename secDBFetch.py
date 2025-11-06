@@ -1,6 +1,16 @@
 import os
 import requests
 from bs4 import BeautifulSoup
+from financialUtils import fetch_cik
+from pymongo.server_api import ServerApi
+from pymongo import MongoClient
+from pymongo.collection import Collection,Cursor
+from dotenv import load_dotenv
+load_dotenv()
+uri = os.getenv('MONGODB_URI')
+client = MongoClient(uri, server_api=ServerApi('1'))
+db=client['test']
+cik_collection=db['tickerCIK']
 
 # Base directory where all SEC filings will be stored
 BASE_DIR = 'sec_filings'
@@ -17,7 +27,7 @@ def get_sec_filings(ticker, form_types):
         'Accept-Encoding': 'gzip, deflate',
         'host': 'www.sec.gov'
     }
-
+    CIK= fetch_cik(ticker,collection=cik_collection)
     # Directory for this ticker's filings
     ticker_dir = os.path.join(BASE_DIR, ticker.capitalize())
 
@@ -28,7 +38,7 @@ def get_sec_filings(ticker, form_types):
     filings = {}
 
     for form_type in form_types:
-        url = f"https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={ticker}&type={form_type}&count=10&output=atom"
+        url = f"https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={CIK}&type={form_type}&count=10&output=atom"
         response = requests.get(url, headers=headers)
 
         if response.status_code == 200:
@@ -88,7 +98,7 @@ def get_sec_filings(ticker, form_types):
 
 # Example Usage:
 if __name__ == "__main__":
-    ticker = 'eric'  # Example ticker
+    ticker = 'lunr'  # Example ticker
     form_types = ['10-K', '10-Q', '8-K', 'DEF 14A','20-F','6-K']  # Forms to fetch
     # form_types = ['10-K', '10-Q']  # Forms to fetch
     response= get_sec_filings(ticker, form_types)

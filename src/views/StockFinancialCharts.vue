@@ -1,7 +1,7 @@
 <template>
   <h1 class="app-title">Charts</h1>
   <div>
-    <button @click="toggleView">
+    <button :disabled="tickers.length === 0" @click="toggleView">
       {{ isYearlyView ? "Switch to Quartetly View" : "Switch to Yearly View" }}
 
     </button>

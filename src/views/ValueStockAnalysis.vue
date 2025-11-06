@@ -6,7 +6,7 @@
       <p>{{ errorMessage }}</p>
     </div>
   </div>
-  <button @click="toggleCollapse">
+  <button :disabled="tickers.length === 0" @click="toggleCollapse">
     Click to expand or collapse
   </button>
     <div v-if="financialData.length" class="table-container" >

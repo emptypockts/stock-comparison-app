@@ -74,6 +74,7 @@ class PDFReport(FPDF):
       print('generating report now')
       if isinstance(self.ai_report, str):
         try:
+          print(self.ai_report)
           ai_json_report= json.loads(self.ai_report)
         except json.JSONDecodeError:
           try:

@@ -4,7 +4,7 @@ from pymongo.server_api import ServerApi
 from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
-from datetime import datetime
+from datetime import datetime,timezone
 from celery.exceptions import Ignore
 
 
@@ -51,7 +51,8 @@ def generate_ai_report(self,tickers,user_id,report_type):
             "assistant":result,
             "report_type":report_type,
             "tickers":tickers,
-            "timestamp":datetime.now().isoformat()+"Z"
+            "timestamp": datetime.now(timezone.utc)
+
             })
 
 
@@ -64,6 +65,7 @@ def generate_ai_report(self,tickers,user_id,report_type):
                 'report_type':report_type,
                 "tickers":tickers,
                 "timestamp":datetime.now().isoformat()+"Z"
+
             })
             print(f"task {task_id} completed emitting task_done")
         except Exception as e:
@@ -92,7 +94,7 @@ def generate_ai_7powers(self,tickers,user_id,report_type):
                 "assistant":result,
                 "report_type":report_type,
                 "tickers":tickers,
-                "timestamp":datetime.now().isoformat()+"Z"
+                "timestamp":datetime.now(timezone.utc)
             })
             try:
                 print("notifying server of completion")

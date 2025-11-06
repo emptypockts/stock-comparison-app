@@ -1,10 +1,10 @@
 <template>
     <div>
         <div>
-            <h1 class="app-title">Hamilton H's Seven Powers.</h1>
+            <h1 class="app-title">Red Flags.</h1>
         </div>
-        <button :disabled="tickers.length === 0" @click="get_seven_p_analysis">
-            7powers ai report
+        <button :disabled="tickers.length === 0" @click="red_flag_analysis">
+            Red Flags
         </button>
         <div>
             <Navigation />
@@ -13,6 +13,9 @@
             <small>
                 <strong>ticker history:</strong> {{ [...tickerHistory].join(',') }}
             </small>
+        </div>
+        <div>
+            {{ final_report['final_report'] }}
         </div>
         <div class="error-message">
             {{ errorMessage }}
@@ -34,15 +37,17 @@ const tickerHistory = ref(new Set())
 const tickerStore = useTickerStore();
 const loading = useLoadingStore();
 const allowedTickers = ref([]);
-
+const final_report=ref('');
 const errorMessage = ref('');
 const messages = ref([
-    { text: 'I will conduct the 7power analysis for this ticker. If you want analysis for another, ticker just change the first ticker field in the main page. Hit send to start. ', isUser: false }
+    { text: 'I will conduct the report analysis and identify red flags. If you want analysis for another, ticker just change the ticker in the main page and pres analyze to start. ', isUser: false }
 ]);
-const tickers =computed(()=> tickerStore.currentTickers)
-async function get_seven_p_analysis() {
+
+const tickers= computed(()=> tickerStore.currentTickers);
+async function red_flag_analysis() {
     
     const user_id = localStorage.getItem('user_id')
+    console.log(tickers)
     if (tickers.value.length === 0 || !user_id) {
         
         messages.value.push({
@@ -63,11 +68,14 @@ async function get_seven_p_analysis() {
                     // starting ai report. updating loading store
 
                     loading.startLoading();
-                     await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/seven_p`, {
+                    const response =  await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/quant`, {
                         tickers: allowedTickers.value,
                         user_id: user_id,
-                        report_type: "seven-powers"
+                        report_type: "red-flags"
                     });
+
+                    final_report.value=response.data['final_report']
+
 
 
                 }
@@ -85,31 +93,31 @@ async function get_seven_p_analysis() {
             }
             else {
                 messages.value.push({
-                    text: "ticker analysis is empty or these tickers were already analysed in this session. analyse the ticker and then generate the 7 power report again or go to the main page and return to this page to get a new report",
+                    text: "ticker analysis is empty or these tickers were already analysed in this session. analyse the ticker and then generate the red flag report again or go to the main page and return to this page to get a new report",
                     isUser: false,
                     type: "error"
                 })
-                errorMessage.value = 'ticker analysis is empty or these tickers were already analysed in this session. analyse the ticker and then generate the 7 power report again or go to the main page and return to this page to get a new report'
+                errorMessage.value = 'ticker analysis is empty or these tickers were already analysed in this session. analyse the ticker and then generate the red flag report again or go to the main page and return to this page to get a new report'
                 showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 3000);
             }
         }
         else {
             if (!rawMessage.value) {
                 messages.value.push({
-                    text: "analysis already done for this ticker, go back to the main page and return to this section to get a new analysis",
+                    text: "analysis already done for this ticker, refresh the page and return to this section to get a new analysis",
                     isUser: false,
                     type: "error"
                 })
-                errorMessage.value = 'analysis already done for this ticker, go back to the main page and return to this section to get a new analysis'
+                errorMessage.value = 'analysis already done for this ticker, refresh the page and return to this section to get a new analysis'
                 showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 3000);
             }
             else {
                 messages.value.push({
-                    text: "analysis already done for this ticker, go back to the main page and return to this section to get a new analysis",
+                    text: "analysis already done for this ticker, refresh the page and return to this section to get a new analysis",
                     isUser: false,
                     type: "error"
                 })
-                errorMessage.value = 'analysis already done for this ticker, go back to the main page and return to this section to get a new analysis'
+                errorMessage.value = 'analysis already done for this ticker, refresh the page and return to this section to get a new analysis'
                 showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 3000);
             }
         }

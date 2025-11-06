@@ -8,9 +8,8 @@
         <ValueStockAnalysis :tickers="tickers" />
         <StockFinancialCharts :tickers="tickers" />
         <IntrinsicValue :tickers="tickers" />
-
         <button :disabled="tickers.length === 0" @click="get_report">Analyse with ai</button>
-        <small> ⚠️warning it takes around 40 sec per ticker <br></small>
+        
         <div v-if="tickerHistory.size > 0">
             <small>
                 <strong>ticker history:</strong> {{ [...tickerHistory].join(',') }}
@@ -35,6 +34,11 @@
             <p v-if="isConnected">🟢 ai analysis available</p>
             <p v-else>🔴 ai analysis not available</p>
         </div>
+        <RedFlags Analysis :tickers="tickers"/>
+        <div>
+            <p v-if="isConnected">🟢 ai analysis available</p>
+            <p v-else>🔴 ai analysis not available</p>
+        </div>
     </div>
     <Navigation />
     <CookieBanner />
@@ -54,7 +58,8 @@
                     <tr v-for="(k, v) in ai_reports" :key="k">
                         <td> {{ k['report_type'] }}</td>
                         <td> {{ k['tickers'][0] }}</td>
-                        <td> {{ formatDateAgo(k['timestamp']) }}</td>
+                        <td> {{ formatDateAgo(k['timestamp']) }} ago</td>
+                         
                         <td>
                             <a href="#" @click.prevent="download_s3_report(k['report_type'], k['task_id'])">
                                 Download
@@ -90,6 +95,7 @@ import { useSocket } from '@/composables/taskSocket';
 import { formatDateAgo } from '@/utils/formateTime';
 import { fetch_reports,ai_reports } from '@/utils/fetch_reports';
 import axios from 'axios';
+import RedFlags from './RedFlags.vue';
 const isConnected = useSocket()
 const tickers = ref([]);
 const errorMessage = ref('');
