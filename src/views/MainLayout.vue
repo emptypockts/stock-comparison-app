@@ -28,13 +28,13 @@
             Framework and AI Analysis
         </h2>
         <!-- analysis is a prop boolean defined in the views isProcessing -->
-        <RittenhouseAnalysis Analysis :tickers="tickers" />
-        <AI Analysis :tickers="tickers" />
+        <RittenhouseAnalysis :tickers="tickers" />
+        <AI :tickers="tickers" />
         <div>
             <p v-if="isConnected">🟢 ai analysis available</p>
             <p v-else>🔴 ai analysis not available</p>
         </div>
-        <RedFlags Analysis :tickers="tickers"/>
+        <RedFlags :tickers="tickers"/>
         <div>
             <p v-if="isConnected">🟢 ai analysis available</p>
             <p v-else>🔴 ai analysis not available</p>
@@ -43,7 +43,7 @@
     <Navigation />
     <CookieBanner />
     <LoginAlert />
-    <div>
+    <div class="table-container">
         <div v-if="ai_reports">
             <table>
                 <thead>
@@ -175,42 +175,4 @@ async function download_s3_report(bucket_name, file_name) {
 }
 </script>
 <style>
-.container {
-    box-shadow:
-        0 1px 2px rgba(0, 0, 0, 0.08),
-        0 4px 6px rgba(0, 0, 0, 0.1),
-        0 10px 15px rgba(0, 0, 0, 0.08);
-    border-radius: 1rem;
-    /* rounded corners */
-    background: #f8f3f3;
-}
-.error-message {
-    color: red;
-    margin-top: 10px;
-}
-
-button {
-    position: relative;
-    width: auto;
-    justify-content: left;
-    padding: 8px;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    margin-top: 10px;
-    background-color: #8bb4e0;
-    margin-right: 10px;
-}
-button:hover {
-    background-color: #468eda;
-}
-button:disabled {
-    background-color: #999;
-    /* Gray out */
-    opacity: 0.6;
-    /* Faded */
-    cursor: not-allowed;
-    /* Show "blocked" cursor */
-}
 </style>

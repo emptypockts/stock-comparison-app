@@ -195,8 +195,9 @@ input {
   padding: 8px;
   margin-top: 5px;
   border-radius: 8px;
-  border: 1px solid #f1f0f0;
-  background-color: #adadad1c;
+  border: 1px solid #0c18f6;
+  background:transparent;
+
 
   input::placeholder {
     background-color: transparent;
@@ -223,44 +224,5 @@ button:hover {
   color: red;
   margin-top: 10px;
 }
-@media screen and (max-width: 768px) {
 
-  th,
-  td {
-    padding: 3px;
-    font-size: 10px;
-    background-color: transparent;
-  }
-}
-.table-container {
-  overflow-x: auto;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-thead th,
-tbody td {
-  padding: 10px;
-  border: 1px solid #ddd;
-  text-align: left;
-  user-select: text;
-}
-tbody tr:hover {
-  background-color: #f9f9f9;
-}
-.copyable-table {
-  user-select: text;
-}
-.title-container {
-  justify-content: auto;
-  align-items: center;
-}
-.title-container h1 {
-  margin-right: 10px;
-}
-.title-container button {
-  margin-left: 10px;
-  margin-top: 5px;
-}
 </style>

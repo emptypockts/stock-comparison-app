@@ -9,13 +9,6 @@ from outils import (
     analyze_ticker,
     save_analysis_report
 )
-from pymongo.server_api import ServerApi
-from pymongo import MongoClient, errors,UpdateOne
-from pymongo.collection import Collection
-from secDBFetch import get_sec_filings
-from datetime import datetime,timedelta
-from textwrap import dedent
-
 load_dotenv()
 
 import os
@@ -27,53 +20,65 @@ llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash",api_key=GEMINI_API)
 # llm=ChatOllama(model="llama3.2:latest")
 
     
-def quant(ticker:str,collection:object=None)->str:
+def quant(tickers:list)->str:
     """
     quant analyzes a ticker 10K, 10Q, 8K, DEF 14A reports and identify red flags and opportunities
     args:
         ticker of the company
-        collection object for MongoDB
     returns:
         str report
     """
-    ticker_dir=os.path.join(directory,ticker)
-    extension=".quant"
-    needs_analysis, existing_report = analyze_ticker(directory,ticker.capitalize(),extension=extension)
-    if not needs_analysis:
-        print(f"Analysis for ticker '{ticker}' is up to date.")
-        return existing_report
+    tickers=[t.capitalize()for t in tickers]
+    for ticker in tickers:
+        ticker_dir=os.path.join(directory,ticker)
+        extension=".quant"
 
-    submitted_reports={}
-    files = os.listdir(ticker_dir)
-    for file in files:
-        if file.endswith((".json",".quant")):
-            pass
-        else:
-            file_name=os.path.join(ticker_dir,file)
-            with open(file_name) as f:
-                report=f.read()
-                clean_report=clean_edgar_text(report)
-                response = llm.invoke(
-                    [
-                        SystemMessage(content=quant_instructions),
-                        HumanMessage(content=f"here is the report: {clean_report}")
-                    ]
-                )
-                submitted_reports[file.split('.')[0]]=response.content
-    final_response=llm.invoke(
-        [
-            HumanMessage(content=synthesis_prompt.format(filing_summaries=submitted_reports))
-        ]
-    )
-    if final_response.content:
-        ai_final_response_json={"final_report":final_response.content}
-        save_analysis_report(ticker_dir, ticker, ai_final_response_json,extension=extension)
-        print(f"Saved analysis report for ticker {ticker}\n")
 
-    return  final_response.content.replace("```json","").replace("```","").strip()
+        needs_analysis, existing_report = analyze_ticker(directory,ticker,extension=extension)
+        if not needs_analysis:
+            print(f"Analysis for ticker '{ticker}' is up to date.")
+            try:
+                return existing_report.replace("```json","").replace("```","").lower()
+            except Exception as e:
+                print("error returning a json object")
+                return existing_report
+
+        submitted_reports={}
+        files = os.listdir(ticker_dir)
+        for file in files:
+            if file.endswith((".json",".quant")):
+                pass
+            else:
+                file_name=os.path.join(ticker_dir,file)
+                with open(file_name) as f:
+                    report=f.read()
+                    clean_report=clean_edgar_text(report)
+                    response = llm.invoke(
+                        [
+                            SystemMessage(content=quant_instructions),
+                            HumanMessage(content=f"here is the report: {clean_report}")
+                        ]
+                    )
+                    submitted_reports[file.split('.')[0]]=response.content
+        final_response=llm.invoke(
+            [
+                HumanMessage(content=synthesis_prompt.format(filing_summaries=submitted_reports))
+            ]
+        )
+        if final_response.content:
+            
+            save_analysis_report(ticker_dir, ticker, final_response.content,extension=extension)
+            print(f"Saved analysis report for ticker {ticker}\n")
+        try:
+            return  final_response.content.replace("```json","").replace("```","").strip().lower()
+        except Exception as e:
+            print("error returning a json structure: ",e)
+            return final_response.content.lower()
+
 
 
 
 if __name__=="__main__":
-    print(quant("lunr".capitalize()))
+
+    print(quant(["duo"]))
 

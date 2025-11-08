@@ -14,8 +14,22 @@
                 <strong>ticker history:</strong> {{ [...tickerHistory].join(',') }}
             </small>
         </div>
-        <div>
-            {{ final_report['final_report'] }}
+        <div class="console-report" v-if="final_report.length">
+            
+            <template v-for="(item,index) in final_report" :key="index">
+                <div v-if="item.type==='title'" class="console-title">
+                    {{ item.content }}
+                </div>
+                <div v-else-if="item.type==='paragraph'" class="console-paragraph">
+                    {{ item.content }}
+                </div>
+                <ul v-else-if="item.type==='bullets'" class="console-bullets">
+                    <li v-for="(b,i) in item.content" :key="i">
+                        {{ b }}
+                    </li>
+                </ul>
+
+            </template>
         </div>
         <div class="error-message">
             {{ errorMessage }}
@@ -47,7 +61,6 @@ const tickers= computed(()=> tickerStore.currentTickers);
 async function red_flag_analysis() {
     
     const user_id = localStorage.getItem('user_id')
-    console.log(tickers)
     if (tickers.value.length === 0 || !user_id) {
         
         messages.value.push({
@@ -68,13 +81,13 @@ async function red_flag_analysis() {
                     // starting ai report. updating loading store
 
                     loading.startLoading();
-                    const response =  await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/quant`, {
+                    await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/quant`, {
                         tickers: allowedTickers.value,
                         user_id: user_id,
-                        report_type: "red-flags"
+                        report_type: "eacsa-red-flags"
                     });
-
-                    final_report.value=response.data['final_report']
+                    
+                    // final_report.value=JSON.parse(response.data['final_report'])
 
 
 

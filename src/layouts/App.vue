@@ -25,6 +25,9 @@ const isLoading=computed(()=>load_store.isLoading);
 
 
 <style>
+html {
+  background-color: black;
+}
 .tooltip-container {
   position: relative; /* Make this the positioning context */
   display: flex;
@@ -41,7 +44,6 @@ const isLoading=computed(()=>load_store.isLoading);
   transform: translateX(-50%);
   visibility: hidden;
   opacity: 0;
-  color: #0000008f;
   padding: 4px 8px;
   white-space: nowrap;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
@@ -55,7 +57,8 @@ const isLoading=computed(()=>load_store.isLoading);
 }
 
 * {
-  font-family: monospace;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  color: gray;
 }
 
 h1,
@@ -64,13 +67,12 @@ h2 {
   font-size: auto;
   margin-bottom: 20px;
   margin-left: 10px;
-  color: #6d6d6d;
   text-align: left;
   font-weight: bold;
 
 }
 
-/* Loading overlay styles */
+
 .loading-overlay {
 position: fixed;
   backdrop-filter: blur(10px);
@@ -118,7 +120,6 @@ p,ul{
 .app-title {
   font-size: 2em;
   text-align: center;
-  color: #6d6d6d;
   margin-bottom: 20px;
   font-weight: bold;
   width: 100%;
@@ -126,6 +127,7 @@ p,ul{
   display: flex;
   justify-content: center;
   align-items: center;
+  background:transparent;
 }
 
 button {
@@ -145,5 +147,106 @@ button {
 button:hover {
     background-color: #468eda;
 }
+
+.container {
+    border: blue;
+    background: black;
+}
+.error-message {
+    color: red;
+    margin-top: 10px;
+}
+
+button {
+    position: relative;
+    width: auto;
+    justify-content: left;
+    padding: 8px;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 10px;
+    background-color: #8bb4e0;
+    margin-right: 10px;
+}
+button:hover {
+    background-color: #468eda;
+}
+button:disabled {
+    background-color: #999;
+    /* Gray out */
+    opacity: 0.6;
+    /* Faded */
+    cursor: not-allowed;
+}
+.console-report {
+  background: #000814;          
+  padding: 20px;
+  width: 90%;
+  overflow-x: auto;
+}
+.console-title {
+  color: #ff0015;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-top: 18px;
+  border-left: 4px solid #00eaff;
+  padding-left: 10px;
+}
+
+.console-paragraph {
+  margin: 8px 0;
+  line-height: 1.5;
+  color: gray;
+}
+
+.console-bullets {
+  margin: 8px 0 8px 20px;
+  color:gray;
+}
+
+.console-bullets li::marker {
+  color:gray;
+}
+@media screen and (max-width: 768px) {
+
+  th,
+  td {
+    padding: 3px;
+    font-size: 10px;
+    background-color: transparent;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    color: white;
+  }
+}
+.table-container {
+  overflow-x: auto;
+  color: gray;
+  background: black;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+tbody tr:hover {
+  background-color: #f9f9f9;
+}
+.copyable-table {
+  user-select: auto;
+}
+.title-container {
+  justify-content: auto;
+  align-items: center;
+}
+.title-container h1 {
+  margin-right: 10px;
+}
+.title-container button {
+  margin-left: 10px;
+  margin-top: 5px;
+}
+
 
 </style>

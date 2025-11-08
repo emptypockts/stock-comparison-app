@@ -6,6 +6,10 @@ import json
 import re 
 from typing import Literal
 from secDBFetch import get_sec_filings
+from dotenv import load_dotenv
+import requests
+load_dotenv()
+
 form_types = ['10-K', '10-Q', '8-K', 'DEF 14A','20-F','6-K'] 
 def clean_edgar_text(content: str) -> str:
     """

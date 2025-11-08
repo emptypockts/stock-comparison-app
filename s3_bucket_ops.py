@@ -4,6 +4,7 @@ import boto3
 from dotenv import load_dotenv
 import os
 from flask import send_file
+import botocore
 load_dotenv();
 def s3_paginator()->list:
     """
@@ -78,7 +79,7 @@ def s3_read_file(bucket_name,file_name):
 def s3_presigned_url(client_method,method_params,expiration_time):
     
     try:
-        s3=boto3.client("s3")
+        s3=boto3.client("s3", region_name="us-east-2",config=botocore.client.Config(signature_version="s3v4"))
     except ClientError as e:
         print("error trying to instanciate client")
         print(f"{e.response['Error']['Code']}: {e.response['Error']['Message']}")
@@ -97,11 +98,6 @@ def s3_presigned_url(client_method,method_params,expiration_time):
 
     
 
-
-bucket_name='overall-reports'
-file_name= "13ac6b59-a9fb-49fd-b699-7c5c620ee57d.pdf"
-url=s3_presigned_url("get_object",{"Bucket":bucket_name,"Key":file_name},60)
-print(url)
 
 
 

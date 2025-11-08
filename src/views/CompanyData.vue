@@ -55,7 +55,6 @@ import { showTempMessage } from '@/utils/timeout';
     const fetchCompanyData = debounce(async () => {
 
       const tickers = [ticker1, ticker2, ticker3].map(tickerRef => tickerRef.value).filter(Boolean);
-      tickerStore.updateTickers(tickers)
       if (tickers.length === 0) {
         showTempMessage(errorMessage, 'Please enter at least one stock ticker.', 2000);
         return errorMessage;
@@ -76,6 +75,7 @@ import { showTempMessage } from '@/utils/timeout';
           showTempMessage(errorMessage, 'No data found for the entered tickers.', 2000);
 
         } else {
+          
           const missingTickers = tickers.filter(
             ticker => !Object.keys(companyData.value).includes(ticker)
           );
@@ -84,8 +84,8 @@ import { showTempMessage } from '@/utils/timeout';
             this app is doing data collection for american companies only.`, 5000);
           }
         }
-
-        
+        console.log("companyData",companyData)
+        tickerStore.updateTickers(tickers)
         emit('tickers-updated', tickers);
         
       } catch (error) {

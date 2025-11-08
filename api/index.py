@@ -29,7 +29,7 @@ from pymongo.server_api import ServerApi
 from stockPlotDataQtr import fetch_4qtr_data
 from PDFReport import PDFReport
 import requests
-from worker import generate_ai_report,celery, generate_ai_7powers
+from worker import generate_ai_report,celery, generate_ai_7powers,generate_ai_quant
 from s3_bucket_ops import s3_upload,s3_presigned_url
 from quant import quant
 load_dotenv()
@@ -429,7 +429,7 @@ def query_reports():
         sort=list({
             'timestamp':-1
         }.items())
-        limit=10
+        limit=20
         docs=db['aiTasks'].find(
             filter=filter,
             projection=project,
@@ -478,17 +478,23 @@ def download_report():
 @app.route('/api/v1/quant',methods=['POST'])
 def quantize():
     data=request.json
-    ticker =data.get('tickers','')[0]
-    if not ticker:
+    if 'user_id' not in data or 'tickers' not in data or 'report_type' not in data:
         return jsonify({
             "error":"missing payload"
         }),400
     else:
-        ticker=ticker.capitalize()
-        response=quant(ticker,ai_tasks_collection)
-        return jsonify({
-            "final_report":response
-        })
+        try:
+            tickers =data.get('tickers','')
+            user_id=data.get('user_id','')
+            report_type=data.get('report_type','')
+            task=generate_ai_quant.delay(tickers,user_id,report_type)
+            return jsonify({
+            'task_id':task.id,
+            'status':'processing',
+            'report_type':report_type
+            }),202
+        except Exception as e:
+                return jsonify({'error':str(e)}),400
 
 if __name__ == '__main__':
     app.run(debug=True)
