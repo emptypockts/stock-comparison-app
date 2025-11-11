@@ -3,15 +3,21 @@ import { ref } from "vue";
 import { generatePdfReport } from "@/utils/pdfOps";
 import { fetch_reports } from "@/utils/fetch_reports";
 import { useLoadingStore } from "@/stores/loadingStore";
+
 const socket = io(import.meta.env.VITE_WS_SERVER,{
     secure:true
 });
+
+let registered = false;
 
 const isConnected = ref(false);
 const taskData = ref(null);
 
 
 export function useSocket(onTaskDone) {
+    if (!registered){
+        registered=true;
+    
     socket.on('connect', () => {
         isConnected.value = true;
     })
@@ -20,6 +26,8 @@ export function useSocket(onTaskDone) {
         console.log('my guy, you are no longer on')
     })
     socket.on('task_done', (data) => {
+        let c=0;
+        console.log('hi socket',+ ++c)
         const user_id = localStorage.getItem('user_id')
         taskData.value = data
         if (data.user_id==user_id){
@@ -34,6 +42,7 @@ export function useSocket(onTaskDone) {
     }   
 }
     })
+}
     return {socket,isConnected,taskData}
 }
 

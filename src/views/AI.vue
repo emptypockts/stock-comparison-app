@@ -1,18 +1,13 @@
 <template>
-    <div>
-        <div>
-            <h1 class="app-title">Hamilton H's Seven Powers.</h1>
-        </div>
-        <button :disabled="tickers.length === 0" @click="get_seven_p_analysis">
-            7powers ai report
+    <div v-if="tickers.length>0">
+        <div class="terminal">
+        <span>eacsa> </span>seven powers report with ai:
+        <button  @click="get_seven_p_analysis" class="buttons">
+            ↲
         </button>
+        </div>
         <div>
             <Navigation />
-        </div>
-        <div v-if="tickerHistory.size > 0">
-            <small>
-                <strong>ticker history:</strong> {{ [...tickerHistory].join(',') }}
-            </small>
         </div>
         <div class="error-message">
             {{ errorMessage }}
@@ -34,7 +29,6 @@ const tickerHistory = ref(new Set())
 const tickerStore = useTickerStore();
 const loading = useLoadingStore();
 const allowedTickers = ref([]);
-
 const errorMessage = ref('');
 const messages = ref([
     { text: 'I will conduct the 7power analysis for this ticker. If you want analysis for another, ticker just change the first ticker field in the main page. Hit send to start. ', isUser: false }
@@ -85,31 +79,31 @@ async function get_seven_p_analysis() {
             }
             else {
                 messages.value.push({
-                    text: "ticker analysis is empty or these tickers were already analysed in this session. analyse the ticker and then generate the 7 power report again or go to the main page and return to this page to get a new report",
+                    text: "ticker previously analysed. refresh your browser if you need to analyse it again",
                     isUser: false,
                     type: "error"
                 })
-                errorMessage.value = 'ticker analysis is empty or these tickers were already analysed in this session. analyse the ticker and then generate the 7 power report again or go to the main page and return to this page to get a new report'
-                showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 3000);
+            errorMessage.value = 'ticker previously analysed. refresh your browser if you need to analyse it again'
+            showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 3000);
             }
         }
         else {
             if (!rawMessage.value) {
                 messages.value.push({
-                    text: "analysis already done for this ticker, go back to the main page and return to this section to get a new analysis",
+                    text: "ticker previously analysed. refresh your browser if you need to analyse it again",
                     isUser: false,
                     type: "error"
                 })
-                errorMessage.value = 'analysis already done for this ticker, go back to the main page and return to this section to get a new analysis'
+                errorMessage.value = 'ticker previously analysed. refresh your browser if you need to analyse it again'
                 showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 3000);
             }
             else {
                 messages.value.push({
-                    text: "analysis already done for this ticker, go back to the main page and return to this section to get a new analysis",
+                    text: "ticker previously analysed. refresh your browser if you need to analyse it again",
                     isUser: false,
                     type: "error"
                 })
-                errorMessage.value = 'analysis already done for this ticker, go back to the main page and return to this section to get a new analysis'
+                errorMessage.value = 'ticker previously analysed. refresh your browser if you need to analyse it again'
                 showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 3000);
             }
         }
@@ -121,80 +115,5 @@ async function get_seven_p_analysis() {
 
 </script>
 <style>
-h1 {
-    text-align: center;
-    font-size: 2em;
-    margin-bottom: 20px;
-    color: rgb(62, 61, 61);
-}
 
-h2 {
-    text-align: center;
-    font-size: 1em;
-    margin-bottom: 20px;
-    color: rgb(62, 61, 61);
-}
-
-.chat-messages {
-    display: flex;
-    flex-direction: column;
-    width: 90%;
-    max-width: 350px;
-    padding: 10px;
-    overflow-y: auto;
-    border-radius: 8px;
-    background-color: #000000c0;
-    color: rgba(255, 255, 255, 0.66);
-    line-height: 1.5;
-    font-family: monospace;
-    margin-bottom: 20px;
-}
-
-button {
-    position: relative;
-    width: auto;
-    justify-content: left;
-    padding: 8px;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    margin-top: 10px;
-    background-color: #8bb4e0;
-    margin-right: 10px;
-}
-
-button:hover {
-    background-color: #468eda;
-}
-
-@media (max-width: 768px) {
-    h1 {
-        font-size: 1.5em;
-    }
-
-    button {
-        width: 90%;
-        padding: 12px;
-    }
-
-    .chat-messages {
-        width: 100%;
-    }
-}
-
-@media (min-width: 769px) {
-    .page {
-        padding: 50px;
-    }
-
-    .chat-messages {
-        max-width: 800px;
-    }
-
-    button {
-        width: auto;
-        padding: 8px;
-    }
-}
 </style>

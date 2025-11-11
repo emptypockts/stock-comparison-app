@@ -1,18 +1,25 @@
 <template>
+  <div v-if="tickers.length>0">
   <div>
-    <h1 class="app-title">Value Stock Analysis</h1>
     <!-- Error message display -->
     <div v-if="errorMessage" class="error-message">
       <p>{{ errorMessage }}</p>
     </div>
+    <div class="terminal">
+      <span >eacsa> </span>value stock index 0-7:
+    </div>
   </div>
-  <button :disabled="tickers.length === 0" @click="toggleCollapse">
-    Click to expand or collapse
-  </button>
+
+      <div v-if="!collapsed">
+        <br>revenue strength, financial health, and value signals. real investors do not yolo, we verify.</br>
+      </div>
+      <div>
+          <button @click="toggleCollapse" class="buttons">
+        ⟬⟬ expand/collapse ⟭⟭
+      </button>
+      </div>
     <div v-if="financialData.length" class="table-container" >
-      <small>
-        ⚠️The score printed is not an individual analysis but an average of the 5 years or the number of years available for this stock
-      </small>
+
       <div class="table-scroll">
         <table class="copyable-table">
           <thead>
@@ -73,11 +80,8 @@
           </tbody>
         </table>
       </div>
-    <!-- <div v-else>
-        <p>No financial data available. Please try fetching data for different tickers.</p>
-      </div> -->
   </div>
-
+</div>
 </template>
 
 <script>
@@ -158,77 +162,5 @@ export default {
 </script>
 
 <style>
-.table-container {
-  overflow-x: auto;
-  /* Enable horizontal scrolling if the table is too wide */
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-thead th,
-tbody td {
-  padding: 10px;
-  border: 1px solid #ddd;
-  text-align: left;
-  user-select: text;
-  /* Ensure text can be selected */
-}
-
-
-tbody tr:hover {
-  background-color: #f9f9f9;
-  /* Optional: highlight row on hover */
-}
-
-/* Add CSS class to allow easy selection and copying */
-.copyable-table {
-  user-select: text;
-  /* Ensure that table text can be selected for copying */
-}
-
-.title-container {
-  justify-content: auto;
-  /* Adjusts space between the title and the button */
-  align-items: center;
-  /* Vertically aligns the button and title */
-}
-
-.title-container h1 {
-  margin-right: 10px;
-  /* Optional: adds some space between the title and button */
-}
-
-.title-container button {
-  margin-left: 10px;
-  /* Optional: adds some space between the button and title */
-  margin-top: 5px;
-}
-
-@media screen and (max-width: 768px) {
-
-  th,
-  td {
-    padding: 0px;
-  }
-}
-
-/* Same loading screen styles */
-.loading-screen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: rgba(0, 0, 0, 0.5);
-  color: white;
-  font-size: 1.5em;
-  z-index: 1000;
-}
 
 </style>

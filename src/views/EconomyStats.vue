@@ -51,6 +51,9 @@ export default {
   },
   created() {
     this.chartOptions = {
+            grid: {
+        show: false
+      },
       chart: { type: 'line', height: 350, zoom: { enabled: true,autoScaleYaxis:true } },
       xaxis: { type: 'datetime' },
       yaxis: {
@@ -129,61 +132,5 @@ export default {
 
 <style scoped>
 
-.title-container {
-  width: 100%;
-  text-align: center;
-  padding: 20px 0;
-}
 
-
-.chart-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px,10%));
-  gap: 10px;
-  background: transparent;
-}
-
-.chart-box {
-  padding: 5px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgb(178, 76, 76);
-  transition: transform 0.3s ease;
-  background: transparent;
-}
-
-.chart-box:hover {
-  transform: translateY(-5px);
-}
-
-.error-message {
-  color: red;
-  margin-top: 10px;
-}
-
-h1 {
-
-font-size: auto;
-margin-bottom: 20px;
-margin-left: 10px;
-color: #6d6d6d;
-text-align: left;
-font-weight: bold;
-
-}
-
-p {
-  font-size: 0.9em;
-  color: rgba(144, 120, 120, 0.977);
-  text-align: center;
-}
-p1 {
-  font-size: 0.9em;
-  color:white;
-  text-align: center;
-}
-@media (max-width: 768px) {
-  .chart-container {
-    grid-template-columns: 1fr;
-  }
-}
 </style>

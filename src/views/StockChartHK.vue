@@ -8,7 +8,9 @@
   <div>
     <div >
       <div v-if="paginatedRecords.length" class="table-container">
-        <button @click="toggleCollapse">Click to expand or collapse</button>
+              <button @click="toggleCollapse" class="buttons">
+        ⟬⟬ expand/collapse ⟭⟭
+      </button>
         <div class="table-scroll">
           <table class="copyable-table">
             <thead>
@@ -251,126 +253,5 @@ export default {
 </script>
 
 <style scoped>
-.input-container{
-width: 100px;
-background: transparent;
-
-}
-
-input {
-  width: 100px;
-  padding: 8px;
-  margin-top: 5px;
-  border-radius: 8px;
-  border: 1px solid #f1f0f0;
-  background-color: #adadad1c;
-  
-}
-
-input::placeholder {
-  background-color: transparent;
-}
-button {
-  position: relative;
-  width: auto;
-  justify-content: left;
-  padding: 8px;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-top: 10px;
-  background-color: #8bb4e0;
-  margin-right: 10px;
-}
-
-button:hover {
-    background-color: #468eda;
-}
-.table-container {
-  overflow-x: auto; /* Enable horizontal scrolling if the table is too wide */
-}
-table {
-  width: 90%;
-  border-collapse: collapse;
-}
-
-thead th,
-tbody td {
-  padding: 10px;
-  border: 1px solid #ddd;
-  text-align: left;
-  user-select: text;
-  /* Ensure text can be selected */
-}
-
-
-tbody tr:hover {
-  background-color: #f9f9f9;
-  /* Optional: highlight row on hover */
-}
-
-/* Add CSS class to allow easy selection and copying */
-.copyable-table {
-  user-select: text;
-  /* Ensure that table text can be selected for copying */
-}
-
-.title-container {
-  justify-content: auto;
-  /* Adjusts space between the title and the button */
-  align-items: center;
-  /* Vertically aligns the button and title */
-}
-
-.title-container h1 {
-  margin-right: 10px;
-  /* Optional: adds some space between the title and button */
-}
-
-.title-container button {
-  margin-left: 10px;
-  /* Optional: adds some space between the button and title */
-  margin-top: 5px;
-}
-
-th {
-  cursor: pointer; /* Change cursor to indicate clickability */
-  position: relative; /* Position relative to contain the sorting indicator */
-}
-
-th span {
-  display: inline-block;
-  margin-left: 5px; /* Space between column name and sort indicator */
-}
-
-.asc::after {
-  content: '▲'; /* Up arrow for ascending */
-  font-size: 12px;
-  position: absolute;
-  right: 8px;
-}
-
-.desc::after {
-  content: '▼'; /* Down arrow for descending */
-  font-size: 12px;
-  position: absolute;
-  right: 8px;
-}
-
-.sortClass {
-  background-color: #f1f1f1; /* Light background for sorted column */
-}
-.pagination-controls {
-  position: fixed; /* Keeps it fixed on the screen */
-  bottom: 10px;    /* Position it 10px from the bottom */
-  left: 45%;       /* Center horizontally */
-  transform: translateX(-50%); /* Centering adjustment */
-  background-color: #fff; /* Optional: Background color */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Optional: Add some shadow */
-  padding: 10px; /* Padding for better appearance */
-  z-index: 1000; /* Ensure it appears above other elements */
-  border-radius: 8px; /* Optional: Rounded corners */
-}
 
 </style>

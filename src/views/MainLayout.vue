@@ -1,81 +1,91 @@
 <template>
-    <h1 class="app-title">EACSA Financials®</h1>
-    <div class="container">
-        <h1 class="app-title">
-            Financials Overview
-        </h1>
+    <div style="position:absolute;top:10px;right:20px">
+        <p v-if="isConnected" style="color:greenyellow;font-size: 14px;">ai: on</p>
+        <p v-else style="color:red">ai: off</p>
+    </div>
+    <div>
         <CompanyData @tickers-updated="updateTickers" />
+    </div>
+    <div>
         <ValueStockAnalysis :tickers="tickers" />
+    </div>
+    <div>
         <StockFinancialCharts :tickers="tickers" />
+    </div>
+    <div>
         <IntrinsicValue :tickers="tickers" />
-        <button :disabled="tickers.length === 0" @click="get_report">Analyse with ai</button>
-        
-        <div v-if="tickerHistory.size > 0">
-            <small>
-                <strong>ticker history:</strong> {{ [...tickerHistory].join(',') }}
-            </small>
-        </div>
-        <div>
-            <p v-if="isConnected">🟢 ai analysis available</p>
-            <p v-else>🔴 ai analysis not available</p>
-        </div>
-        <div class="error-message">
-            {{ errorMessage }}
+    </div>
+    <div v-if="tickers.length > 0">
+        <div class="terminal">
+            <span>eacsa> </span>financial report with ai:
+            <button @click="get_report" class="buttons">
+                ↲
+            </button>
         </div>
     </div>
-    <div class="container">
-        <h2 class="app-title">
-            Framework and AI Analysis
-        </h2>
-        <!-- analysis is a prop boolean defined in the views isProcessing -->
+    <div class="error-message">
+        {{ errorMessage }}
+    </div>
+    <div>
         <RittenhouseAnalysis :tickers="tickers" />
+    </div>
+    <div>
         <AI :tickers="tickers" />
-        <div>
-            <p v-if="isConnected">🟢 ai analysis available</p>
-            <p v-else>🔴 ai analysis not available</p>
-        </div>
-        <RedFlags :tickers="tickers"/>
-        <div>
-            <p v-if="isConnected">🟢 ai analysis available</p>
-            <p v-else>🔴 ai analysis not available</p>
-        </div>
     </div>
-    <Navigation />
-    <CookieBanner />
-    <LoginAlert />
-    <div class="table-container">
-        <div v-if="ai_reports">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Report Type</th>
-                        <th>Ticker</th>
-                        <th>Timestamp</th>
-                        <th>Download</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(k, v) in ai_reports" :key="k">
-                        <td> {{ k['report_type'] }}</td>
-                        <td> {{ k['tickers'][0] }}</td>
-                        <td> {{ formatDateAgo(k['timestamp']) }} ago</td>
-                         
-                        <td>
-                            <a href="#" @click.prevent="download_s3_report(k['report_type'], k['task_id'])">
-                                Download
-                            </a>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+    <div>
+        <RedFlags :tickers="tickers" />
+        <div class="terminal">
+            <span>eacsa> </span>query S3 archives:
         </div>
-        <div v-else>
-            <strong>
-                You have no reports stored in our records.
-            </strong>
-        </div>
-    </div>
+        <button @click="toggleCollapse" class="buttons">
+            ⟬⟬ expand/collapse ⟭⟭
+        </button>
 
+        <div v-if="!collapsed" class="table-container">
+            <div v-if="ai_reports">
+                <br></br>
+                <div class="terminal">
+                    all previous ai reports indexed: overall, seven powers, red flags. timestamped. your research trail
+                    starts here.
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>report type</th>
+                            <th>ticker</th>
+                            <th>timestamp</th>
+                            <th>download</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(k, v) in ai_reports" :key="k">
+                            <td> {{ k['report_type'] }}</td>
+                            <td> {{ k['tickers'][0] }}</td>
+                            <td> {{ formatDateAgo(k['timestamp']) }} ago</td>
+
+                            <td>
+                                <a href="#" @click.prevent="download_s3_report(k['report_type'], k['task_id'])"
+                                    class="download-link">
+                                    download
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div v-else>
+                <strong>
+                    no reports found
+                </strong>
+            </div>
+        </div>
+    </div>
+        <div>
+            <Navigation />
+            <CookieBanner />
+            <LoginAlert />
+        </div>
 </template>
 <script setup>
 import { ref, onMounted } from 'vue';
@@ -90,41 +100,46 @@ import Navigation from '@/components/Navigation.vue';
 import CookieBanner from '@/components/CookieBanner.vue';
 import LoginAlert from '@/components/LoginAlert.vue';
 import { showTempMessage } from '@/utils/timeout';
-import { useLoadingStore } from '@/stores/loadingStore';
-import { useSocket } from '@/composables/taskSocket';
 import { formatDateAgo } from '@/utils/formateTime';
-import { fetch_reports,ai_reports } from '@/utils/fetch_reports';
+import { useSocket } from '@/composables/taskSocket';
 import axios from 'axios';
 import RedFlags from './RedFlags.vue';
-const isConnected = useSocket()
+import { fetch_reports, ai_reports } from '@/utils/fetch_reports';
+import { useLoadingStore } from '@/stores/loadingStore';
+const allowedTickers = ref([]);
+const tickerHistory = ref(new Set());
+const isConnected = useSocket();
 const tickers = ref([]);
 const errorMessage = ref('');
 const tickerStore = useTickerStore();
-const loading = useLoadingStore();
-const tickerHistory = ref(new Set());
-const allowedTickers = ref([]);
+const loading = useLoadingStore()
 const updateTickers = (newTickers) => {
     tickerStore.updateTickers(newTickers)
     tickers.value = tickerStore.currentTickers
 }
+const collapsed = ref(true)
+const toggleCollapse = () => {
+    collapsed.value = !collapsed.value;
+};
 
 
-onMounted(async ()=>{
-    ai_reports.value= await fetch_reports();
+onMounted(async () => {
+    ai_reports.value = await fetch_reports();
 })
 
 const get_report = async () => {
+    const tickers = tickerStore.currentTickers;
     const user_id = localStorage.getItem('user_id')
-    if (tickers.value.length == 0 || !user_id) {
+    if (tickers.length == 0 || !user_id) {
         console.error('missing tickers');
         errorMessage.value = 'ticker or user_id is missing'
         showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 2000);
     }
     else {
-        allowedTickers.value = tickers.value.filter(e => !tickerHistory.value.has(e.toLowerCase()))
-        if (allowedTickers.value.length > 0 && isConnected) {
+        allowedTickers.value = tickers.filter(e => !tickerHistory.value.has(e.toLowerCase()))
+        if (allowedTickers.value.length) {
             loading.startLoading();
-            
+
             try {
                 await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/gemini`, {
                     tickers: allowedTickers.value,
@@ -136,33 +151,35 @@ const get_report = async () => {
                 console.error('error trying to generate report:', err)
             }
             finally {
-                tickers.value.forEach(t => tickerHistory.value.add(t.toLowerCase()))
-                ai_reports.value= await fetch_reports();
+                tickers.forEach(t => tickerHistory.value.add(t.toLowerCase()))
+                ai_reports.value = await fetch_reports();
             }
         }
         else {
             errorMessage.value = 'ticker previously analysed. refresh your browser if you need to analyse it again'
-            showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 2000);
+            showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 3000);
         }
     }
 }
+
+
 async function download_s3_report(bucket_name, file_name) {
     try {
-        const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/v1/user_report`,{
-           params:
-           { 
-            bucket_name:bucket_name,
-            file_name:file_name,
-            client_method:"get_object"
-           }
-           
+        const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/v1/user_report`, {
+            params:
+            {
+                bucket_name: bucket_name,
+                file_name: file_name,
+                client_method: "get_object"
+            }
+
         });
-        
-        const signed_url=response.data.signed_url
-        if (signed_url){
-            window.open(signed_url,'_blank')
+
+        const signed_url = response.data.signed_url
+        if (signed_url) {
+            window.open(signed_url, '_blank')
         }
-        else{
+        else {
             errorMessage.value = 'no signed url available. try again later'
             showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 2000);
             console.error('no signed url available. try again later')
@@ -171,8 +188,7 @@ async function download_s3_report(bucket_name, file_name) {
     catch (err) {
         console.error("error: ", err)
     }
-    
+
 }
 </script>
-<style>
-</style>
+<style></style>

@@ -20,7 +20,7 @@
           the data provided is calculated based on the sec edgar db
           the price history is provided by twelvedata.com
         </p>
-        <button @click="dismissAlert">OK, got it</button>
+        <button @click="dismissAlert" class="button-alert">OK, got it</button>
       </div>
     </div>
   </div>
@@ -80,7 +80,7 @@ export default {
 
 }
 
-button {
+.button-alert {
   width: auto;
   padding: 10px;
   color: white;
@@ -92,7 +92,7 @@ button {
   margin-bottom: 10px;
 }
 
-button:hover {
+.button-alert:hover {
   background-color: #8bb4e0;
 }
 </style>

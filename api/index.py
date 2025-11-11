@@ -429,7 +429,7 @@ def query_reports():
         sort=list({
             'timestamp':-1
         }.items())
-        limit=20
+        limit=10
         docs=db['aiTasks'].find(
             filter=filter,
             projection=project,

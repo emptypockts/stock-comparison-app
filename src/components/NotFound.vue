@@ -13,29 +13,5 @@
   </script>
   
   <style scoped>
-  .page-not-found {
-    text-align: center;
-    padding: 50px;
-  }
-  
-  .page-not-found h1 {
-    font-size: 2.5em;
-    margin-bottom: 20px;
-  }
-  
-  .page-not-found p {
-    font-size: 1.2em;
-    margin-bottom: 20px;
-  }
-  
-  .page-not-found a {
-    color: #4CAF50;
-    text-decoration: none;
-    font-weight: bold;
-  }
-  
-  .page-not-found a:hover {
-    text-decoration: underline;
-  }
   </style>
   

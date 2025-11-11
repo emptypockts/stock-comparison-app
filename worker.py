@@ -126,6 +126,7 @@ def generate_ai_quant(self,tickers,user_id,report_type):
         if not user_id:
             raise Ignore()
         result=quant(tickers)
+        print("quant report type: ",type(result))
         task_id=self.request.id
         now=datetime.now()
         if result:

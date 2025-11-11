@@ -1,36 +1,39 @@
 <template>
+  <div v-if="tickers.length > 0">
+    <div class="terminal">
+        <span>eacsa> </span>new intrinsic value:
+        <button @click="calculateIntrinsicValue" class="buttons">
+          ↲
+        </button>
 
-  <h1 class="app-title">Intrinsic Value Analysis</h1>
-  <div v-if="tickers.length">
-    <button @click="calculateIntrinsicValue">Calculate new value</button>
-  </div>
-  <div>
-    <!-- Input fields for each ticker -->
-    <div v-for="(ticker, index) in tickers" :key="index" class="input-container">
-      <h3>Ticker: {{ ticker }}</h3>
-      <div class="input-group">
+      </div>
+    <div v-for="(ticker, index) in tickers" :key="index">
+      <div class="input-field">
         <label for="growthRate">Growth Rate (%) default 5%</label>
-        <input v-model.number="intrinsicParams[ticker].growthRate" id="growthRate" type="number" step="0.1" />
+        <input v-model.number="intrinsicParams[ticker].growthRate" id="growthRate" class="terminal-input"
+          style="width: 20px;" />
         <span v-if="!intrinsicParams[ticker].growthRate">Empty</span>
-      </div>
-      <div class="input-group">
-        <label for="discountRate">Discount Rate (%) WACC default 10%</label>
-        <input v-model.number="intrinsicParams[ticker].discountRate" id="discountRate" type="number" step="0.1" />
-        <span v-if="!intrinsicParams[ticker].discountRate">Empty</span>
-      </div>
-      <div class="input-group">
-        <label for="terminalGrowthRate">Terminal Growth Rate (%) default 2%</label>
-        <input v-model.number="intrinsicParams[ticker].terminalGrowthRate" id="terminalGrowthRate" type="number"
-          step="0.1" />
-        <span v-if="!intrinsicParams[ticker].terminalGrowthRate">Empty</span>
-      </div>
-      <div class="input-group">
-        <label for="projectionYears">Projection Years default 5y</label>
-        <input v-model.number="intrinsicParams[ticker].projectionYears" id="projectionYears" type="number" step="1"
-          min="1" />
-        <span v-if="!intrinsicParams[ticker].projectionYears">Empty</span>
 
+
+        <label for="discountRate">Discount Rate (%) WACC default 10%</label>
+        <input v-model.number="intrinsicParams[ticker].discountRate" id="discountRate" class="terminal-input"
+          style="width: 20px;" />
+        <span v-if="!intrinsicParams[ticker].discountRate">Empty</span>
+
+
+        <label for="terminalGrowthRate">Terminal Growth Rate (%) default 2%</label>
+        <input v-model.number="intrinsicParams[ticker].terminalGrowthRate" id="terminalGrowthRate"
+          class="terminal-input" style="width: 20px;" />
+        <span v-if="!intrinsicParams[ticker].terminalGrowthRate">Empty</span>
+
+
+        <label for="projectionYears">Projection Years default 5y</label>
+        <input v-model.number="intrinsicParams[ticker].projectionYears" id="projectionYears" class="terminal-input"
+          style="width: 20px;" />
+        <span v-if="!intrinsicParams[ticker].projectionYears">Empty</span>
       </div>
+      
+
 
     </div>
     <!-- Error Message Display -->
@@ -39,7 +42,12 @@
     </div>
 
     <div v-if="intrinsicData.length" class="table-container">
-      <button @click="toggleCollapse">Click to expand or collapse</button>
+      <button @click="toggleCollapse" class="buttons">
+        ⟬⟬ expand/collapse ⟭⟭
+      </button>
+      <div v-if="!collapsed">
+        dcf engines online. computing what the stock should cost, not what wall street says
+      </div>
       <div class="table-scroll">
         <table>
           <thead>
@@ -183,46 +191,4 @@ export default {
   },
 };
 </script>
-<style scoped>
-.input-container {
-  flex-direction: row;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-input {
-  width: 50px;
-  padding: 8px;
-  margin-top: 5px;
-  border-radius: 8px;
-  border: 1px solid #0c18f6;
-  background:transparent;
-
-
-  input::placeholder {
-    background-color: transparent;
-  }
-
-}
-button {
-  position: relative;
-  width: auto;
-  justify-content: left;
-  padding: 8px;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-top: 10px;
-  background-color: #8bb4e0;
-}
-button:hover {
-  background-color: #468eda;
-}
-/* Error message style */
-.error-message {
-  color: red;
-  margin-top: 10px;
-}
-
-</style>
+<style scoped></style>

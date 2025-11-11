@@ -1,18 +1,14 @@
 <template>
-    <div>
-        <div>
-            <h1 class="app-title">Red Flags.</h1>
-        </div>
-        <button :disabled="tickers.length === 0" @click="red_flag_analysis">
-            Red Flags
+    <div v-if="tickers.length>0">
+        <div class="terminal">
+            <span>eacsa> </span>red flag report with ai:
+        
+        <button  @click="red_flag_analysis" class="buttons">
+            ↲
         </button>
+        </div>
         <div>
             <Navigation />
-        </div>
-        <div v-if="tickerHistory.size > 0">
-            <small>
-                <strong>ticker history:</strong> {{ [...tickerHistory].join(',') }}
-            </small>
         </div>
         <div class="console-report" v-if="final_report.length">
             
@@ -87,10 +83,6 @@ async function red_flag_analysis() {
                         report_type: "eacsa-red-flags"
                     });
                     
-                    // final_report.value=JSON.parse(response.data['final_report'])
-
-
-
                 }
                 catch (error) {
                     console.error('Error sending query', error);
@@ -142,80 +134,5 @@ async function red_flag_analysis() {
 
 </script>
 <style>
-h1 {
-    text-align: center;
-    font-size: 2em;
-    margin-bottom: 20px;
-    color: rgb(62, 61, 61);
-}
 
-h2 {
-    text-align: center;
-    font-size: 1em;
-    margin-bottom: 20px;
-    color: rgb(62, 61, 61);
-}
-
-.chat-messages {
-    display: flex;
-    flex-direction: column;
-    width: 90%;
-    max-width: 350px;
-    padding: 10px;
-    overflow-y: auto;
-    border-radius: 8px;
-    background-color: #000000c0;
-    color: rgba(255, 255, 255, 0.66);
-    line-height: 1.5;
-    font-family: monospace;
-    margin-bottom: 20px;
-}
-
-button {
-    position: relative;
-    width: auto;
-    justify-content: left;
-    padding: 8px;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    margin-top: 10px;
-    background-color: #8bb4e0;
-    margin-right: 10px;
-}
-
-button:hover {
-    background-color: #468eda;
-}
-
-@media (max-width: 768px) {
-    h1 {
-        font-size: 1.5em;
-    }
-
-    button {
-        width: 90%;
-        padding: 12px;
-    }
-
-    .chat-messages {
-        width: 100%;
-    }
-}
-
-@media (min-width: 769px) {
-    .page {
-        padding: 50px;
-    }
-
-    .chat-messages {
-        max-width: 800px;
-    }
-
-    button {
-        width: auto;
-        padding: 8px;
-    }
-}
 </style>

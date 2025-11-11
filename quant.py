@@ -3,11 +3,13 @@ from langchain_ollama import ChatOllama
 from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage,SystemMessage
-from prompts import quant_instructions,synthesis_prompt
+import json
+from prompts import quant_instructions,synthesis_prompt,json_validator_instructions
 from outils import (
     clean_edgar_text, 
     analyze_ticker,
-    save_analysis_report
+    save_analysis_report,
+    json_validator
 )
 load_dotenv()
 
@@ -38,7 +40,7 @@ def quant(tickers:list)->str:
         if not needs_analysis:
             print(f"Analysis for ticker '{ticker}' is up to date.")
             try:
-                return existing_report.replace("```json","").replace("```","").lower()
+                return json.loads(existing_report.replace("```json","").replace("```","").lower())
             except Exception as e:
                 print("error returning a json object")
                 return existing_report
@@ -66,19 +68,19 @@ def quant(tickers:list)->str:
             ]
         )
         if final_response.content:
-            
-            save_analysis_report(ticker_dir, ticker, final_response.content,extension=extension)
-            print(f"Saved analysis report for ticker {ticker}\n")
-        try:
-            return  final_response.content.replace("```json","").replace("```","").strip().lower()
-        except Exception as e:
-            print("error returning a json structure: ",e)
-            return final_response.content.lower()
+            try:
+                validated_json=json.loads(json_validator(json_validator_instructions,final_response.content).replace("```json","").replace("```","").strip().lower())
+                save_analysis_report(ticker_dir, ticker, validated_json,extension=extension)
+                print(f"Saved analysis report for ticker {ticker}\n")
+                return  validated_json
+            except Exception as e:
+                print("error returning a json structure: ",e)
+                return final_response.content
 
 
 
 
 if __name__=="__main__":
 
-    print(quant(["duo"]))
+    print(quant(["tssi"]))
 

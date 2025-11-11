@@ -1,0 +1,183 @@
+html {
+  background-color: black;
+  width: 90%;
+  display: flex;
+}
+* {
+  font-family: monospace;
+  color: gray;
+  font-size: 20px;
+  
+}
+.terminal-input
+{
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid blue;
+  outline: none;
+  color: white;
+  padding: 2px 4px;
+}
+
+.terminal-input:focus,
+.terminal-input:active {
+    border-bottom-color:blue;
+
+  
+}
+
+.terminal-input:-webkit-autofill,
+.terminal-input:-webkit-autofill:hover,
+.terminal-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: white !important;
+  -webkit-box-shadow: 0 0 0px 1000px transparent inset !important;
+  box-shadow: 0 0 0px 1000px transparent inset !important;
+  border-bottom: 1px solid blue !important;
+}
+.input-field{
+  display: flex; 
+  align-items: center; 
+  gap: 8px;
+  padding: 10px;
+}
+.buttons{
+  border: blue solid 2px;
+  font-size: 14px;
+  
+  background: transparent;
+}
+.buttons:hover{
+  background: transparent;
+  color: greenyellow;
+  cursor: pointer;
+}
+
+.chart-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(600px,10%));
+  gap: 10px;
+  background: transparent;
+  
+}
+.chart-box {
+  padding: 5px;
+  box-shadow:0 4px 8px rgb(178, 76, 76);
+  transition: transform 0.3s ease;
+  background: transparent;
+}
+.chart-box:hover {
+  transform: translateY(-5px);
+}
+.table-container {
+  overflow-x: auto; 
+  padding-bottom: 4px; 
+  margin-top:10px
+}
+.table-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 255, 0.1);
+  border: 1px dotted rgba(0, 0, 255, 0.4);
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 255, 0.6);
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 255, 0.9);
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 255, 0.9);
+}
+table {
+  margin-left: 10px;
+  width: 90%;
+  border-collapse: collapse;
+}
+thead th
+ {
+  padding: 10px;
+  text-align: left;
+  user-select:text;
+  border:dotted rgba(0, 0, 255, 0.384) 1px;
+  color: red;
+}
+tbody td{
+  padding: 10px;
+  text-align: left;
+  user-select:text;
+  border:dotted rgba(0, 0, 255, 0.384) 1px;
+  
+}
+tbody tr:hover {
+  user-select: text;
+  background-color: rgba(255, 0, 0, 0.167);
+}
+.copyable-table {
+  user-select:auto;
+}
+.download-link:hover {
+  color: greenyellow;
+}
+.download-link{
+  text-decoration: none;
+}
+.terminal{
+  margin-left: 10px;
+  margin-top: 40px;
+}
+
+
+span{
+  color:red;
+}
+
+.tooltip-container {
+  position: relative;
+  display:flex;
+  flex-direction: column;
+  align-items: center;
+  background: transparent;
+
+}
+.tooltip-text {
+    position: absolute;
+  /* Position relative to the container */
+  bottom: 0%;
+  /* Place tooltip above the icon */
+  left: 50%;
+  transform: translateX(-50%);
+  visibility: hidden;
+  opacity: 0;
+  padding: 4px 8px;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(241, 2, 2, 0.15);
+  transition: opacity 0.3s ease;
+  color: greenyellow;
+  z-index: 2000;
+  
+}
+.tooltip-container:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+.icon-bar {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  z-index: 2000;
+}
+h2{
+  justify-content: center;
+  align-items: center;
+  color: gray;
+}
+p{
+  font-size: 14px;
+  align-items: center;
+  justify-content: center;
+}
+.error-message{
+  color:red;
+}

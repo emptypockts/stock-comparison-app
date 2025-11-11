@@ -29,14 +29,5 @@ import QtrStockChartLogo from "./QtrStockChartLogo.vue";
 
 </script>
 <style scoped>
-.icon-bar {
-  position: fixed;
-  bottom: 10px;
-  right: 10px;
-  display: flex;
-  flex-direction: column;  
-  align-items: flex-end;
-  z-index: 2000;
-  gap:0.5rem;
-}
+
 </style>

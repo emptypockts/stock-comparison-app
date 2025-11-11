@@ -6,6 +6,7 @@ from fetch5yData import fetch_5y_data
 from stockPlotData import fetch_financials
 from stockPlotDataQtr import fetch_4qtr_data
 from stockIntrinsicVal import getAllIntrinsicValues
+from financialUtils import fetch_name
 import pandas as pd
 import json
 load_dotenv()
@@ -16,7 +17,7 @@ def get_company_data_agent(tickers)->str:
     return f"""
     You are a financial analysis AI assistant designed to generate concise, insightful feedback for investors.
 
-    You will receive a Python dictionary with financial data per stock tickers {tickers}. Each entry contains:
+    You will receive a Python dictionary with financial data per stock tickers {tickers} and company names {fetch_name(tickers)} Each entry contains:
     - General stock info: symbol, name, share count, market cap, and derived current price
     - A list of recent quarterly earnings (filing date, revenue in millions)
     - The last known filing date
@@ -33,7 +34,7 @@ def get_company_score_agent(tickers)->str:
     return f"""
     You are an AI assistant specialized in value investing, inspired by the principles of Benjamin Graham. Your job is to review a company's historical financials and determine how well it aligns with value investing standards.
 
-    Company ticker : {tickers}
+    Company ticker : {tickers} and company names {fetch_name(tickers)}
 
     You will be given one row per fiscal year. Each row includes:
     - Raw metrics (EPS, Debt, FCF, Market Cap, Dividend Yield, etc.)
@@ -65,7 +66,7 @@ def get_company_score_agent(tickers)->str:
     """
 def get_company_financials_agent(tickers)->str:
     return f"""
-    You are a financial analysis assistant helping investors make informed decisions. You receive financial data for up to 3 stock tickers given here {tickers}, 
+    You are a financial analysis assistant helping investors make informed decisions. You receive financial data for up to 3 stock tickers given here {tickers} and company names {fetch_name(tickers)}, 
     each consisting of multiple years of key financial metrics (such as revenue, net income, free cash flow, assets, liabilities, EPS, and dividends).
     Your task is to analyze the trends over time for each ticker and highlight insights such as:
     Revenue and income growth or decline
@@ -80,7 +81,7 @@ def get_company_financials_agent(tickers)->str:
 def get_company_financials_qtr_agent(tickers)->str:
     return f"""
     You are a financial analysis AI assistant that evaluates and compares companies based on their quarterly financial statements.
-    You receive structured financial data for up to 3 stock tickers given here {tickers}, each with quarterly values for key metrics such as:
+    You receive structured financial data for up to 3 stock tickers given here {tickers} and company names {fetch_name(tickers)}, each with quarterly values for key metrics such as:
 
     Revenue and Net Income
     Earnings Per Share (Basic and Diluted)
@@ -108,7 +109,7 @@ def get_company_financials_qtr_agent(tickers)->str:
 def get_company_intrinsic_value_agent(tickers)->str:
     return f"""
     You are a financial valuation assistant specializing in intrinsic value analysis using Discounted Cash Flow (DCF) and Graham valuation models.
-    You are given structured data for up to 3 tickers given here {tickers}. For each, you receive:
+    You are given structured data for up to 3 tickers given here {tickers} and company names {fetch_name(tickers)}. For each, you receive:
     Estimated Earnings Growth for the next year
     Intrinsic Value (DCF and Graham)
     Current Market Price
@@ -139,16 +140,16 @@ def get_full_report_agent(tickers)->str:
     analysis expected: 
 
     ## 1. Executive Summary
-    This report reviews the financial health, performance trends, and valuation insights for the following companies: {tickers}.
+    This report reviews the financial health, performance trends, and valuation insights for the following companies: {tickers} and company names {fetch_name(tickers)}.
 
     ## 2. Financial Trends Analysis (Annual)
     [Insert AI-generated insights about annual trends, revenue, ROA, FCF, etc.]
 
     ## 3. Quarterly Performance Review
-    [Insert quarterly data analysis for {tickers}.]
+    [Insert quarterly data analysis for {tickers} and company names {fetch_name(tickers)}.]
 
     ## 4. Intrinsic Value Analysis
-    [Insert DCF & Graham valuation summaries for {tickers}.]
+    [Insert DCF & Graham valuation summaries for {tickers} and company names {fetch_name(tickers)}.]
 
     ## Conclusion
     [Comparison and wrap-up.]
@@ -314,6 +315,6 @@ def compile(tickers)->str:
     except Exception as e:
         return e
 if __name__ == "__main__":
-    tickers = ["ko",'celh','pep']
+    tickers = ["ko"]
 
     print(compile(tickers))

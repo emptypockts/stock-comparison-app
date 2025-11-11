@@ -417,8 +417,37 @@ def fetch_price_realtime(ticker:str,period:int=5):
     except Exception as e:
         print(str(e))
         return pd.Series(0)
-    
+def fetch_name(tickers:list)->str:
+    """
+    this function fetch the name of a list of tickers
+    args:
+        list of tickers
+    return:
+        list of company names
+    """
+    from pymongo import MongoClient
+    from pymongo.server_api import ServerApi
+    uri = os.getenv('MONGODB_URI')
+    client = MongoClient(uri, server_api=ServerApi('1'))
+    db=client['test']
+    ticker_collection=db['tickerCIK']
+    tickers=[e.upper() for e in tickers]
+    filter={
+        'ticker':{
+            '$in':tickers
+        }
+    }
+    project ={
+        'title':1,
+        '_id':0
+    }
+    cursor=ticker_collection.find(filter=filter,projection=project)
+    return [e['title'] for e in cursor]
+    return cursor
+
+
     
 
 if __name__=="__main__":
-    print(fetch_price_realtime('nvda'))
+    cursor=fetch_name(['ros','meta'])
+    print(cursor)

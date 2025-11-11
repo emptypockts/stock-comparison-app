@@ -18,7 +18,6 @@ export async function generatePdfReport(task,fileName=[],bucket_name=''){
             const objectUrl= URL.createObjectURL(blob)
             const link=document.createElement('a')
             link.href=objectUrl
-            console.log(`${response.data.size}_${fileName.join('_')}_${bucket_name}.pdf`)
             link.download=`${response.data.size}_${fileName.join('_')}_${bucket_name}.pdf`||'generic_report.pdf'
             document.body.appendChild(link)
             link.click()

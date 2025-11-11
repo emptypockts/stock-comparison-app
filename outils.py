@@ -9,6 +9,9 @@ from secDBFetch import get_sec_filings
 from dotenv import load_dotenv
 import requests
 load_dotenv()
+API_KEY = os.getenv("GEMINI_API")
+url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+querystring = {"key": API_KEY}
 
 form_types = ['10-K', '10-Q', '8-K', 'DEF 14A','20-F','6-K'] 
 def clean_edgar_text(content: str) -> str:
@@ -91,3 +94,22 @@ def save_analysis_report(ticker_dir, ticker, report,extension:Literal[".quant","
         else:
             report = json.dumps(report,indent=4,ensure_ascii=False)
             f.write(report)
+def json_validator(agent,r6)->str:
+    payload={
+    "system_instruction":{"parts":[{"text":agent}]},
+    "contents":[
+        {
+            "parts":[
+                {
+                    "text":r6
+                }
+            ]
+        }
+    ],
+}
+    headers= {"Content-Type":"application/json"}
+    response=requests.post(url,json=payload,headers=headers,params=querystring)
+    if response.status_code==429:
+        raise Exception("quota exceeded",response)
+    response=response.json()
+    return response["candidates"][0]["content"]["parts"][0]["text"]
