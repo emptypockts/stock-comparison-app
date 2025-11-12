@@ -1,10 +1,15 @@
 <template>
     <div v-if="tickers.length>0">
+        
         <div class="terminal">
         <span>eacsa> </span>seven powers report with ai:
-        <button  @click="get_seven_p_analysis" class="buttons">
-            ↲
-        </button>
+            
+                             <button 
+                :disabled="loading.isLoading" 
+                @click="get_seven_p_analysis" 
+                class="buttons">
+            {{loading['isLoading'] ? 'generating report': 'GO'}}
+            </button>
         </div>
         <div>
             <Navigation />

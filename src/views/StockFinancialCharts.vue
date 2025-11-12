@@ -58,7 +58,8 @@
 
         <!-- Other Expenses -->
         <div class="chart-box">
-          <h2>{{ isYearlyView ? "Other Expenses (Last 5 Years)" : "Other Non Current Liabilities (Last q Quarters)" }}</h2>
+          <h2>{{ isYearlyView ? "Other Expenses (Last 5 Years)" : "Other Non Current Liabilities (Last q Quarters)" }}
+          </h2>
           <apexcharts v-if="pickOtherExpensesSeries.length" type="line" :options="chartOptions"
             :series="pickOtherExpensesSeries"></apexcharts>
           <p>These types of expenses should be non-recurring.</p>
@@ -66,7 +67,7 @@
 
         <!-- FCF and Net Income Growth Ratio -->
         <div class="chart-box">
-          <h2>{{ isYearlyView ? "FCF Net Income Growth % (Last 5 Years)" : "FCF Net Income Growth % (Last 4 Quarters)" }}
+          <h2>{{ isYearlyView ? "FCF Net Income Growth % (Last 5 Years)" : "FCF Net Income Growth % (Last 4 Quarters)"}}
           </h2>
           <apexcharts v-if="pickFcfNetIncomeGrowthSeries.length" type="line" :options="percentageChartOptions"
             :series="pickFcfNetIncomeGrowthSeries"></apexcharts>
@@ -86,7 +87,8 @@
 
         <!-- Return on Average Assets -->
         <div class="chart-box">
-          <h2>{{ isYearlyView ? "Return on Average Assets (Last 5 Years)" : "Return on Average Assets (Last 4 Quarters)" }}
+          <h2>{{ isYearlyView ? "Return on Average Assets (Last 5 Years)" : "Return on Average Assets (Last 4 Quarters)"
+            }}
           </h2>
           <apexcharts v-if="pickReturnOnAssetsSeries.length" type="line" :options="percentageChartOptions"
             :series="pickReturnOnAssetsSeries"></apexcharts>
@@ -95,7 +97,7 @@
 
         <!-- Cash Dividends Paid Total -->
         <div class="chart-box">
-          <h2>{{ isYearlyView ? "Cash Dividends Paid Total (Last 5 Years)" : "Cash Dividends Paid Total (Last 4 Quarters)" }}
+          <h2>{{ isYearlyView ? "Cash Dividends Paid Total (Last 5 Years)" : "Cash Dividends Paid Total (Last 4Quarters)" }}
           </h2>
           <apexcharts v-if="pickDividendsPaidSeries.length" type="line" :options="chartOptions"
             :series="pickDividendsPaidSeries"></apexcharts>
@@ -156,7 +158,7 @@ export default {
         {
           style: {
             colors: 'greenyellow',
-            fontSize:'14px'
+            fontSize: '14px'
           },
         },
       },
@@ -169,15 +171,15 @@ export default {
             if (Math.abs(val) >= 1e6) return `$${(val / 1e6).toFixed(1)}M`;
             return `$${val.toFixed(2)}`;
           },
-          style:{
-            colors:'red',
-            fontSize:'15px'
+          style: {
+            colors: 'red',
+            fontSize: '15px'
           }
         },
       },
       stroke: {
         width: '1',
-        style:'dotted'
+        style: 'dotted'
       },
       grid: {
         show: false
@@ -198,18 +200,18 @@ export default {
         type: 'datetime',
         min: this.chartMinDate,
         max: this.chartMaxDate,
-        labels:{
-          style:{
-            colors:'greenyellow',
-            fontSize:'14px'
+        labels: {
+          style: {
+            colors: 'greenyellow',
+            fontSize: '14px'
           }
         },
       },
       yaxis: {
         labels: {
-          style:{
-            colors:'red',
-            fontSize:'14px'
+          style: {
+            colors: 'red',
+            fontSize: '14px'
           },
           formatter: (val) => {
             if (val === null || val === undefined) return '';
@@ -230,10 +232,10 @@ export default {
         },
       },
       xaxis: {
-        labels:{
-          style:{
-            colors:'greenyellow',
-            fontSize:'14px'
+        labels: {
+          style: {
+            colors: 'greenyellow',
+            fontSize: '14px'
           }
         },
         type: 'datetime',
@@ -242,9 +244,9 @@ export default {
       },
       yaxis: {
         labels: {
-          style:{
-            colors:'red',
-            fontSize:'14px'
+          style: {
+            colors: 'red',
+            fontSize: '14px'
           },
           formatter: (val) => {
             if (val === null || val === undefined) return '';

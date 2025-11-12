@@ -3,9 +3,12 @@
         <div class="terminal">
             <span>eacsa> </span>red flag report with ai:
         
-        <button  @click="red_flag_analysis" class="buttons">
-            ↲
-        </button>
+                                     <button 
+                :disabled="loading.isLoading" 
+                @click="red_flag_analysis" 
+                class="buttons">
+            {{loading['isLoading'] ? 'generating report': 'GO'}}
+            </button>
         </div>
         <div>
             <Navigation />

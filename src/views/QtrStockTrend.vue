@@ -11,8 +11,8 @@
     <div >
       <div v-if="paginatedRecords.length" class="table-container">
         
-        <div class="table-scroll">
-          <table class="copyable-table">
+        <div >
+          <table>
             <thead>
               <tr>
                 <th @click="sortTable('ticker')">Symbol<span class="sortClass"></span></th>

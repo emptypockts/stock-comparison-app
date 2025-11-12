@@ -4,9 +4,12 @@
 
     <input v-model="ticker1" id="ticker 1" class="terminal-input" style="width: 60px; justify-items: center;">
     </input>
-    <button @click="verifyAndFetchCompanyData"  class="buttons">
-      ↲
-    </button>
+                <button 
+                :disabled="loading.isLoading" 
+                @click="verifyAndFetchCompanyData" 
+                class="buttons">
+            {{loading['isLoading'] ? 'generating report': 'GO'}}
+            </button>
   </div>
   <div>
     <div v-if="tickerList.length > 0">

@@ -1,16 +1,16 @@
 html {
   background-color: black;
-  width: 90%;
-  display: flex;
+
 }
+
 * {
   font-family: monospace;
   color: gray;
   font-size: 20px;
-  
+
 }
-.terminal-input
-{
+
+.terminal-input {
   background: transparent;
   border: none;
   border-bottom: 1px solid blue;
@@ -21,9 +21,9 @@ html {
 
 .terminal-input:focus,
 .terminal-input:active {
-    border-bottom-color:blue;
+  border-bottom-color: blue;
 
-  
+
 }
 
 .terminal-input:-webkit-autofill,
@@ -34,45 +34,98 @@ html {
   box-shadow: 0 0 0px 1000px transparent inset !important;
   border-bottom: 1px solid blue !important;
 }
-.input-field{
-  display: flex; 
-  align-items: center; 
+
+.input-field {
+  display: flex;
+  align-items: center;
   gap: 8px;
   padding: 10px;
+  width: 80%;
 }
-.buttons{
-  border: blue solid 2px;
+
+.buttons {
+  border: pink double 4px;
   font-size: 14px;
-  
+
   background: transparent;
 }
-.buttons:hover{
+
+.buttons:hover {
   background: transparent;
   color: greenyellow;
-  cursor: pointer;
+  cursor:pointer;
+}
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .chart-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(600px,10%));
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  overflow: hidden;
+  grid-template-columns: repeat(auto-fit, minmax(10%, 40%));
   gap: 10px;
-  background: transparent;
-  
 }
+
+
 .chart-box {
-  padding: 5px;
-  box-shadow:0 4px 8px rgb(178, 76, 76);
+  width: 100%;
+  max-width: 100%;
+  margin: 0 left;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgb(178, 76, 76);
   transition: transform 0.3s ease;
-  background: transparent;
 }
+
 .chart-box:hover {
   transform: translateY(-5px);
 }
+
 .table-container {
-  overflow-x: auto; 
-  padding-bottom: 4px; 
-  margin-top:10px
+  width: 80%;
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 10px left;
+  padding-bottom: 4px;
+  display: block;
 }
+
+table {
+  width: 75%;
+  min-width: 400px;
+  /* allow horizontal scroll when too narrow */
+  border-collapse: collapse;
+}
+
+
+thead th {
+  padding: 10px;
+  text-align: left;
+  user-select: text;
+  border: dotted rgba(0, 0, 255, 0.384) 1px;
+  color: red;
+}
+
+tbody td {
+  padding: 10px;
+  text-align: left;
+  user-select: text;
+  border: dotted rgba(0, 0, 255, 0.384) 1px;
+
+}
+
+tbody tr:hover {
+  user-select: text;
+  background-color: rgba(255, 0, 0, 0.167);
+}
+
+.table-container::-webkit-scrollbar {
+  height: 8px;
+}
+
 .table-container::-webkit-scrollbar-track {
   background: rgba(0, 0, 255, 0.1);
   border: 1px dotted rgba(0, 0, 255, 0.4);
@@ -87,62 +140,47 @@ html {
 .table-container::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 255, 0.9);
 }
-table {
-  margin-left: 10px;
-  width: 90%;
-  border-collapse: collapse;
-}
-thead th
- {
-  padding: 10px;
-  text-align: left;
-  user-select:text;
-  border:dotted rgba(0, 0, 255, 0.384) 1px;
-  color: red;
-}
-tbody td{
-  padding: 10px;
-  text-align: left;
-  user-select:text;
-  border:dotted rgba(0, 0, 255, 0.384) 1px;
-  
-}
-tbody tr:hover {
-  user-select: text;
-  background-color: rgba(255, 0, 0, 0.167);
-}
-.copyable-table {
-  user-select:auto;
-}
+
 .download-link:hover {
   color: greenyellow;
 }
-.download-link{
+
+.download-link {
   text-decoration: none;
 }
-.terminal{
+
+.terminal {
   margin-left: 10px;
   margin-top: 40px;
+  width: 80%;
 }
 
+.list-container {
+  width: 80%;
+}
 
-span{
-  color:red;
+.p {
+  width: 80%;
+}
+
+span {
+  color: red;
 }
 
 .tooltip-container {
   position: relative;
-  display:flex;
+  display: flex;
   flex-direction: column;
   align-items: center;
   background: transparent;
 
 }
+
 .tooltip-text {
-    position: absolute;
-  /* Position relative to the container */
+  position: absolute;
+
   bottom: 0%;
-  /* Place tooltip above the icon */
+
   left: 50%;
   transform: translateX(-50%);
   visibility: hidden;
@@ -151,33 +189,144 @@ span{
   white-space: nowrap;
   box-shadow: 0 2px 6px rgba(241, 2, 2, 0.15);
   transition: opacity 0.3s ease;
+  font-size: 14px;
   color: greenyellow;
   z-index: 2000;
-  
+
 }
+
 .tooltip-container:hover .tooltip-text {
   visibility: visible;
   opacity: 1;
 }
+
 .icon-bar {
   position: fixed;
-  bottom: 10px;
-  right: 10px;
+  top: 50%;
+  right: 0;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  z-index: 2000;
+  align-items: center;
+  transform: translateY(-50%);
+  cursor: pointer;
+
 }
-h2{
+
+h2 {
   justify-content: center;
   align-items: center;
   color: gray;
 }
-p{
+
+p {
   font-size: 14px;
   align-items: center;
   justify-content: center;
 }
-.error-message{
-  color:red;
+
+.error-message {
+  color: red;
+}
+
+@media (max-width: 768px) {
+
+  .table-wrapper {
+    width: 100%;
+
+    padding: 0 8px;
+  }
+
+  .table-container {
+    width: 100%;
+
+    padding: 0 8px;
+  }
+
+  table {
+    font-size: 13px;
+    min-width: 500px;
+  }
+
+  .chart-container {
+    width: 80%;
+    overflow-x: scroll;
+  }
+
+  .chart-box {
+    width: 80% !important;
+  }
+
+  thead th,
+  tbody td {
+    padding: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .table-wrapper {
+    width: 100%;
+    max-width: 100%;
+    padding: 0 8px;
+  }
+
+  .table-container {
+    width: 100%;
+    max-width: 100%;
+    padding: 0 8px;
+  }
+
+  table {
+    font-size: 12px;
+    min-width: 400px;
+  }
+
+  .chart-container {
+    overflow-x: auto;
+  }
+
+  thead th,
+  tbody td {
+    padding: 4px;
+  }
+}
+
+.spinner {
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s ease-in-out infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-overlay {
+  position: fixed;
+  backdrop-filter: blur(10px);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.disabled-content {
+  pointer-events: none;
+  opacity: .5;
+  filter: blur(5px);
+}
+
+.loading-throbber {
+  text-align: center;
+  color: white;
 }

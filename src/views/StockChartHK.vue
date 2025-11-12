@@ -11,8 +11,8 @@
               <button @click="toggleCollapse" class="buttons">
         ⟬⟬ expand/collapse ⟭⟭
       </button>
-        <div class="table-scroll">
-          <table class="copyable-table">
+        <div >
+          <table >
             <thead>
               <tr>
                 <th @click="sortTable('Symbol')">Symbol<span class="sortClass"></span></th>

@@ -2,9 +2,14 @@
   <div v-if="tickers.length > 0">
     <div class="terminal">
       <span>eacsa></span> analyze sentiment:
-      <button :disabled="tickers.length === 0" @click="fetchAnalysisReports" class="buttons">
-        ↲
-      </button>
+      
+
+                     <button 
+                :disabled="loading.isLoading" 
+                @click="fetchAnalysisReports" 
+                class="buttons">
+            {{loading['isLoading'] ? 'generating report': 'GO'}}
+            </button>
     </div>
 
 
@@ -13,16 +18,18 @@
         ⟬⟬ expand/collapse ⟭⟭
       </button>
       <div v-if="compact" style="display: flex;flex-flow: row wrap; gap: 0.5rem;">
-        <div v-for="(fileType, fileTypeIndex) in getFileTypes()" :key="fileTypeIndex" class="terminal"  style="border:solid 1px blue; padding: 10px;">
-          <div v-for="reportData in analysisReports" :key="reportData.ticker" >
-            <span>report type: {{ formatFileName(reportData.reports[fileTypeIndex].File) }} </span>
-            <br>polarity: {{ reportData.reports[fileTypeIndex]['Sentiment Polarity'].toFixed(2) }}</br>
-            subjectivity: {{ reportData.reports[fileTypeIndex]['Sentiment Subjectivity'].toFixed(2) }}
+        
+          <div v-for="reportData in analysisReports" :key="reportData.ticker" style="display: flex;">
+            <div v-for="report in reportData['reports']" :key="report.File" class="terminal"  style=" border: solid 1px blue;width: auto; padding: 10px;">
+            <span>report type: {{ extractFileType(report['File']) }} </span>
+            <br>polarity: {{ report['Sentiment Polarity'].toFixed(2) }}</br>
+            subjectivity: {{ report['Sentiment Subjectivity'].toFixed(2) }}
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
+  
 </template>
 
 <script>
@@ -180,6 +187,7 @@ export default {
       getKeywordsForFileType,
       formatFileName,
       localIsProcessing,
+      loading
     };
   },
 };

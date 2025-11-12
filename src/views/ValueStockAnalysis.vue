@@ -9,19 +9,19 @@
       <span >eacsa> </span>value stock index 0-7:
     </div>
   </div>
-
       <div v-if="!collapsed">
-        <br>revenue strength, financial health, and value signals. real investors do not yolo, we verify.</br>
+        <p>
+          revenue strength, financial health, and value signals. real investors do not yolo, we verify.
+        </p>
       </div>
       <div>
           <button @click="toggleCollapse" class="buttons">
         ⟬⟬ expand/collapse ⟭⟭
       </button>
       </div>
-    <div v-if="financialData.length" class="table-container" >
-
-      <div class="table-scroll">
-        <table class="copyable-table">
+      
+    <div v-if="financialData.length" >
+        <table class="table-container">
           <thead>
             <tr>
               <th>Date</th>
@@ -80,8 +80,7 @@
           </tbody>
         </table>
       </div>
-  </div>
-</div>
+      </div>
 </template>
 
 <script>

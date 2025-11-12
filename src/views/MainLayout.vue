@@ -1,12 +1,11 @@
 <template>
-    <div style="position:absolute;top:10px;right:20px">
-        <p v-if="isConnected" style="color:greenyellow;font-size: 14px;">ai: on</p>
-        <p v-else style="color:red">ai: off</p>
+    <div style="position:fixed;top:10px;right:20px;">
+        
+        <p v-if="isConnected" style="color:greenyellow;font-size: 14px;border: greenyellow double 1px;padding: 10px;">AI on</p>
+        <p  v-else style="color:red;font-size: 14px;border: red double 1px;padding: 10px;">AI off</p>
     </div>
     <div>
         <CompanyData @tickers-updated="updateTickers" />
-    </div>
-    <div>
         <ValueStockAnalysis :tickers="tickers" />
     </div>
     <div>
@@ -18,8 +17,11 @@
     <div v-if="tickers.length > 0">
         <div class="terminal">
             <span>eacsa> </span>financial report with ai:
-            <button @click="get_report" class="buttons">
-                ↲
+                                    <button 
+                :disabled="loading.isLoading" 
+                @click="get_report" 
+                class="buttons">
+            {{loading['isLoading'] ? 'generating report': 'GO'}}
             </button>
         </div>
     </div>
@@ -81,11 +83,11 @@
             </div>
         </div>
     </div>
-        <div>
-            <Navigation />
-            <CookieBanner />
-            <LoginAlert />
-        </div>
+    <div>
+        <Navigation />
+        <CookieBanner />
+        <LoginAlert />
+    </div>
 </template>
 <script setup>
 import { ref, onMounted } from 'vue';

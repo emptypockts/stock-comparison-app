@@ -2,9 +2,12 @@
   <div v-if="tickers.length > 0">
     <div class="terminal">
         <span>eacsa> </span>new intrinsic value:
-        <button @click="calculateIntrinsicValue" class="buttons">
-          ↲
-        </button>
+                        <button 
+                :disabled="loading.isLoading" 
+                @click="calculateIntrinsicValue" 
+                class="buttons">
+            {{loading['isLoading'] ? 'generating report': 'GO'}}
+            </button>
 
       </div>
     <div v-for="(ticker, index) in tickers" :key="index">
@@ -48,7 +51,7 @@
       <div v-if="!collapsed">
         dcf engines online. computing what the stock should cost, not what wall street says
       </div>
-      <div class="table-scroll">
+      <div >
         <table>
           <thead>
             <tr>
