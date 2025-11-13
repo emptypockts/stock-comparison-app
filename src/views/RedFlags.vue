@@ -4,10 +4,10 @@
             <span>eacsa> </span>red flag report with ai:
         
                                      <button 
-                :disabled="loading.isLoading" 
+                :disabled="isLoadingLocal" 
                 @click="red_flag_analysis" 
                 class="buttons">
-            {{loading['isLoading'] ? 'generating report': 'GO'}}
+            {{isLoadingLocal ? 'generating report': 'GO'}}
             </button>
         </div>
         <div>
@@ -38,13 +38,14 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed,watch } from 'vue';
 import Navigation from '@/components/Navigation.vue';
 import axios from 'axios';
 import { useTickerStore } from '@/stores/tickerStore';
 import { useLoadingStore } from '@/stores/loadingStore';
 import { showTempMessage } from '@/utils/timeout';
-
+const isLoadingLocal = ref(false);
+let localTaskID=null;
 const rawMessage = ref('');
 const tickerHistory = ref(new Set())
 const tickerStore = useTickerStore();
@@ -55,6 +56,13 @@ const errorMessage = ref('');
 const messages = ref([
     { text: 'I will conduct the report analysis and identify red flags. If you want analysis for another, ticker just change the ticker in the main page and pres analyze to start. ', isUser: false }
 ]);
+
+watch(loading.pendingTasks,()=>{
+    if(localTaskID&&!loading.pendingTasks[localTaskID]){
+        isLoadingLocal.value=false;
+        localTaskID=null;
+    }
+})
 
 const tickers= computed(()=> tickerStore.currentTickers);
 async function red_flag_analysis() {
@@ -79,13 +87,14 @@ async function red_flag_analysis() {
                 try {
                     // starting ai report. updating loading store
 
-                    loading.startLoading();
-                    await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/quant`, {
+                    isLoadingLocal.value=true;
+                    const response=await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/quant`, {
                         tickers: allowedTickers.value,
                         user_id: user_id,
                         report_type: "eacsa-red-flags"
                     });
-                    
+                    localTaskID=response.data.task_id;
+                    loading.addTask[localTaskID]
                 }
                 catch (error) {
                     console.error('Error sending query', error);
@@ -94,7 +103,7 @@ async function red_flag_analysis() {
                     showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 2000);
                 }
                 finally {
-                    loading.stopLoading()
+                    
                     tickers.value.forEach(t => tickerHistory.value.add(t.toLowerCase()));
 
                 }

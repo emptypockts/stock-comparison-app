@@ -79,16 +79,18 @@
           </table>
         </div>
         <div class="pagination-controls">
-          <button @click="previousPage" :disabled="currentPage === 1">Prev</button>
+          <button @click="previousPage" :disabled="currentPage === 1" class="buttons">Prev</button>
 
           <span>Page {{ currentPage }} of {{ totalPages }}</span>
 
           <!-- Input for page navigation -->
           <input type="number" v-model.number="enteredPage" @keyup.enter="goToPage" :min="1" :max="totalPages"
-            placeholder="@page"/>
-          <button @click="goToPage">Go</button>
+            placeholder="@page"
+            class="terminal-input"
+            />
+          <button @click="goToPage" class="buttons">Go</button>
 
-          <button @click="nextPage" :disabled="currentPage === totalPages">Next</button>
+          <button @click="nextPage" :disabled="currentPage === totalPages" class="buttons">Next</button>
         </div>
       </div>
       <!-- Loading Throbber -->

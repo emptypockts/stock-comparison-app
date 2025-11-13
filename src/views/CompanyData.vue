@@ -1,16 +1,21 @@
 <template>
-  <div class="input-field">
-    <span style="color: red;">eacsa></span><span> ticker:</span>
+  <div class="input-row">
+    <span style="color: red;">eacsa></span><span style="color: gray;"> ticker:</span>
 
-    <input v-model="ticker1" id="ticker 1" class="terminal-input" style="width: 60px; justify-items: center;">
-    </input>
+    <input 
+    v-model="ticker1"
+    id="ticker 1" 
+    class="terminal-input" 
+    @keyup.enter="verifyAndFetchCompanyData"
+    />
                 <button 
                 :disabled="loading.isLoading" 
                 @click="verifyAndFetchCompanyData" 
                 class="buttons">
-            {{loading['isLoading'] ? 'generating report': 'GO'}}
+            {{loading['isLoading'] ? 'generating report': 'fundamentals'}}
             </button>
-  </div>
+            </div>
+  
   <div>
     <div v-if="tickerList.length > 0">
       <div class="terminal">

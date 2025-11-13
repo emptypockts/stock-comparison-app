@@ -1,41 +1,36 @@
 <template>
   <div v-if="tickers.length > 0">
     <div class="terminal">
-        <span>eacsa> </span>new intrinsic value:
-                        <button 
-                :disabled="loading.isLoading" 
-                @click="calculateIntrinsicValue" 
-                class="buttons">
-            {{loading['isLoading'] ? 'generating report': 'GO'}}
-            </button>
+      <span>eacsa> </span>new intrinsic value:
+      <button :disabled="loading.isLoading" @click="calculateIntrinsicValue" class="buttons">
+        {{ loading['isLoading'] ? 'generating report' : 'GO' }}
+      </button>
 
-      </div>
+    </div>
     <div v-for="(ticker, index) in tickers" :key="index">
-      <div class="input-field">
-        <label for="growthRate">Growth Rate (%) default 5%</label>
-        <input v-model.number="intrinsicParams[ticker].growthRate" id="growthRate" class="terminal-input"
-          style="width: 20px;" />
-        <span v-if="!intrinsicParams[ticker].growthRate">Empty</span>
-
-
-        <label for="discountRate">Discount Rate (%) WACC default 10%</label>
-        <input v-model.number="intrinsicParams[ticker].discountRate" id="discountRate" class="terminal-input"
-          style="width: 20px;" />
-        <span v-if="!intrinsicParams[ticker].discountRate">Empty</span>
-
-
-        <label for="terminalGrowthRate">Terminal Growth Rate (%) default 2%</label>
-        <input v-model.number="intrinsicParams[ticker].terminalGrowthRate" id="terminalGrowthRate"
-          class="terminal-input" style="width: 20px;" />
-        <span v-if="!intrinsicParams[ticker].terminalGrowthRate">Empty</span>
-
-
-        <label for="projectionYears">Projection Years default 5y</label>
-        <input v-model.number="intrinsicParams[ticker].projectionYears" id="projectionYears" class="terminal-input"
-          style="width: 20px;" />
-        <span v-if="!intrinsicParams[ticker].projectionYears">Empty</span>
+      <div class="input-row">
+        <div style="border: blue 1px solid; gap: 2px 4px;padding: 8px; margin-top: 10px;">
+          <label for=" growthRate">Growth Rate (%) default 5%</label>
+            <input v-model.number="intrinsicParams[ticker].growthRate" id="growthRate" class="terminal-input"/>
+            <span v-if="!intrinsicParams[ticker].growthRate">Empty</span>
+        </div>
+        <div style="border: blue 1px solid; gap: 2px 4px;padding: 8px;margin-top: 10px;">
+        <label for=" discountRate">Discount Rate (%) WACC default 10%</label>
+          <input v-model.number="intrinsicParams[ticker].discountRate" id="discountRate" class="terminal-input"/>
+          <span v-if="!intrinsicParams[ticker].discountRate">Empty</span>
+        </div>
+        <div style="border: blue 1px solid; gap: 2px 4px;padding: 8px;margin-top: 10px;">
+        <label for=" terminalGrowthRate">Terminal Growth Rate (%) default 2%</label>
+          <input v-model.number="intrinsicParams[ticker].terminalGrowthRate" id="terminalGrowthRate" class="terminal-input"/>
+          <span v-if="!intrinsicParams[ticker].terminalGrowthRate">Empty</span>
+        </div>
+        <div style="border: blue 1px solid; gap: 2px 4px;padding: 8px;margin-top: 10px;">
+        <label for=" projectionYears">Projection Years default 5y</label>
+          <input v-model.number="intrinsicParams[ticker].projectionYears" id="projectionYears" class="terminal-input"/>
+          <span v-if="!intrinsicParams[ticker].projectionYears">Empty</span>
+        </div>
       </div>
-      
+
 
 
     </div>
@@ -49,9 +44,11 @@
         ⟬⟬ expand/collapse ⟭⟭
       </button>
       <div v-if="!collapsed">
-        dcf engines online. computing what the stock should cost, not what wall street says
+        <p>
+          dcf engines online. computing what the stock should cost, not what wall street says
+        </p>
       </div>
-      <div >
+      <div>
         <table>
           <thead>
             <tr>

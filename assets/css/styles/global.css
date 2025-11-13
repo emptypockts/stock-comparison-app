@@ -9,19 +9,25 @@ html {
   font-size: 20px;
 
 }
-
+.input-row{
+  display: flex;
+  gap: 10px;
+}
 .terminal-input {
+
   background: transparent;
   border: none;
-  border-bottom: 1px solid blue;
-  outline: none;
+  border-bottom: 2px solid gray;
   color: white;
   padding: 2px 4px;
+  width: 60px;
+  text-align: center;
 }
 
 .terminal-input:focus,
 .terminal-input:active {
-  border-bottom-color: blue;
+  border-bottom-color: gray;
+  
 
 
 }
@@ -32,16 +38,9 @@ html {
   -webkit-text-fill-color: white !important;
   -webkit-box-shadow: 0 0 0px 1000px transparent inset !important;
   box-shadow: 0 0 0px 1000px transparent inset !important;
-  border-bottom: 1px solid blue !important;
+  border-bottom: 2px solid gray !important;
 }
 
-.input-field {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px;
-  width: 80%;
-}
 
 .buttons {
   border: pink double 4px;
@@ -96,7 +95,6 @@ button:disabled {
 table {
   width: 75%;
   min-width: 400px;
-  /* allow horizontal scroll when too narrow */
   border-collapse: collapse;
 }
 
@@ -105,15 +103,17 @@ thead th {
   padding: 10px;
   text-align: left;
   user-select: text;
-  border: dotted rgba(0, 0, 255, 0.384) 1px;
+  border: dotted blue 1px;
   color: red;
+  font-size: 18px;
+  
 }
 
 tbody td {
   padding: 10px;
   text-align: left;
   user-select: text;
-  border: dotted rgba(0, 0, 255, 0.384) 1px;
+  border: dotted blue 1px;
 
 }
 
@@ -128,18 +128,59 @@ tbody tr:hover {
 
 .table-container::-webkit-scrollbar-track {
   background: rgba(0, 0, 255, 0.1);
-  border: 1px dotted rgba(0, 0, 255, 0.4);
+  border: dotted blue 1px;
 }
 
 .table-container::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 255, 0.6);
   border-radius: 4px;
-  border: 1px solid rgba(0, 0, 255, 0.9);
+  border: dotted blue 1px;
 }
 
 .table-container::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 255, 0.9);
 }
+
+.asc::after {
+  content: '▲'; /* Up arrow for ascending */
+  font-size: 12px;
+  position: absolute;
+  right: 8px;
+  background-color: transparent;
+}
+
+.desc::after {
+  content: '▼'; /* Down arrow for descending */
+  font-size: 12px;
+  position: absolute;
+  right: 8px;
+  background-color: transparent;
+}
+
+.sortClass {
+  background-color: red;
+}
+.pagination-controls {
+  position: fixed; 
+  display: flex;
+  gap: 10px;
+  bottom: 10px;    
+  left: 70%;       
+  transform: translateX(-50%); 
+  background-color: transparent;
+  
+  padding: 10px; 
+  z-index: 1000; 
+  border-radius: 8px; 
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    background: transparent;
+    opacity: 1;
+    filter: invert(19%) sepia(94%) saturate(7493%) hue-rotate(356deg) brightness(90%) contrast(118%);
+}
+
 
 .download-link:hover {
   color: greenyellow;
@@ -260,6 +301,12 @@ p {
   tbody td {
     padding: 6px;
   }
+}
+
+label{
+  font-size: 16px;
+  width: auto;
+  
 }
 
 @media (max-width: 480px) {

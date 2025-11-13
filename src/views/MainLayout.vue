@@ -1,5 +1,5 @@
 <template>
-    <div style="position:fixed;top:10px;right:20px;">
+    <div style="position:fixed;top:10px;right:40px;">
         
         <p v-if="isConnected" style="color:greenyellow;font-size: 14px;border: greenyellow double 1px;padding: 10px;">AI on</p>
         <p  v-else style="color:red;font-size: 14px;border: red double 1px;padding: 10px;">AI off</p>
@@ -18,10 +18,10 @@
         <div class="terminal">
             <span>eacsa> </span>financial report with ai:
                                     <button 
-                :disabled="loading.isLoading" 
+                :disabled="isLoadingLocal" 
                 @click="get_report" 
                 class="buttons">
-            {{loading['isLoading'] ? 'generating report': 'GO'}}
+            {{isLoadingLocal ? 'generating report': 'GO'}}
             </button>
         </div>
     </div>
@@ -45,10 +45,11 @@
 
         <div v-if="!collapsed" class="table-container">
             <div v-if="ai_reports">
-                <br></br>
+                
                 <div class="terminal">
-                    all previous ai reports indexed: overall, seven powers, red flags. timestamped. your research trail
-                    starts here.
+                    <p>
+                    all previous ai reports indexed: overall, seven powers, red flags. timestamped. your research trail starts here.
+                    </p>
                 </div>
                 <table>
                     <thead>
@@ -90,7 +91,7 @@
     </div>
 </template>
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import IntrinsicValue from '@/views/IntrinsicValue.vue';
 import CompanyData from '@/views/CompanyData.vue';
 import StockFinancialCharts from '@/views/StockFinancialCharts.vue';
@@ -108,6 +109,7 @@ import axios from 'axios';
 import RedFlags from './RedFlags.vue';
 import { fetch_reports, ai_reports } from '@/utils/fetch_reports';
 import { useLoadingStore } from '@/stores/loadingStore';
+import { data } from 'jquery';
 const allowedTickers = ref([]);
 const tickerHistory = ref(new Set());
 const isConnected = useSocket();
@@ -115,6 +117,8 @@ const tickers = ref([]);
 const errorMessage = ref('');
 const tickerStore = useTickerStore();
 const loading = useLoadingStore()
+const isLoadingLocal=ref(false)
+let localTaskID=null;
 const updateTickers = (newTickers) => {
     tickerStore.updateTickers(newTickers)
     tickers.value = tickerStore.currentTickers
@@ -129,6 +133,13 @@ onMounted(async () => {
     ai_reports.value = await fetch_reports();
 })
 
+watch(loading.pendingTasks,()=>{
+    if(localTaskID &&!loading.pendingTasks[localTaskID]){
+        isLoadingLocal.value=false
+        localTaskID=null;
+    }
+})
+
 const get_report = async () => {
     const tickers = tickerStore.currentTickers;
     const user_id = localStorage.getItem('user_id')
@@ -140,15 +151,18 @@ const get_report = async () => {
     else {
         allowedTickers.value = tickers.filter(e => !tickerHistory.value.has(e.toLowerCase()))
         if (allowedTickers.value.length) {
-            loading.startLoading();
+            isLoadingLocal.value=true
 
             try {
-                await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/gemini`, {
+               const response= await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/gemini`, {
                     tickers: allowedTickers.value,
                     user_id: user_id,
                     report_type: "overall-reports"
                 })
+                localTaskID=response.data.task_id
+                loading.addTask(localTaskID)
             }
+            
             catch (err) {
                 console.error('error trying to generate report:', err)
             }

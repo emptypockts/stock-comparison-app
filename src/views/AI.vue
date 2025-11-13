@@ -5,10 +5,10 @@
         <span>eacsa> </span>seven powers report with ai:
             
                              <button 
-                :disabled="loading.isLoading" 
+                :disabled="isLoadingLocal" 
                 @click="get_seven_p_analysis" 
                 class="buttons">
-            {{loading['isLoading'] ? 'generating report': 'GO'}}
+            {{isLoadingLocal ? 'generating report': 'GO'}}
             </button>
         </div>
         <div>
@@ -22,7 +22,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import Navigation from '@/components/Navigation.vue';
 import axios from 'axios';
 import { useTickerStore } from '@/stores/tickerStore';
@@ -35,9 +35,17 @@ const tickerStore = useTickerStore();
 const loading = useLoadingStore();
 const allowedTickers = ref([]);
 const errorMessage = ref('');
+const isLoadingLocal=ref(false);
+let localTaskID=null;
 const messages = ref([
     { text: 'I will conduct the 7power analysis for this ticker. If you want analysis for another, ticker just change the first ticker field in the main page. Hit send to start. ', isUser: false }
 ]);
+watch(loading.pendingTasks,()=>{
+    if(localTaskID&&!loading.pendingTasks[localTaskID]){
+        isLoadingLocal.value=false;
+        localTaskID=null;
+    }
+})
 const tickers =computed(()=> tickerStore.currentTickers)
 async function get_seven_p_analysis() {
     
@@ -61,14 +69,14 @@ async function get_seven_p_analysis() {
                 try {
                     // starting ai report. updating loading store
 
-                    loading.startLoading();
-                     await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/seven_p`, {
+                    isLoadingLocal.value=true;
+                    const  response= await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/seven_p`, {
                         tickers: allowedTickers.value,
                         user_id: user_id,
                         report_type: "seven-powers"
                     });
-
-
+                    localTaskID=response.data.task_id
+                    loading.addTask(localTaskID)
                 }
                 catch (error) {
                     console.error('Error sending query', error);

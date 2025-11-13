@@ -26,8 +26,6 @@ export function useSocket(onTaskDone) {
         console.log('my guy, you are no longer on')
     })
     socket.on('task_done', (data) => {
-        let c=0;
-        console.log('hi socket',+ ++c)
         const user_id = localStorage.getItem('user_id')
         taskData.value = data
         if (data.user_id==user_id){

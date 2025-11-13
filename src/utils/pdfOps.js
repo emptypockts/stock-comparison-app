@@ -31,6 +31,7 @@ export async function generatePdfReport(task,fileName=[],bucket_name=''){
         finally{
             const loading = useLoadingStore(); 
             loading.stopLoading()
+            loading.completeTask(task)
         }
     }
         
