@@ -30,9 +30,9 @@
 
             </template>
         </div>
-        <div class="error-message">
-            {{ errorMessage }}
-        </div>
+      <div v-if="notification" :class="['msg', notification.type]">
+        {{ notification.text}}
+    </div>
     </div>
 
 </template>
@@ -43,7 +43,7 @@ import Navigation from '@/components/Navigation.vue';
 import axios from 'axios';
 import { useTickerStore } from '@/stores/tickerStore';
 import { useLoadingStore } from '@/stores/loadingStore';
-import { showTempMessage } from '@/utils/timeout';
+import { showTempMessage } from '@/utils/showMessages';
 const isLoadingLocal = ref(false);
 let localTaskID=null;
 const rawMessage = ref('');
@@ -52,15 +52,16 @@ const tickerStore = useTickerStore();
 const loading = useLoadingStore();
 const allowedTickers = ref([]);
 const final_report=ref('');
-const errorMessage = ref('');
+const notification = ref(null);
 const messages = ref([
     { text: 'I will conduct the report analysis and identify red flags. If you want analysis for another, ticker just change the ticker in the main page and pres analyze to start. ', isUser: false }
 ]);
 
 watch(loading.pendingTasks,()=>{
-    if(localTaskID&&!loading.pendingTasks[localTaskID]){
-        isLoadingLocal.value=false;
+    if(localTaskID &&!loading.pendingTasks[localTaskID]){
+        isLoadingLocal.value=false
         localTaskID=null;
+        showTempMessage(notification,"report completed. go to the s3 report section","notification",20000);
     }
 })
 
@@ -74,8 +75,8 @@ async function red_flag_analysis() {
             text: 'ticker analysis or user_id empty',
             isUser: false
         })
-        errorMessage.value = 'ticker analysis is empty. there must be an analysis and 7powers analysis generated first'
-        showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 2000);
+        
+        showTempMessage(notification, "ticker analysis is empty. there must be an analysis and 7powers analysis generated first","error")
 
     }
     else {
@@ -99,8 +100,8 @@ async function red_flag_analysis() {
                 catch (error) {
                     console.error('Error sending query', error);
 
-                    errorMessage.value = 'Error sending query'
-                    showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 2000);
+                    
+                    showTempMessage(notification,"Error sending query","error")
                 }
                 finally {
                     
@@ -114,8 +115,8 @@ async function red_flag_analysis() {
                     isUser: false,
                     type: "error"
                 })
-                errorMessage.value = 'ticker analysis is empty or these tickers were already analysed in this session. analyse the ticker and then generate the red flag report again or go to the main page and return to this page to get a new report'
-                showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 3000);
+                
+                showTempMessage(notification,"ticker analysis is empty or these tickers were already analysed in this session. analyse the ticker and then generate the red flag report again or go to the main page and return to this page to get a new report","error",10000)
             }
         }
         else {
@@ -125,8 +126,8 @@ async function red_flag_analysis() {
                     isUser: false,
                     type: "error"
                 })
-                errorMessage.value = 'analysis already done for this ticker, refresh the page and return to this section to get a new analysis'
-                showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 3000);
+                
+                showTempMessage(notification,"analysis already done for this ticker, refresh the page and return to this section to get a new analysis","error",10000)
             }
             else {
                 messages.value.push({
@@ -134,8 +135,8 @@ async function red_flag_analysis() {
                     isUser: false,
                     type: "error"
                 })
-                errorMessage.value = 'analysis already done for this ticker, refresh the page and return to this section to get a new analysis'
-                showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 3000);
+                
+                showTempMessage(notification,"analysis already done for this ticker, refresh the page and return to this section to get a new analysis","error",10000)
             }
         }
     }

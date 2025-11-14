@@ -315,6 +315,6 @@ def compile(tickers)->str:
     except Exception as e:
         return e
 if __name__ == "__main__":
-    tickers = ["ko"]
+    tickers = ["mu"]
 
     print(compile(tickers))

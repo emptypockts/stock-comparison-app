@@ -18,7 +18,7 @@ celery = Celery(
     backend=os.getenv('REDIS_SERVER')
 )
 
-def notify_task_done(event_name,payload):
+def notify_task_result(event_name,payload):
     if not sio.connected:
         sio.connect(WS_SOCKET_URI)
     try:
@@ -57,9 +57,9 @@ def generate_ai_report(self,tickers,user_id,report_type):
             })
 
 
-        try:
+            
             print('notifying server of completion')
-            notify_task_done('task_done',{
+            notify_task_result('task_done',{
                 'user_id':user_id,
                 'task_id':task_id,
                 'tickers':tickers,
@@ -68,13 +68,20 @@ def generate_ai_report(self,tickers,user_id,report_type):
                 "timestamp":datetime.now().isoformat()+"Z"
 
             })
-            print(f"task {task_id} completed emitting task_done")
-        except Exception as e:
-            print('ws issue',str(e))
-        return result
+            return result
+
     except Exception as e:
-        print('error with task execution',str(e))
-        return str(e)
+        print(f"error with task execution {str(e)} for tickers {tickers}, task id {task_id}, data returned  {result}")
+        notify_task_result("task_failed", {
+            "user_id": user_id,
+            "task_id": task_id,
+            "tickers": tickers,
+            "report_type": report_type,
+            "timestamp": datetime.now().isoformat() + "Z",
+            "error": str(e)
+        })
+        
+        raise self.retry(exc=e,countdown=5,max_retries=1)
     
     # ============7powers===============
 
@@ -99,23 +106,32 @@ def generate_ai_7powers(self,tickers,user_id,report_type):
                 "tickers":tickers,
                 "timestamp":datetime.now(timezone.utc)
             })
-            try:
-                print("notifying server of completion")
-                notify_task_done('task_done',{
-                'user_id':user_id,
-                'task_id':task_id,
-                'tickers':tickers,
-                'report_type':report_type,
-                "tickers":tickers,
-                "timestamp":datetime.now().isoformat()+"Z"
-                })
-                print(f"task {task_id} completed emitting task_done")
-            except Exception as e:
-                print("error trying to notify task completion: ", str(e))
+            
+            print("notifying server of completion")
+            notify_task_result('task_done',{
+            'user_id':user_id,
+            'task_id':task_id,
+            'tickers':tickers,
+            'report_type':report_type,
+            "tickers":tickers,
+            "timestamp":datetime.now().isoformat()+"Z"
+            })
+            
             return result
+
+            
     except Exception as e:
-        print("error executing task: ",str(e))
-        return str(e)
+        print(f"error with task execution {str(e)} for tickers {tickers}, task id {task_id}, data returned  {result}")
+        notify_task_result("task_failed", {
+            "user_id": user_id,
+            "task_id": task_id,
+            "tickers": tickers,
+            "report_type": report_type,
+            "timestamp": datetime.now().isoformat() + "Z",
+            "error": str(e)
+        })
+        
+        raise self.retry(exc=e,countdown=5,max_retries=1)
     
     # ========quant============
        
@@ -126,7 +142,6 @@ def generate_ai_quant(self,tickers,user_id,report_type):
         if not user_id:
             raise Ignore()
         result=quant(tickers)
-        print("quant report type: ",type(result))
         task_id=self.request.id
         now=datetime.now()
         if result:
@@ -141,22 +156,29 @@ def generate_ai_quant(self,tickers,user_id,report_type):
                 "tickers":tickers,
                 "timestamp":datetime.now(timezone.utc)
             })
-            try:
-                print("notifying server of completion")
-                notify_task_done('task_done',{
-                'user_id':user_id,
-                'task_id':task_id,
-                'tickers':tickers,
-                'report_type':report_type,
-                "tickers":tickers,
-                "timestamp":datetime.now().isoformat()+"Z"
-                })
-                print(f"task {task_id} completed emitting task_done")
-            except Exception as e:
-                print("error trying to notify task completion: ", str(e))
+        
+            print("notifying server of completion")
+            notify_task_result('task_done',{
+            'user_id':user_id,
+            'task_id':task_id,
+            'tickers':tickers,
+            'report_type':report_type,
+            "tickers":tickers,
+            "timestamp":datetime.now().isoformat()+"Z"
+            })
+            
             return result
-    except Exception as e:
-        print("error executing task: ",str(e))
-        return str(e)
-         
 
+    except Exception as e:
+         
+        print(f"error with task execution {str(e)} for tickers {tickers}, task id {task_id}, data returned  {result}")
+        notify_task_result("task_failed", {
+            "user_id": user_id,
+            "task_id": task_id,
+            "tickers": tickers,
+            "report_type": report_type,
+            "timestamp": datetime.now().isoformat() + "Z",
+            "error": str(e)
+        })
+        
+        raise self.retry(exc=e,countdown=5,max_retries=1)

@@ -39,9 +39,9 @@
     </div>
   </div>
   <!-- Error message display -->
-  <div v-if="errorMessage" class="error-message">
-    <p>{{ errorMessage }}</p>
-  </div>
+      <div v-if="notification" :class="['msg', notification.type]">
+        {{ notification.text}}
+    </div>
 </template>
 
 <script setup>
@@ -52,10 +52,10 @@ import debounce from 'lodash.debounce';
 import { useLoadingStore } from '@/stores/loadingStore';
 import { verifyCfToken, verifyToken } from '@/utils/auth';
 import { useTickerStore } from '@/stores/tickerStore';
-import { showTempMessage } from '@/utils/timeout';
+import { showTempMessage } from '@/utils/showMessages';
 import { fetch_reports, ai_reports } from '@/utils/fetch_reports';
 const emit = defineEmits(['tickers-updated']);
-const errorMessage = ref('');
+const notification = ref(null);
 const ticker1 = ref('');
 const ticker2 = ref('');
 const ticker3 = ref('');
@@ -68,10 +68,9 @@ const fetchCompanyData = debounce(async () => {
   const tickers = [ticker1, ticker2, ticker3].map(tickerRef => tickerRef.value).filter(Boolean);
   tickerList.value = tickers
   if (tickers.length === 0) {
-    showTempMessage(errorMessage, 'Please enter at least one stock ticker.', 2000);
-    return errorMessage;
+    showTempMessage(notification, 'Please enter a ticker',"error");
+    return notification;
   }
-  errorMessage.value = ""
 
   loading.startLoading();
   try {
@@ -83,8 +82,7 @@ const fetchCompanyData = debounce(async () => {
     });
     companyData.value = response.data;
     if (!companyData.value || Object.keys(companyData.value).length === 0) {
-      errorMessage.value = 'No data found. this app is doing data collection of american companies only';
-      showTempMessage(errorMessage, 'No data found for the entered tickers.', 2000);
+      showTempMessage(notification, 'No data found for the entered tickers.',"error");
 
     } else {
 
@@ -92,8 +90,8 @@ const fetchCompanyData = debounce(async () => {
         ticker => !Object.keys(companyData.value).includes(ticker)
       );
       if (missingTickers.length > 0) {
-        showTempMessage(errorMessage, `Data for the following tickers is missing: ${missingTickers.join(', ')}.
-            this app is doing data collection for american companies only.`, 5000);
+        showTempMessage(notification, `Data for the following tickers is missing: ${missingTickers.join(', ')}.
+            this app is doing data collection for american companies only.`,"error");
       }
     }
     tickerStore.updateTickers(tickers)
@@ -101,7 +99,7 @@ const fetchCompanyData = debounce(async () => {
 
   } catch (error) {
     console.error("error trying to fetch company data", error)
-    return errorMessage;
+    return notification;
   }
 
   finally {

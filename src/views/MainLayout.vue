@@ -25,8 +25,8 @@
             </button>
         </div>
     </div>
-    <div class="error-message">
-        {{ errorMessage }}
+      <div v-if="notification" :class="['msg', notification.type]">
+        {{ notification.text}}
     </div>
     <div>
         <RittenhouseAnalysis :tickers="tickers" />
@@ -102,7 +102,7 @@ import { useTickerStore } from '@/stores/tickerStore';
 import Navigation from '@/components/Navigation.vue';
 import CookieBanner from '@/components/CookieBanner.vue';
 import LoginAlert from '@/components/LoginAlert.vue';
-import { showTempMessage } from '@/utils/timeout';
+import { showTempMessage } from '@/utils/showMessages';
 import { formatDateAgo } from '@/utils/formateTime';
 import { useSocket } from '@/composables/taskSocket';
 import axios from 'axios';
@@ -114,7 +114,7 @@ const allowedTickers = ref([]);
 const tickerHistory = ref(new Set());
 const isConnected = useSocket();
 const tickers = ref([]);
-const errorMessage = ref('');
+const notification = ref(null);
 const tickerStore = useTickerStore();
 const loading = useLoadingStore()
 const isLoadingLocal=ref(false)
@@ -137,16 +137,19 @@ watch(loading.pendingTasks,()=>{
     if(localTaskID &&!loading.pendingTasks[localTaskID]){
         isLoadingLocal.value=false
         localTaskID=null;
+        showTempMessage(notification,"report completed. go to the s3 report section","notification",20000);
     }
 })
+
+
 
 const get_report = async () => {
     const tickers = tickerStore.currentTickers;
     const user_id = localStorage.getItem('user_id')
     if (tickers.length == 0 || !user_id) {
         console.error('missing tickers');
-        errorMessage.value = 'ticker or user_id is missing'
-        showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 2000);
+        
+        showTempMessage(notification, "ticker or user_id is missing","error");
     }
     else {
         allowedTickers.value = tickers.filter(e => !tickerHistory.value.has(e.toLowerCase()))
@@ -172,8 +175,8 @@ const get_report = async () => {
             }
         }
         else {
-            errorMessage.value = 'ticker previously analysed. refresh your browser if you need to analyse it again'
-            showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 3000);
+            
+            showTempMessage(notification, "ticker previously analysed. refresh your browser if you need to analyse it again","error");
         }
     }
 }
@@ -196,8 +199,8 @@ async function download_s3_report(bucket_name, file_name) {
             window.open(signed_url, '_blank')
         }
         else {
-            errorMessage.value = 'no signed url available. try again later'
-            showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 2000);
+            
+            showTempMessage(notification, "no signed url available. try again later","error");
             console.error('no signed url available. try again later')
         }
     }

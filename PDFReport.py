@@ -101,7 +101,7 @@ class PDFReport(FPDF):
       self.output(f"{BASE_DIR}/ai_reports/{self.task_id}.pdf")
       pdf_buffer.seek(0)
 
-      return pdf_buffer,today
+      
 
 if __name__=='__main__':
   task_id = "4c4aa198-1ef4-4816-9784-deab49c88ffa"

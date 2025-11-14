@@ -268,12 +268,11 @@ def report_generate_and_upload():
     else:
         try:
             pdf_report = PDFReport(task_id)
-            pdf_buffer,today=pdf_report.generate()
+            pdf_report.generate()
             s3_upload(bucket_name=bucket_name,file_name=file_name)
-            return send_file(pdf_buffer,as_attachment=True,
-                            download_name=f"{today}.pdf",
-                            mimetype='application/pdf',
-                            ),200
+            return jsonify({
+                "message":"success"
+            }),200
         except Exception as e:
             return jsonify({
                 "error":str(e)

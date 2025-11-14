@@ -14,9 +14,9 @@
         <div>
             <Navigation />
         </div>
-        <div class="error-message">
-            {{ errorMessage }}
-        </div>
+      <div v-if="notification" :class="['msg', notification.type]">
+        {{ notification.text}}
+    </div>
     </div>
 
 </template>
@@ -27,23 +27,24 @@ import Navigation from '@/components/Navigation.vue';
 import axios from 'axios';
 import { useTickerStore } from '@/stores/tickerStore';
 import { useLoadingStore } from '@/stores/loadingStore';
-import { showTempMessage } from '@/utils/timeout';
+import { showTempMessage } from '@/utils/showMessages';
 
 const rawMessage = ref('');
 const tickerHistory = ref(new Set())
 const tickerStore = useTickerStore();
 const loading = useLoadingStore();
 const allowedTickers = ref([]);
-const errorMessage = ref('');
+const notification = ref(null);
 const isLoadingLocal=ref(false);
 let localTaskID=null;
 const messages = ref([
     { text: 'I will conduct the 7power analysis for this ticker. If you want analysis for another, ticker just change the first ticker field in the main page. Hit send to start. ', isUser: false }
 ]);
 watch(loading.pendingTasks,()=>{
-    if(localTaskID&&!loading.pendingTasks[localTaskID]){
-        isLoadingLocal.value=false;
+    if(localTaskID &&!loading.pendingTasks[localTaskID]){
+        isLoadingLocal.value=false
         localTaskID=null;
+        showTempMessage(notification,"report completed. go to the s3 report section","notification",20000);
     }
 })
 const tickers =computed(()=> tickerStore.currentTickers)
@@ -56,8 +57,8 @@ async function get_seven_p_analysis() {
             text: 'ticker analysis or user_id empty',
             isUser: false
         })
-        errorMessage.value = 'ticker analysis is empty. there must be an analysis and 7powers analysis generated first'
-        showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 2000);
+        
+        showTempMessage(notification, "ticker analysis is empty. there must be an analysis and 7powers analysis generated first","error")
 
     }
     else {
@@ -81,8 +82,8 @@ async function get_seven_p_analysis() {
                 catch (error) {
                     console.error('Error sending query', error);
 
-                    errorMessage.value = 'Error sending query'
-                    showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 2000);
+                    
+                    showTempMessage(notification,"error sending query","error")
                 }
                 finally {
                     loading.stopLoading()
@@ -96,8 +97,8 @@ async function get_seven_p_analysis() {
                     isUser: false,
                     type: "error"
                 })
-            errorMessage.value = 'ticker previously analysed. refresh your browser if you need to analyse it again'
-            showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 3000);
+            
+            showTempMessage(notification,"ticker previously analysed. refresh your browser if you need to analyse it again","error")
             }
         }
         else {
@@ -107,8 +108,8 @@ async function get_seven_p_analysis() {
                     isUser: false,
                     type: "error"
                 })
-                errorMessage.value = 'ticker previously analysed. refresh your browser if you need to analyse it again'
-                showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 3000);
+                
+                showTempMessage(notification,"ticker previously analysed. refresh your browser if you need to analyse it again","error")
             }
             else {
                 messages.value.push({
@@ -116,8 +117,8 @@ async function get_seven_p_analysis() {
                     isUser: false,
                     type: "error"
                 })
-                errorMessage.value = 'ticker previously analysed. refresh your browser if you need to analyse it again'
-                showTempMessage(errorMessage, `(￣▽￣;)ゞ ${errorMessage.value}`, 3000);
+                
+                showTempMessage(notification,"ticker previously analysed. refresh your browser if you need to analyse it again","error")
             }
         }
     }

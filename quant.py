@@ -40,9 +40,9 @@ def quant(tickers:list)->str:
         if not needs_analysis:
             print(f"Analysis for ticker '{ticker}' is up to date.")
             try:
-                return json.loads(existing_report.replace("```json","").replace("```","").lower())
+                return json.dumps(existing_report)
             except Exception as e:
-                print("error returning a json object")
+                print("error returning a json object", e)
                 return existing_report
 
         submitted_reports={}
