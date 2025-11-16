@@ -1,14 +1,58 @@
 <template>
-    <div style="position:fixed;top:10px;right:40px;">
-        
-        <p v-if="isConnected" style="color:greenyellow;font-size: 14px;border: greenyellow double 1px;padding: 10px;">AI on</p>
-        <p  v-else style="color:red;font-size: 14px;border: red double 1px;padding: 10px;">AI off</p>
-    </div>
+    <div id="aiStatusBox" @click="toggleToolTip"
+    style="position:fixed;top:10px;right:40px; display: flex;align-items: center;gap: 10px;">
+        <p 
+        :style="{
+            color: isSocketReady ? 'greenyellow': 'red',
+            border: isSocketReady ? '1px double greenyellow' : '1px double red',
+            fontSize:'14px',
+            padding:'10px'
+            }">
+            {{ isSocketReady ? 'AI on':'AI off' }}
+         </p>
+            <span
+            v-if="notifStore.unreadCount()>0"
+            style="position: absolute;top: 8px;right: -8px;background: red;color: white;border-radius: 50%;padding: 3px 7px;font-size: 7px;border: 2px solid white;"
+            >
+            {{ notifStore.unreadCount() }}
+        </span>
+        <div class="tooltip" :class="{show :showTooltip}">
+        <div v-if="showTooltip&&notifStore.list.length>0"
+            style="position: absolute;
+            top: 40px;
+            right: 70px;
+            background: blue;
+            color: white;
+            padding: 10px;
+            border: solid 1px greenyellow;
+            border-radius: 4px;
+            width: 200px;
+            z-index: 999;"
+            
+            >
+            <p style="font-weight: bold;margin-bottom: 5px;">Reports Ready</p>
+            <div v-for="note in notifStore.list" :key="note.id"
+            style="margin-bottom: 8px;display: flex;justify-content: space-between;align-items: center;"
+            >
+            <a h:ref="note.url" 
+            class="notif-link"
+            @click="notifStore.markRead(note.task_id);download_s3_report(note.report_type, note.task_id)"
+            >
+                {{note.report_type}}-{{ note.tickers[0] }}
+            </a>
+            </div>
+        </div>
+
+        </div>
+        </div>
     <div>
+        
         <CompanyData @tickers-updated="updateTickers" />
         <ValueStockAnalysis :tickers="tickers" />
     </div>
+
     <div>
+        
         <StockFinancialCharts :tickers="tickers" />
     </div>
     <div>
@@ -18,7 +62,7 @@
         <div class="terminal">
             <span>eacsa> </span>financial report with ai:
                                     <button 
-                :disabled="isLoadingLocal" 
+                :disabled="(isLoadingLocal||!isSocketReady)" 
                 @click="get_report" 
                 class="buttons">
             {{isLoadingLocal ? 'generating report': 'GO'}}
@@ -89,9 +133,10 @@
         <CookieBanner />
         <LoginAlert />
     </div>
+    
 </template>
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch ,onBeforeMount} from 'vue';
 import IntrinsicValue from '@/views/IntrinsicValue.vue';
 import CompanyData from '@/views/CompanyData.vue';
 import StockFinancialCharts from '@/views/StockFinancialCharts.vue';
@@ -109,7 +154,10 @@ import axios from 'axios';
 import RedFlags from './RedFlags.vue';
 import { fetch_reports, ai_reports } from '@/utils/fetch_reports';
 import { useLoadingStore } from '@/stores/loadingStore';
-import { data } from 'jquery';
+import { useNotificationStore } from '@/stores/notificationStore';
+
+const showTooltip =ref(false);
+const notifStore=useNotificationStore();
 const allowedTickers = ref([]);
 const tickerHistory = ref(new Set());
 const isConnected = useSocket();
@@ -118,16 +166,27 @@ const notification = ref(null);
 const tickerStore = useTickerStore();
 const loading = useLoadingStore()
 const isLoadingLocal=ref(false)
+const isSocketReady=ref(false);
 let localTaskID=null;
 const updateTickers = (newTickers) => {
     tickerStore.updateTickers(newTickers)
     tickers.value = tickerStore.currentTickers
 }
 const collapsed = ref(true)
+
 const toggleCollapse = () => {
     collapsed.value = !collapsed.value;
 };
+let tooltipTimer=null;
 
+function toggleToolTip(){
+    
+       showTooltip.value=!showTooltip.value
+    
+}
+function hideToolTip(){
+    showTooltip.value=false
+}
 
 onMounted(async () => {
     ai_reports.value = await fetch_reports();
@@ -140,8 +199,20 @@ watch(loading.pendingTasks,()=>{
         showTempMessage(notification,"report completed. go to the s3 report section","notification",20000);
     }
 })
+watch(isConnected.isConnected,()=>{
+    isSocketReady.value=isConnected.socket.connected
 
+})
 
+function handleClickOutside(event){
+    const el=document.querySelector('#aiStatusBox')
+    if (el &&!el.contains(event.target)){
+        showTooltip.value=false
+    }
+
+}
+onMounted(()=>document.addEventListener('click',handleClickOutside));
+onBeforeMount(()=>document.addEventListener('click',handleClickOutside))
 
 const get_report = async () => {
     const tickers = tickerStore.currentTickers;

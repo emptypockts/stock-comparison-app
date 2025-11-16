@@ -5,7 +5,7 @@
         <span>eacsa> </span>seven powers report with ai:
             
                              <button 
-                :disabled="isLoadingLocal" 
+                :disabled="isLoadingLocal||!isSocketReady" 
                 @click="get_seven_p_analysis" 
                 class="buttons">
             {{isLoadingLocal ? 'generating report': 'GO'}}
@@ -28,6 +28,7 @@ import axios from 'axios';
 import { useTickerStore } from '@/stores/tickerStore';
 import { useLoadingStore } from '@/stores/loadingStore';
 import { showTempMessage } from '@/utils/showMessages';
+import { useSocket } from '@/composables/taskSocket';
 
 const rawMessage = ref('');
 const tickerHistory = ref(new Set())
@@ -36,6 +37,8 @@ const loading = useLoadingStore();
 const allowedTickers = ref([]);
 const notification = ref(null);
 const isLoadingLocal=ref(false);
+const isConnected = useSocket();
+const isSocketReady=ref(false);
 let localTaskID=null;
 const messages = ref([
     { text: 'I will conduct the 7power analysis for this ticker. If you want analysis for another, ticker just change the first ticker field in the main page. Hit send to start. ', isUser: false }
@@ -46,6 +49,10 @@ watch(loading.pendingTasks,()=>{
         localTaskID=null;
         showTempMessage(notification,"report completed. go to the s3 report section","notification",20000);
     }
+})
+watch(isConnected.isConnected,()=>{
+    isSocketReady.value=isConnected.socket.connected
+
 })
 const tickers =computed(()=> tickerStore.currentTickers)
 async function get_seven_p_analysis() {

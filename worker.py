@@ -71,7 +71,7 @@ def generate_ai_report(self,tickers,user_id,report_type):
             return result
 
     except Exception as e:
-        print(f"error with task execution {str(e)} for tickers {tickers}, task id {task_id}, data returned  {result}")
+        print(f"error with task execution {str(e)} for tickers {tickers}, task id {task_id}")
         notify_task_result("task_failed", {
             "user_id": user_id,
             "task_id": task_id,
@@ -91,8 +91,9 @@ def generate_ai_7powers(self,tickers,user_id,report_type):
     try:
         if not user_id:
             raise Ignore()
-        result= seven_powers(tickers)
         task_id=self.request.id
+        result= seven_powers(tickers)
+        
         now=datetime.now()
         if result:
             client = MongoClient(uri, server_api=ServerApi('1'))
@@ -121,7 +122,7 @@ def generate_ai_7powers(self,tickers,user_id,report_type):
 
             
     except Exception as e:
-        print(f"error with task execution {str(e)} for tickers {tickers}, task id {task_id}, data returned  {result}")
+        print(f"error with task execution {str(e)} for tickers {tickers}, task id {task_id}")
         notify_task_result("task_failed", {
             "user_id": user_id,
             "task_id": task_id,
@@ -141,8 +142,9 @@ def generate_ai_quant(self,tickers,user_id,report_type):
     try:
         if not user_id:
             raise Ignore()
-        result=quant(tickers)
         task_id=self.request.id
+        result=quant(tickers)
+        
         now=datetime.now()
         if result:
             client = MongoClient(uri, server_api=ServerApi('1'))
@@ -171,7 +173,7 @@ def generate_ai_quant(self,tickers,user_id,report_type):
 
     except Exception as e:
          
-        print(f"error with task execution {str(e)} for tickers {tickers}, task id {task_id}, data returned  {result}")
+        print(f"error with task execution {str(e)} for tickers {tickers}, task id {task_id}")
         notify_task_result("task_failed", {
             "user_id": user_id,
             "task_id": task_id,

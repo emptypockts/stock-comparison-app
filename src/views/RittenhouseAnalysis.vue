@@ -22,7 +22,7 @@
               Polarity: Measures the tone of the text. Values range from –1 (negative) to +1 (positive).
               Subjectivity: Measures how factual or opinion-based the text is.Values range from 0 (objective) to 1 (subjective).
         </p>
-          <div v-for="reportData in analysisReports" :key="reportData.ticker" style="display: flex;">
+          <div v-for="reportData in analysisReports" :key="reportData.ticker" style="display: flex;" class="table-container">
             <div v-for="report in reportData['reports']" :key="report.File" class="terminal"  style=" border: solid 1px blue;width: auto; padding: 10px;">
             <span>report type: {{ extractFileType(report['File']) }} </span>
             <br>polarity: {{ report['Sentiment Polarity'].toFixed(2) }}

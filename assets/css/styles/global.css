@@ -52,7 +52,7 @@ html {
 .buttons:hover {
   background: transparent;
   color: greenyellow;
-  cursor:pointer;
+  
 }
 button:disabled {
   opacity: 0.6;
@@ -84,7 +84,7 @@ button:disabled {
 }
 
 .table-container {
-  width: 80%;
+  width: 82%;
   max-width: 100%;
   overflow-x: auto;
   margin: 10px left;
@@ -232,7 +232,7 @@ span {
   transition: opacity 0.3s ease;
   font-size: 14px;
   color: greenyellow;
-  z-index: 2000;
+  z-index: 1000;
 
 }
 
@@ -384,4 +384,23 @@ label{
 .loading-throbber {
   text-align: center;
   color: white;
+}
+.notif-link{
+  color: greenyellow;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 14px;
+  opacity: 0.7;
+}
+.tooltip {
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.18s ease-out, transform 0.18s ease-out;
+  z-index: 9999;
+}
+
+.tooltip.show {
+  opacity: 9;
+  transform: translateY(0px);
+  z-index: 8888;
 }

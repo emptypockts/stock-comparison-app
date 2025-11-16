@@ -4,39 +4,48 @@ import { generatePdfReport } from "@/utils/pdfOps";
 import { fetch_reports } from "@/utils/fetch_reports";
 import { useLoadingStore } from "@/stores/loadingStore";
 import { showTempMessage } from "@/utils/showMessages";
+import { useNotificationStore } from "@/stores/notificationStore";
 
-const socket = io(import.meta.env.VITE_WS_SERVER, {
-    secure: true
-});
+const socket = io(import.meta.env.VITE_WS_SERVER, {secure: true});
 
 let registered = false;
-
 const isConnected = ref(false);
 const taskData = ref(null);
 
 
-export function useSocket(onTaskDone) {
+export function useSocket() {
+    const notifStore=useNotificationStore();
+    const loading = useLoadingStore();
     if (!registered) {
         registered = true;
 
         socket.on('connect', () => {
+            
+            const user_id=localStorage.getItem('user_id')
+            socket.emit("register_user",{user_id})
             isConnected.value = true;
+            console.log(`socket has been connected with id: ${socket.id} and userid: ${user_id}`)
+            
         })
         socket.on('disconnect', () => {
             isConnected.value = false;
-            console.log('my guy, you are no longer on')
+            console.log('socket has been disconnected')
         })
         socket.on('task_done', (data) => {
             const user_id = localStorage.getItem('user_id')
             taskData.value = data
-            if (data.user_id == user_id) {
+            if (data.user_id === user_id) {
                 try {
                     generatePdfReport(taskData.value.task_id, taskData.value.tickers, taskData.value.report_type)
                     fetch_reports();
+                    notifStore.add({
+                        task_id:taskData.value.task_id,
+                        tickers:taskData.value.tickers,
+                        report_type:taskData.value.report_type
+                    })
                 }
                 catch (err) {
                     console.error('error trying to generate report', err)
-                    const loading = useLoadingStore()
                     loading.stopLoading()
                 }
             }
@@ -45,6 +54,8 @@ export function useSocket(onTaskDone) {
             loading.stopLoading()
             showTempMessage(Notification,"error executing ai task","error")
         })
+
+
     }
     return { socket, isConnected, taskData }
 }

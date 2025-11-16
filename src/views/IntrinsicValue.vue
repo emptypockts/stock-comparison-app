@@ -7,7 +7,7 @@
       </button>
 
     </div>
-    <div v-for="(ticker, index) in tickers" :key="index">
+    <div v-for="(ticker, index) in tickers" :key="index" class="table-container">
       <div class="input-row">
         <div style="border: blue 1px solid; gap: 2px 4px;padding: 8px; margin-top: 10px;">
           <label for=" growthRate">Growth Rate (%) default 5%</label>

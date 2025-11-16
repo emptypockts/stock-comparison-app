@@ -20,8 +20,8 @@
       </button>
       </div>
       
-    <div v-if="financialData.length" >
-        <table class="table-container">
+    <div v-if="financialData.length" class="table-container">
+        <table >
           <thead>
             <tr>
               <th>Date</th>

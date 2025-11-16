@@ -2,9 +2,8 @@
     <div v-if="tickers.length>0">
         <div class="terminal">
             <span>eacsa> </span>red flag report with ai:
-        
                                      <button 
-                :disabled="isLoadingLocal" 
+                :disabled="isLoadingLocal||downloadingSecFiles||!isSocketReady" 
                 @click="red_flag_analysis" 
                 class="buttons">
             {{isLoadingLocal ? 'generating report': 'GO'}}
@@ -44,25 +43,39 @@ import axios from 'axios';
 import { useTickerStore } from '@/stores/tickerStore';
 import { useLoadingStore } from '@/stores/loadingStore';
 import { showTempMessage } from '@/utils/showMessages';
+import { useSocket } from '@/composables/taskSocket';
 const isLoadingLocal = ref(false);
 let localTaskID=null;
 const rawMessage = ref('');
 const tickerHistory = ref(new Set())
 const tickerStore = useTickerStore();
 const loading = useLoadingStore();
+const isConnected = useSocket();
 const allowedTickers = ref([]);
 const final_report=ref('');
 const notification = ref(null);
+const downloadingSecFiles=ref(false);
+const isSocketReady=ref(false);
 const messages = ref([
     { text: 'I will conduct the report analysis and identify red flags. If you want analysis for another, ticker just change the ticker in the main page and pres analyze to start. ', isUser: false }
 ]);
 
-watch(loading.pendingTasks,()=>{
+watch(loading,()=>{
     if(localTaskID &&!loading.pendingTasks[localTaskID]){
         isLoadingLocal.value=false
         localTaskID=null;
         showTempMessage(notification,"report completed. go to the s3 report section","notification",20000);
     }
+})
+watch (loading,()=>{
+    if(tickers.value.length>0){
+    downloadingSecFiles.value=loading.isLoading
+    }
+})
+
+watch(isConnected.isConnected,()=>{
+    isSocketReady.value=isConnected.socket.connected
+
 })
 
 const tickers= computed(()=> tickerStore.currentTickers);
