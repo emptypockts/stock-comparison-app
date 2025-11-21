@@ -666,3 +666,134 @@ Additional rules:
 - Optionally, you may correct common formatting issues only if it's clear and safe.
 - Be concise, structured, and strictly follow the output format.
 """
+
+rittenhouse_individual_report_instructions = """
+You are a Quantitative Corporate Disclosure Intelligence Agent.
+Your role is to convert a single SEC filing summary into structured, machine-readable sentiment, risk, tone, and signal data.
+
+You will receive a summary containing a filing type (10-K, 10-Q, 8-K, earnings transcript, DEF 14A, etc.) text. 
+
+Your output must detect financial tone, commitment strength, risk posture, optimism level, and linguistic behaviors associated with credibility, pressure, or uncertainty.
+
+---
+
+### ANALYTICAL OBJECTIVES
+
+Extract quantifiable assessments from the filing using these categories:
+
+1. **Sentiment Scoring (0-100)**
+   - 0 = Highly negative, defensive, uncertain
+   - 100 = Highly positive, confident, forward-progress tone
+
+2. **Confidence / Assertiveness Score (0-100)**
+   - Measures certainty, strength of commitments, decisive modality (e.g., "will" vs "may" vs "intend to").
+
+3. **Risk Posture Score (0-100)**  
+   - Higher score = more stability and control.
+   - Lower score = signals caution, volatility, or defensive positioning.
+
+4. **Evidence-Backed Claims Ratio (0-100)**  
+   - Evaluate if bullish statements are justified with measurable results or are unsupported buzzwords.
+
+5. **Forward-Looking Density (0-100)**  
+   - Measures frequency of vision, roadmap, long-horizon claims.
+
+6. **Keyword Intelligence Flags**
+   Detect and return keyword categories if present:
+   - restructuring
+   - uncertainty
+   - competitive threat
+   - delays / execution issues
+   - capital raise or dilution signals
+   - regulatory/legal vulnerability
+   - over-repetition of optimistic phrases
+   - evasive generalities / vague strategy language
+
+7. **Extractive Signals**
+   Pull up to **5 raw text excerpts** (short phrases) that strongly influenced the scoring.
+
+---
+
+### OUTPUT FORMAT (STRICT)
+
+Return ONLY a valid JSON object with the following schema:
+
+{
+  "filing_type": "string",
+  "sentiment_score": number,
+  "confidence_score": number,
+  "risk_posture_score": number,
+  "evidence_support_score": number,
+  "forward_looking_score": number,
+  "keyword_flags": ["string", ...],
+  "notable_phrases": ["string", ...],
+  "high_level_assessment": "short one-paragraph summary with no formatting"
+}
+
+Rules:
+- Do NOT add commentary outside the JSON.
+- Do NOT invent facts—base all results on tone patterns, not presumed company performance.
+- If a field has no signal, return `[]` or `null` as appropriate.
+
+Only return the JSON response. No reasoning steps or explanation.
+"""
+
+
+rittenhouse_synthesis_instructions = """
+You are a forensic financial intelligence analyst specializing in corporate tone integrity and sentiment drift.
+You analyze SEC filings not only for content but for intent, tone, omissions, and linguistic patterns that relate to transparency, leadership integrity, and strategic clarity.
+
+You will receive multiple SEC filing summaries from the same company (10-K, 10-Q, 8-K, earnings transcript, DEF 14A, etc.). 
+Each includes `summary`, `key risks`, and `diagnostic commentary`.
+
+---
+
+### OBJECTIVE
+Your task is to synthesize the disclosures and produce a structured Rittenhouse-style sentiment intelligence output that:
+1. Identifies tone alignment or conflict across filings.
+2. Detects linguistic shifts such as increasing optimism, defensiveness, vagueness, or hesitation.
+3. Highlights accountability language vs. evasive framing.
+4. Generates an actionable investor-facing briefing.
+
+---
+
+### ANALYTICS REQUIRED
+For the synthesis, evaluate the following dimensions:
+
+- **Transparency Score (0-100)** → clarity vs buzzwords
+- **Accountability Score (0-100)** → ownership of failures vs externalizing blame
+- **Strategic Clarity Score (0-100)** → specificity, grounded plans vs abstractions
+- **Tone Stability Rating** → Stable | Improving | Deteriorating | Volatile
+- **Sentiment Polarity** → Positive / Neutral / Negative (short justification)
+- **Notable Language Shifts** → new patterns vs prior filings
+
+Extract up to **5 short “Flagged Statements”** that are:
+- unusually optimistic,
+- evasive,
+- contradictory,
+- repeated assertive claims without evidence.
+
+(If none exist, return `"none"`.)
+
+---
+
+###OUTPUT FORMAT STRICT
+The output MUST be a **pure JSON array** (no wrapper object, no "report" field, etc.), where each element matches **exactly one** of the following formats:
+
+    1. {{ "type": "title", "content": "string" }}
+    2. {{ "type": "paragraph", "content": "string" }}
+    3. {{ "type": "bullets", "content": ["bullet1", "bullet2", ..., "bulletn"] }}
+
+    Do NOT include any outer object like {{ "report": [...] }}. Only return the array.
+
+Ensure the JSON is valid and ready for parsing.
+
+### Style & Tone
+- Use concise, analytical, institutional-investor language.
+- Include visual cues: emojis for sections, bold text for key numbers, short paragraphs.
+- Avoid restating facts verbatim; focus on synthesis and relationships between filings.
+
+DO NOT include chain-of-thought or reasoning steps. Output only the final JSON array.
+"""
+test_lunr={'lunr_DEF 14A_2025-04-22_complete_submission': {'filing_type': 'def 14a', 'sentiment_score': 75, 'confidence_score': 85, 'risk_posture_score': 70, 'evidence_support_score': 60, 'forward_looking_score': 70, 'keyword_flags': [], 'notable_phrases': ['we encourage you to attend the annual meeting', 'your board recommends a vote for the election of each director nominee.', 'we believe we have a leading position', 'we’re deliberately creating onsite workspaces that are specific to our needs, allow for growth, and foster collaboration and innovation', 'our board is chaired by dr. kamal ghaffarian'], 'high_level_assessment': "this proxy statement for intuitive machines' 2025 annual meeting projects a positive and confident outlook. the language expresses encouragement for stockholder participation, strong recommendations for voting, and highlights the company's leading position and commitment to growth and innovation. while related party transactions are disclosed, the overall tone suggests stability and controlled expansion."}, 'Lunr_8-K_2025-11-04_complete_submission': {'filing_type': '8-k', 'sentiment_score': 70, 'confidence_score': 80, 'risk_posture_score': 65, 'evidence_support_score': 50, 'forward_looking_score': 60, 'keyword_flags': [], 'notable_phrases': ['the company’s board of directors has unanimously approved the purchase agreement.', 'purchaser will purchase from seller 100% of the issued and outstanding membership interests of lanteris', 'the stock consideration will be issued at $12.34 per share of common stock', 'purchase agreement contemplates that, at the closing of the acquisition, seller and lanteris will enter into a transitional services agreement', 'completion of the acquisition is subject to certain closing conditions'], 'high_level_assessment': "this 8-k filing announces intuitive machines' entry into a membership interest purchase agreement to acquire lanteris. the tone is generally positive and confident, driven by the unanimous board approval and defined terms of the acquisition. however, the presence of closing conditions and termination rights introduces a moderate degree of risk, while the evidence supporting the deal's long-term value is not explicitly detailed."}, 'lunr_10-K_2025-03-25_complete_submission': {'filing_type': '10-k', 'sentiment_score': 60, 'confidence_score': 70, 'risk_posture_score': 65, 'evidence_support_score': 50, 'forward_looking_score': 75, 'keyword_flags': ['competitive threat', 'capital raise or dilution signals', 'regulatory/legal vulnerability', 'uncertainty'], 'notable_phrases': ['driving critical early conversations', 'sustainable return to the lunar surface', 'fundamentally disrupting lunar access economics', 'robust and cost-effective lunar communication infrastructure', 'pioneering lunar access'], 'high_level_assessment': "the filing conveys a moderately positive outlook, emphasizing the company's leading position in lunar access and its efforts to establish a sustainable cislunar economy. while highlighting achievements like the successful lunar landing, it also acknowledges risks related to competition, regulations, and potential disruptions. forward-looking statements are frequent, focusing on expansion of services and technological innovation, though evidence backing these claims is mixed, relying more on awarded contracts than demonstrable financial results. the presence of keyword flags suggests awareness of potential challenges ahead."}, 'Lunr_10-K_2025-03-25_complete_submission': {'filing_type': '10-k', 'sentiment_score': 60, 'confidence_score': 70, 'risk_posture_score': 55, 'evidence_support_score': 40, 'forward_looking_score': 65, 'keyword_flags': ['uncertainty', 'competitive threat', 'delays / execution issues', 'capital raise or dilution signals', 'regulatory/legal vulnerability'], 'notable_phrases': ['limited operating history', 'face increasing industry consolidation', 'may experience delayed launches', 'failure of landers to conduct all mission milestones', 'may need additional capital to fund our operations'], 'high_level_assessment': 'this 10-k filing presents a moderately positive outlook tempered by several risks. while highlighting successful milestones like the lunar landing, the report acknowledges potential challenges including a limited operating history, increasing competition, potential launch delays, and the need for additional capital. the sentiment is cautiously optimistic, reflecting both achievements and the inherent uncertainties of the space technology industry.'}, 'Lunr_10-Q_2025-08-07_complete_submission': {'filing_type': '10-q', 'sentiment_score': 45, 'confidence_score': 60, 'risk_posture_score': 55, 'evidence_support_score': 40, 'forward_looking_score': 70, 'keyword_flags': ['restructuring', 'competitive threat', 'delays / execution issues', 'capital raise or dilution signals', 'regulatory/legal vulnerability', 'uncertainty'], 'notable_phrases': ['our reliance upon the efforts of our key personnel and board of directors to be successful', 'our limited operating history', 'unsatisfactory safety performance of our spaceflight systems or security incidents at our facilities', 'failure of our products to operate in the expected manner or defects in our sub-systems', 'our failure to comply with various laws and regulations relating to various aspects of our business'], 'high_level_assessment': "this 10-q filing presents a mixed outlook. while there's a focus on forward-looking initiatives and growth in core service areas, several risk factors and uncertainties are highlighted, including reliance on key personnel, limited operating history, and regulatory compliance. the presence of loss contracts and ongoing legal proceedings further temper the otherwise optimistic tone, resulting in a neutral overall assessment."}, 'lunr_10-Q_2025-11-13_complete_submission': {'filing_type': '10-q', 'sentiment_score': 40, 'confidence_score': 50, 'risk_posture_score': 55, 'evidence_support_score': 40, 'forward_looking_score': 60, 'keyword_flags': ['competitive threat', 'delays / execution issues', 'capital raise or dilution signals', 'regulatory/legal vulnerability', 'uncertainty'], 'notable_phrases': ['our limited operating history', 'our failure to manage our growth effectively and failure to win new contracts', 'customer concentration', 'our history of losses and failure to achieve profitability in the future', 'any delayed launches'], 'high_level_assessment': "this 10-q filing presents a mixed outlook. while there's discussion of strategic importance and potential opportunities related to lunar missions, the document also acknowledges significant risks, including a limited operating history, customer concentration, potential launch delays, and a history of losses. the presence of legal proceedings and discussion of government budget uncertainties add to a cautiously optimistic but realistically tempered view."}, 'lunr_8-K_2025-11-04_complete_submission': {'filing_type': '8-k', 'sentiment_score': 70, 'confidence_score': 80, 'risk_posture_score': 65, 'evidence_support_score': 50, 'forward_looking_score': 60, 'keyword_flags': [], 'notable_phrases': ['company’s board of directors has unanimously approved the purchase agreement', 'pursuant to the purchase agreement', 'completion of the acquisition', 'stock consideration', 'customary representations, warranties and covenants'], 'high_level_assessment': "this 8-k filing announces intuitive machines' entry into a membership interest purchase agreement to acquire lanteris space holdings. the tone is generally positive and confident, evidenced by the board's unanimous approval and the detailed terms outlined in the agreement. however, the presence of closing conditions, termination rights, and lock-up periods introduces a degree of risk and uncertainty. there's a balance between assertive statements about the acquisition and cautious language regarding potential obstacles."}, 'Lunr_DEF 14A_2025-04-22_complete_submission': {'filing_type': 'def 14a', 'sentiment_score': 75, 'confidence_score': 85, 'risk_posture_score': 70, 'evidence_support_score': 60, 'forward_looking_score': 75, 'keyword_flags': [], 'notable_phrases': ['cordially invited to attend our 2025 annual meeting', 'your board recommends a vote for the election of each director nominee.', 'we encourage you to attend the annual meeting', 'leading position in the development of technology platforms', 'we welcome new perspectives and technology expertise as we grow'], 'high_level_assessment': "this proxy statement conveys a generally positive outlook, emphasizing achievements and forward-looking strategies. while maintaining a formal tone fitting for a regulatory filing, there's a clear effort to project confidence in the company's direction and governance. the language used suggests a proactive approach to growth and innovation, tempered by standard risk management and compliance considerations."}}
+test_lunr_final=[{'type': 'title', 'content': '🌙 intuitive machines: sentiment & tone analysis'}, {'type': 'paragraph', 'content': 'this briefing synthesizes sec filings to assess sentiment drift, leadership integrity, and strategic clarity. recent filings indicate a **deteriorating** tone, trending from optimistic to cautiously optimistic, with increasing emphasis on risks and uncertainties.'}, {'type': 'bullets', 'content': ['**transparency score:** decreased from **75** (def 14a) to **40** (10-q).', '**accountability score:** remains consistently low, reflecting limited ownership of challenges.', '**strategic clarity score:** fluctuates, with forward-looking statements often lacking robust evidence.', '**tone stability rating:** deteriorating', '**sentiment polarity:** shift from positive (def 14a) to neutral (10-q), driven by increasing risk disclosures.']}, {'type': 'title', 'content': '🚩 key observations'}, {'type': 'paragraph', 'content': 'initial optimism surrounding the annual meeting (def 14a) and the lanteris acquisition (8-k) has been tempered by subsequent 10-q filings. these later filings highlight concerns about limited operating history, customer concentration, potential launch delays, and a history of losses. the shift suggests a recalibration of expectations.'}, {'type': 'title', 'content': '🗣️ notable language shifts'}, {'type': 'bullets', 'content': ['increased frequency of risk disclosures related to delays, competition, and capital needs.', "shift from assertive claims of 'leading position' to acknowledgements of 'limited operating history'.", 'greater emphasis on regulatory compliance and potential legal challenges.', "more frequent mentions of 'uncertainty' impacting forward-looking statements."]}, {'type': 'title', 'content': '⚠️ flagged statements'}, {'type': 'bullets', 'content': ['"we believe we have a leading position" (def 14a) - repeated assertion without concrete financial validation.', '"driving critical early conversations" (10-k) - vague and unsubstantiated claim.', '"fundamentally disrupting lunar access economics" (10-k) - overly optimistic given financial performance.', '"our reliance upon the efforts of our key personnel and board of directors to be successful" (10-q) - highlights key-person risk without mitigation strategies.', '"failure of our products to operate in the expected manner or defects in our sub-systems" (10-q) - direct admission of potential product failure, raising concerns about quality control.']}]

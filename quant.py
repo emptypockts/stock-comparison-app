@@ -4,6 +4,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage,SystemMessage
 import json
+from datetime import datetime
 from prompts import quant_instructions,synthesis_prompt,json_validator_instructions
 from outils import (
     clean_edgar_text, 
@@ -15,14 +16,14 @@ load_dotenv()
 
 import os
 GEMINI_API=os.getenv('GEMINI_API')
-directory=os.getenv('DIRECTORY')
+DIRECTORY=os.getenv('DIRECTORY')
 
 
 llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash",api_key=GEMINI_API,max_retries=1)
 # llm=ChatOllama(model="llama3.2:latest")
 
     
-def quant(tickers:list)->str:
+def quant(year,tickers:list)->str:
     """
     quant analyzes a ticker 10K, 10Q, 8K, DEF 14A reports and identify red flags and opportunities
     args:
@@ -30,6 +31,8 @@ def quant(tickers:list)->str:
     returns:
         str report
     """
+    
+    directory= os.path.join(DIRECTORY,year)
     tickers=[t.capitalize()for t in tickers]
     for ticker in tickers:
         ticker_dir=os.path.join(directory,ticker)
@@ -81,6 +84,6 @@ def quant(tickers:list)->str:
 
 
 if __name__=="__main__":
-
-    print(quant(["aapl"]))
+    year= str(datetime.now().year)
+    print(quant(year,["aapl"]))
 

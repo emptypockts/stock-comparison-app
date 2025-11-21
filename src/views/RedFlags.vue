@@ -89,7 +89,7 @@ async function red_flag_analysis() {
             isUser: false
         })
         
-        showTempMessage(notification, "ticker analysis is empty. there must be an analysis and 7powers analysis generated first","error")
+        showTempMessage(notification, "ticker analysis is empty.","error")
 
     }
     else {

@@ -77,7 +77,7 @@ def s3_read_file(bucket_name,file_name):
         print(f"error trying to instanciate client: str{e}")
 
 def s3_presigned_url(client_method,method_params,expiration_time):
-    
+    print(method_params)
     try:
         s3=boto3.client("s3", region_name="us-east-2",config=botocore.client.Config(signature_version="s3v4"))
     except ClientError as e:

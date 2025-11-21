@@ -71,6 +71,6 @@ for await (const page of paginator){
 
 
 const bucket_id= process.env.S3_BUCKET
-const task_id="7b724346-7823-4116-93f2-53c4bd8cd913"
+const task_id="d0d5b083-a60b-4e13-82f0-f9100686215"
 
 const response = await iterate_pages(bucket_id);

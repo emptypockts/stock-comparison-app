@@ -138,12 +138,63 @@ def generate_ai_7powers(self,tickers,user_id,report_type):
        
 @celery.task(bind=True)
 def generate_ai_quant(self,tickers,user_id,report_type):
+    current_year=(datetime.now().year)
     from quant import quant
     try:
         if not user_id:
             raise Ignore()
         task_id=self.request.id
-        result=quant(tickers)
+        result=quant(str(current_year),tickers)
+        
+        now=datetime.now()
+        if result:
+            client = MongoClient(uri, server_api=ServerApi('1'))
+            db = client["test"]
+            ai_report_collections = db["aiTasks"]
+            ai_report_collections.insert_one({
+                "user_id":user_id,
+                "task_id":task_id,
+                "assistant":result,
+                "report_type":report_type,
+                "tickers":tickers,
+                "timestamp":datetime.now(timezone.utc)
+            })
+        
+            print("notifying server of completion")
+            notify_task_result('task_done',{
+            'user_id':user_id,
+            'task_id':task_id,
+            'tickers':tickers,
+            'report_type':report_type,
+            "tickers":tickers,
+            "timestamp":datetime.now().isoformat()+"Z"
+            })
+            
+            return result
+
+    except Exception as e:
+         
+        print(f"error with task execution {str(e)} for tickers {tickers}, task id {task_id}")
+        notify_task_result("task_failed", {
+            "user_id": user_id,
+            "task_id": task_id,
+            "tickers": tickers,
+            "report_type": report_type,
+            "timestamp": datetime.now().isoformat() + "Z",
+            "error": str(e)
+        })
+        
+        raise self.retry(exc=e,countdown=5,max_retries=1)
+    
+@celery.task(bind=True)
+def generate_ai_quant_rittenhouse(self,tickers,user_id,report_type):
+    current_year=(datetime.now().year)
+    from rittenhouse import quant_rittenhouse
+    try:
+        if not user_id:
+            raise Ignore()
+        task_id=self.request.id
+        result=quant_rittenhouse(str(current_year),tickers)
         
         now=datetime.now()
         if result:

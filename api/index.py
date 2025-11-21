@@ -6,7 +6,7 @@ from flask_cors import CORS
 from flask_session import Session
 import pandas as pd
 import secDBFetch
-import rittenhouse
+from rittenhouse import quant_rittenhouse
 import fetch5yData
 import stockPlotData
 import companyData
@@ -29,7 +29,7 @@ from pymongo.server_api import ServerApi
 from stockPlotDataQtr import fetch_4qtr_data
 from PDFReport import PDFReport
 import requests
-from worker import generate_ai_report,celery, generate_ai_7powers,generate_ai_quant
+from worker import generate_ai_report,celery, generate_ai_7powers,generate_ai_quant,generate_ai_quant_rittenhouse
 from s3_bucket_ops import s3_upload,s3_presigned_url
 from quant import quant
 load_dotenv()
@@ -45,7 +45,7 @@ app = Flask(__name__)
 app.config.from_object(app_constants)
 CORS(app)
 Session(app)
-DOWNLOAD_DIR = 'sec_filings'
+DOWNLOAD_DIR = os.getenv('DIRECTORY')
 
 
 @app.route('/api/economy_index', methods=['GET'])
@@ -107,27 +107,26 @@ def fetch_5y_financial_data():
     result = combined_data.to_dict(orient='records')
     return jsonify(result),200
 #Rittenhouse Analysis API
-@app.route('/api/fetch_sec_reports', methods=['GET'])
-def fetch_sec_reports():
-    tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
-    if not tickers:
-        return jsonify({'error': 'No tickers provided'}), 400
-    for ticker in tickers:
-        try:
-            form_types = request.args.getlist('form_types') or ['10-K', '10-Q', '8-K', 'DEF 14A']
-            # Fetch the SEC filings using the secDBFetch module
-            secDBFetch.get_sec_filings(ticker.capitalize(), form_types)
-            return jsonify({'message': 'SEC filings fetched successfully'}), 200
-        except Exception as e:
-            return jsonify({'error check the secDBFetch flow': str(e)}), 500
-# analyse text from 10-K 8-K 6-K and DEF reports for rittenhouse analysis
-@app.route('/api/analyze_rittenhouse', methods=['GET'])
+@app.route('/api/v1/analyze_rittenhouse', methods=['POST'])
 def analyze_rittenhouse():
-    tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
-    if not tickers:
-        return jsonify({'error': 'No tickers provided'}), 400
-    data = {ticker: rittenhouse.analyze_ticker(DOWNLOAD_DIR,ticker) for ticker in tickers} 
-    return jsonify({"reports": data}),200
+    data=request.json
+    if 'user_id' not in data or 'tickers' not in data or 'report_type' not in data:
+        return jsonify({
+            "error":"missing payload"
+        }),400
+    else:
+        try:
+            tickers =data.get('tickers','')
+            user_id=data.get('user_id','')
+            report_type=data.get('report_type','')
+            task=generate_ai_quant_rittenhouse.delay(tickers,user_id,report_type)
+            return jsonify({
+            'task_id':task.id,
+            'status':'processing',
+            'report_type':report_type
+            }),202
+        except Exception as e:
+                return jsonify({'error':str(e)}),400
 # calculate intrinsic values
 @app.route('/api/intrinsic_value', methods=['GET'])
 def analyze_intrinsic_value():

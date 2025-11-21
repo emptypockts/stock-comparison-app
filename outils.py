@@ -37,7 +37,7 @@ def clean_edgar_text(content: str) -> str:
 
     return text.strip()
 
-def is_new_analysis_needed(ticker_dir,extension:Literal[".json",".quant"]):
+def is_new_analysis_needed(ticker_dir,extension:Literal[".json",".quant",".rtn"]):
     three_months_ago = datetime.now() - timedelta(days=90)
     most_recent_report = None
     for file_name in os.listdir(ticker_dir):
@@ -53,14 +53,14 @@ def is_new_analysis_needed(ticker_dir,extension:Literal[".json",".quant"]):
                     return False, most_recent_report
     return True, None
 
-def analyze_ticker(directory, ticker,extension:Literal[".json",".quant"]):
+def analyze_ticker(directory, ticker,extension:Literal[".json",".quant",".rtn"]):
     reports = []
     ticker_dir = os.path.join(directory, ticker.capitalize())
     
     if not os.path.exists(ticker_dir):
         print(f"Directory for ticker '{ticker}' not found. Creating folder...")
         os.makedirs(ticker_dir)
-        get_sec_filings(ticker=ticker, form_types=form_types)
+        get_sec_filings(directory=directory,ticker=ticker, form_types=form_types)
     
     # Check if any .txt files are older than 3 months and delete them
     three_months_ago = datetime.now() - timedelta(days=90)
@@ -79,13 +79,21 @@ def analyze_ticker(directory, ticker,extension:Literal[".json",".quant"]):
     # Fetch new data if no recent .txt files are left
     if not txt_files_exist or not os.listdir(ticker_dir):
         print(f"No recent files for '{ticker}' found. Fetching data...")
-        get_sec_filings(ticker=ticker, form_types=form_types)
+        get_sec_filings(directory=directory,ticker=ticker, form_types=form_types)
     
     needs_analysis, existing_report = is_new_analysis_needed(ticker_dir,extension)
 
     return needs_analysis,existing_report
 
-def save_analysis_report(ticker_dir, ticker, report,extension:Literal[".quant",".json"]):
+def save_analysis_report(ticker_dir:str, ticker:str, report:str,extension: Literal[".quant",".json",".rtn"]):
+    """
+    this function save the report in the server
+    args:
+        ticker_dir: ticker directory
+        ticker: the ticker name
+        report: the report to be saved
+        extension: the extension to use, .quant for red flag ai report, .json for other ai reports and .rittenhouse for rittenhouse sentiment report
+    """
     today = datetime.today().strftime('%Y-%m-%d')
     report_file = os.path.join(ticker_dir, f"{ticker.capitalize()}_analysis_{today}{extension}")
     with open(report_file, 'w', encoding='utf-8') as f:

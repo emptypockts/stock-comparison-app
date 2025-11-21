@@ -6,30 +6,29 @@ from pymongo.server_api import ServerApi
 from pymongo import MongoClient
 from pymongo.collection import Collection,Cursor
 from dotenv import load_dotenv
+from datetime import datetime
 load_dotenv()
 uri = os.getenv('MONGODB_URI')
 client = MongoClient(uri, server_api=ServerApi('1'))
 db=client['test']
 cik_collection=db['tickerCIK']
-
-# Base directory where all SEC filings will be stored
-BASE_DIR = 'sec_filings'
+DIRECTORY = os.getenv('DIRECTORY')
 
 # Ensure the base directory exists
-if not os.path.exists(BASE_DIR):
-    os.makedirs(BASE_DIR)
+
 
 # Function to fetch SEC filings and save them in the appropriate directory structure
-def get_sec_filings(ticker, form_types):
+def get_sec_filings(directory:str,ticker, form_types)->dict:
     base_url = "https://www.sec.gov"
     headers = {
         'User-Agent': 'jjmr86@live.com.mx',
         'Accept-Encoding': 'gzip, deflate',
         'host': 'www.sec.gov'
     }
+
     CIK= fetch_cik(ticker,collection=cik_collection)
     # Directory for this ticker's filings
-    ticker_dir = os.path.join(BASE_DIR, ticker.capitalize())
+    ticker_dir = os.path.join(directory, ticker.capitalize())
 
     # Ensure the ticker directory exists
     if not os.path.exists(ticker_dir):
@@ -101,5 +100,6 @@ if __name__ == "__main__":
     ticker = 'lunr'  # Example ticker
     form_types = ['10-K', '10-Q', '8-K', 'DEF 14A','20-F','6-K']  # Forms to fetch
     # form_types = ['10-K', '10-Q']  # Forms to fetch
-    response= get_sec_filings(ticker, form_types)
+    year =datetime.now().year
+    response= get_sec_filings(f"{DIRECTORY}/{year}",ticker, form_types)
     print(response)

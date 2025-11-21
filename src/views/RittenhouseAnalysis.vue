@@ -1,199 +1,164 @@
 <template>
-  <div v-if="tickers.length > 0">
-    <div class="terminal">
-      <span>eacsa></span> analyze sentiment:
-      
-
-                     <button 
-                :disabled="loading.isLoading" 
-                @click="fetchAnalysisReports" 
+    <div v-if="tickers.length>0">
+        <div class="terminal">
+            <span>eacsa> </span>trust and sentiment analysis with ai:
+                                     <button 
+                :disabled="isLoadingLocal||downloadingSecFiles||!isSocketReady" 
+                @click="quant_rittenhouse" 
                 class="buttons">
-            {{loading['isLoading'] ? 'generating report': 'GO'}}
+            {{isLoadingLocal ? 'generating report': 'GO'}}
             </button>
-    </div>
-
-
-    <div v-if="analysisReports.length && !localIsProcessing">
-      <button @click="toggleCollapse" class="buttons">
-        ⟬⟬ expand/collapse ⟭⟭
-      </button>
-      <div v-if="compact" style="display: flex;flex-flow: row wrap; gap: 0.5rem;">
-        <p>
-              Polarity: Measures the tone of the text. Values range from –1 (negative) to +1 (positive).
-              Subjectivity: Measures how factual or opinion-based the text is.Values range from 0 (objective) to 1 (subjective).
-        </p>
-          <div v-for="reportData in analysisReports" :key="reportData.ticker" style="display: flex;" class="table-container">
-            <div v-for="report in reportData['reports']" :key="report.File" class="terminal"  style=" border: solid 1px blue;width: auto; padding: 10px;">
-            <span>report type: {{ extractFileType(report['File']) }} </span>
-            <br>polarity: {{ report['Sentiment Polarity'].toFixed(2) }}
-            subjectivity: {{ report['Sentiment Subjectivity'].toFixed(2) }}
-            </div>
-          </div>
         </div>
-      </div>
+        <div>
+            <Navigation />
+        </div>
+        <div class="console-report" v-if="final_report.length">
+            
+            <template v-for="(item,index) in final_report" :key="index">
+                <div v-if="item.type==='title'" class="console-title">
+                    {{ item.content }}
+                </div>
+                <div v-else-if="item.type==='paragraph'" class="console-paragraph">
+                    {{ item.content }}
+                </div>
+                <ul v-else-if="item.type==='bullets'" class="console-bullets">
+                    <li v-for="(b,i) in item.content" :key="i">
+                        {{ b }}
+                    </li>
+                </ul>
+
+            </template>
+        </div>
+      <div v-if="notification" :class="['msg', notification.type]">
+        {{ notification.text}}
     </div>
-  
+    </div>
+
 </template>
 
-<script>
+<script setup>
+import { ref, computed,watch } from 'vue';
+import Navigation from '@/components/Navigation.vue';
 import axios from 'axios';
-import { watch, ref } from 'vue';
+import { useTickerStore } from '@/stores/tickerStore';
 import { useLoadingStore } from '@/stores/loadingStore';
+import { showTempMessage } from '@/utils/showMessages';
+import { useSocket } from '@/composables/taskSocket';
+const isLoadingLocal = ref(false);
+let localTaskID=null;
+const rawMessage = ref('');
+const tickerHistory = ref(new Set())
+const tickerStore = useTickerStore();
+const loading = useLoadingStore();
+const isConnected = useSocket();
+const allowedTickers = ref([]);
+const final_report=ref('');
+const notification = ref(null);
+const downloadingSecFiles=ref(false);
+const isSocketReady=ref(false);
+const messages = ref([
+    { text: 'I will conduct the a trust and sentiment analysis ofthe latest submitted reports. If you want analysis for another, ticker just change the ticker in the main page and pres analyze to start. ', isUser: false }
+]);
 
-export default {
-  props: {
-    tickers: {
-      type: Array
-    },
-    // companies: {
-    //   type: Object,
-    //   required: true,
-    // },
-    isProcessing: Boolean,
-  },
-  setup(props, { emit }) {
-    const analysisReports = ref([]);
-    const collapsed = ref({});
-    const compact = ref(false);
-    const localIsProcessing = ref(props.isProcessing);
-    const loading = useLoadingStore();
-    const toggleCollapse = () => {
-      compact.value = !compact.value;
-    };
+watch(loading,()=>{
+    if(localTaskID &&!loading.pendingTasks[localTaskID]){
+        isLoadingLocal.value=false
+        localTaskID=null;
+        showTempMessage(notification,"report completed. go to the s3 report section","notification",20000);
+    }
+})
+watch (loading,()=>{
+    if(tickers.value.length>0){
+    downloadingSecFiles.value=loading.isLoading
+    }
+})
 
+watch(isConnected.isConnected,()=>{
+    isSocketReady.value=isConnected.socket.connected
 
-    watch(
-      () => props.tickers,
-      (newTickers) => {
-        if (newTickers.length) {
-          fetchAnalysisReports(newTickers);
+})
+
+const tickers= computed(()=> tickerStore.currentTickers);
+async function quant_rittenhouse() {
+    
+    const user_id = localStorage.getItem('user_id')
+    if (tickers.value.length === 0 || !user_id) {
+        
+        messages.value.push({
+            text: 'ticker analysis or user_id empty',
+            isUser: false
+        })
+        
+        showTempMessage(notification, "ticker analysis is empty","error")
+
+    }
+    else {
+        if (tickers.value.length > 0) {
+            allowedTickers.value = tickers.value.filter(e => !tickerHistory.value.has(e.toLowerCase()))
+
+            if (allowedTickers.value.length > 0) {
+                try {
+                    // starting ai report. updating loading store
+
+                    isLoadingLocal.value=true;
+                    const response=await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/analyze_rittenhouse`, {
+                        tickers: allowedTickers.value,
+                        user_id: user_id,
+                        report_type: "eacsa-rittenhouse"
+                    });
+                    localTaskID=response.data.task_id;
+                    loading.addTask[localTaskID]
+                }
+                catch (error) {
+                    console.error('Error sending query', error);
+                    isLoadingLocal.value=false;
+                    tickerHistory.value.pop()
+
+                    
+                    showTempMessage(notification,"Error sending query","error")
+                }
+                finally {
+                    
+                    tickers.value.forEach(t => tickerHistory.value.add(t.toLowerCase()));
+
+                }
+            }
+            else {
+                messages.value.push({
+                    text: "ticker analysis is empty or these tickers were already analysed in this session. analyse the ticker and then generate the  report again or go to the main page and return to this page to get a new report",
+                    isUser: false,
+                    type: "error"
+                })
+                showTempMessage(notification,"ticker analysis is empty or these tickers were already analysed in this session. analyse the ticker and then generate report again or go to the main page and return to this page to get a new report","error",10000)
+            }
         }
-      },
-      { immediate: true }
-    );
-
-    const fetchAnalysisReports = async () => {
-
-      loading.startLoading();
-      try {
-        const params = props.tickers.reduce((acc, ticker, index) => {
-          acc[`ticker${index + 1}`] = ticker;
-          return acc;
-        }, {});
-
-        const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/analyze_rittenhouse`, { params });
-        analysisReports.value = Object.keys(response.data.reports).map((ticker) => {
-          return {
-            ticker,
-            reports: response.data.reports[ticker],
-          };
-        });
-      } catch (error) {
-        console.error('Error fetching Rittenhouse analysis reports:', error);
-      } finally {
-        loading.stopLoading();
-
-      }
-
-    };
-
-    const getFileTypes = () => {
-      const fileTypes = new Set();
-      analysisReports.value.forEach((reportData) => {
-        reportData.reports.forEach((report) => {
-          const fileType = extractFileType(report.File);
-          fileTypes.add(fileType);
-        });
-      });
-      fileTypes.forEach((fileType) => {
-        if (!(fileType in collapsed.value)) {
-          collapsed.value[fileType] = true;
+        else {
+            if (!rawMessage.value) {
+                messages.value.push({
+                    text: "analysis already done for this ticker, refresh the page and return to this section to get a new analysis",
+                    isUser: false,
+                    type: "error"
+                })
+                
+                showTempMessage(notification,"analysis already done for this ticker, refresh the page and return to this section to get a new analysis","error",10000)
+            }
+            else {
+                messages.value.push({
+                    text: "analysis already done for this ticker, refresh the page and return to this section to get a new analysis",
+                    isUser: false,
+                    type: "error"
+                })
+                
+                showTempMessage(notification,"analysis already done for this ticker, refresh the page and return to this section to get a new analysis","error",10000)
+            }
         }
-      });
-      return Array.from(fileTypes);
-    };
+    }
+}
 
-    const extractFileType = (fileName) => {
-      const match = fileName.match(/10-[KQ]|8-K|DEF 14A|20-F|6-K/);
-      return match ? match[0] : 'Unknown';
-    };
 
-    const findReportByFileType = (fileType) => {
-      for (const reportData of analysisReports.value) {
-        const report = reportData.reports.find(
-          (report) => extractFileType(report.File) === fileType
-        );
-        if (report) {
-          return report;
-        }
-      }
-      return null;
-    };
 
-    const getKeywordCountForFileType = (reports, fileType, category, keyword) => {
-      const report = reports.find(
-        (report) => extractFileType(report.File) === fileType
-      );
-      return report && report['Keyword Counts'][category] && report['Keyword Counts'][category][keyword]
-        ? report['Keyword Counts'][category][keyword]
-        : 0;
-    };
 
-    const getCategoriesForFileType = (fileType) => {
-      const report = findReportByFileType(fileType);
-      return report ? Object.keys(report['Keyword Counts']) : [];
-    };
-
-    const getSortedKeywordsForFileType = (fileType, category) => {
-      const keywords = getKeywordsForFileType(fileType, category);
-      const keywordDataArray = keywords.map((keyword) => {
-        const counts = {};
-        let totalCount = 0;
-
-        analysisReports.value.forEach((reportData) => {
-          const count = getKeywordCountForFileType(reportData.reports, fileType, category, keyword);
-          counts[reportData.ticker] = count;
-          totalCount += count;
-        });
-
-        return { keyword, counts, totalCount };
-      });
-
-      return keywordDataArray.sort((a, b) => b.totalCount - a.totalCount);
-    };
-
-    const getKeywordsForFileType = (fileType, category) => {
-      const report = findReportByFileType(fileType);
-      return report && report['Keyword Counts'][category]
-        ? Object.keys(report['Keyword Counts'][category])
-        : [];
-    };
-
-    const formatFileName = (fileName) => {
-      return fileName
-        .replace(/^.*[\\/]/, '')  // Remove directory path
-        .replace('_complete_submission.txt', '');  // Remove the suffix
-    };
-
-    return {
-      analysisReports,
-      collapsed,
-      compact,
-      fetchAnalysisReports,
-      toggleCollapse,
-      getFileTypes,
-      extractFileType,
-      findReportByFileType,
-      getKeywordCountForFileType,
-      getCategoriesForFileType,
-      getSortedKeywordsForFileType,
-      getKeywordsForFileType,
-      formatFileName,
-      localIsProcessing,
-      loading
-    };
-  },
-};
 </script>
+<style>
 
-<style scoped></style>
+</style>
