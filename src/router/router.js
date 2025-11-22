@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import AuthPage from '@/views/AuthPage.vue';
 import RegisterUser from '@/views/RegisterUser.vue';
-import AI from '@/views/AI.vue';
+import AI from '@/views/SevenPowers.vue';
 import EconomyStats from '@/views/EconomyStats.vue';
 import StockChart from '@/views/StockChart.vue';
 import QtrStockTrend from '@/views/QtrStockTrend.vue';

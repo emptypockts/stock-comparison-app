@@ -43,11 +43,18 @@ let localTaskID=null;
 const messages = ref([
     { text: 'I will conduct the 7power analysis for this ticker. If you want analysis for another, ticker just change the first ticker field in the main page. Hit send to start. ', isUser: false }
 ]);
-watch(loading.pendingTasks,()=>{
+watch(loading,()=>{
     if(localTaskID &&!loading.pendingTasks[localTaskID]){
         isLoadingLocal.value=false
         localTaskID=null;
-        showTempMessage(notification,"report completed. go to the s3 report section","notification",20000);
+        if(loading.lastStatus=="done")
+        {
+            showTempMessage(notification,"report completed. go to the s3 report section","notification",20000);
+        }
+        else if(loading.lastStatus=="error")
+        {
+            showTempMessage(notification,"error trying to generate the pdf. refresh the browser and try again","error",20000);
+        }
     }
 })
 watch(isConnected.isConnected,()=>{
@@ -88,7 +95,7 @@ async function get_seven_p_analysis() {
                 }
                 catch (error) {
                     console.error('Error sending query', error);
-
+                    isLoadingLocal.value=false;
                     
                     showTempMessage(notification,"error sending query","error")
                 }

@@ -5,14 +5,12 @@ from aiReport import ai_query, compile
 from flask_cors import CORS
 from flask_session import Session
 import pandas as pd
-import secDBFetch
 from rittenhouse import quant_rittenhouse
 import fetch5yData
 import stockPlotData
 import companyData
 import getStockPrice
 import stockIntrinsicVal
-import geminiChat
 from dotenv import load_dotenv
 import os
 import bcrypt

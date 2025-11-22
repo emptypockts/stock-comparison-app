@@ -11,7 +11,7 @@ const socket = io(import.meta.env.VITE_WS_SERVER, {secure: true});
 let registered = false;
 const isConnected = ref(false);
 const taskData = ref(null);
-
+const notification = ref(null);
 
 export function useSocket() {
     const notifStore=useNotificationStore();
@@ -46,13 +46,13 @@ export function useSocket() {
                 }
                 catch (err) {
                     console.error('error trying to generate report', err)
-                    loading.stopLoading()
+                    loading.stopLoading("error")
                 }
             }
         })
         socket.on('task_failed',(data)=>{
-            loading.stopLoading()
-            showTempMessage(Notification,"error executing ai task","error")
+            loading.stopLoading("error")
+            showTempMessage(notification,`Notification,"error executing ai task ${data.error}`,"error")
         })
 
 

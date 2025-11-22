@@ -76,7 +76,7 @@
         <RittenhouseAnalysis :tickers="tickers" />
     </div>
     <div>
-        <AI :tickers="tickers" />
+        <SevenPowers :tickers="tickers" />
     </div>
     <div>
         <RedFlags :tickers="tickers" />
@@ -142,7 +142,7 @@ import CompanyData from '@/views/CompanyData.vue';
 import StockFinancialCharts from '@/views/StockFinancialCharts.vue';
 import ValueStockAnalysis from '@/views/ValueStockAnalysis.vue';
 import RittenhouseAnalysis from "@/views/RittenhouseAnalysis.vue";
-import AI from "@/views/AI.vue"
+import SevenPowers from "@/views/SevenPowers.vue"
 import { useTickerStore } from '@/stores/tickerStore';
 import Navigation from '@/components/Navigation.vue';
 import CookieBanner from '@/components/CookieBanner.vue';

@@ -64,7 +64,14 @@ watch(loading,()=>{
     if(localTaskID &&!loading.pendingTasks[localTaskID]){
         isLoadingLocal.value=false
         localTaskID=null;
-        showTempMessage(notification,"report completed. go to the s3 report section","notification",20000);
+        if(loading.lastStatus=="done")
+        {
+            showTempMessage(notification,"report completed. go to the s3 report section","notification",20000);
+        }
+        else if(loading.lastStatus=="error")
+        {
+            showTempMessage(notification,"error trying to generate the pdf. refresh the browser and try again","error",20000);
+        }
     }
 })
 watch (loading,()=>{

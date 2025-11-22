@@ -87,7 +87,7 @@ def generate_ai_report(self,tickers,user_id,report_type):
 
 @celery.task(bind=True)
 def generate_ai_7powers(self,tickers,user_id,report_type):
-    from geminiChat import seven_powers
+    from sevenPowers import seven_powers
     try:
         if not user_id:
             raise Ignore()

@@ -1,11 +1,10 @@
-
 from langchain_ollama import ChatOllama
 from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage,SystemMessage
 import json
 from datetime import datetime
-from prompts import quant_instructions,synthesis_prompt,json_validator_instructions
+from prompts import quant_instructions,synthesis_instructions,json_validator_instructions
 from outils import (
     clean_edgar_text, 
     analyze_ticker,
@@ -51,7 +50,7 @@ def quant(year,tickers:list)->str:
         submitted_reports={}
         files = os.listdir(ticker_dir)
         for file in files:
-            if file.endswith((".json",".quant")):
+            if file.endswith((".json",".quant",".rtn")):
                 pass
             else:
                 file_name=os.path.join(ticker_dir,file)
@@ -67,7 +66,7 @@ def quant(year,tickers:list)->str:
                     submitted_reports[file.split('.')[0]]=response.content
         final_response=llm.invoke(
             [
-                HumanMessage(content=synthesis_prompt.format(filing_summaries=submitted_reports))
+                HumanMessage(content=synthesis_instructions.format(filing_summaries=submitted_reports))
             ]
         )
         if final_response.content:
@@ -85,5 +84,5 @@ def quant(year,tickers:list)->str:
 
 if __name__=="__main__":
     year= str(datetime.now().year)
-    print(quant(year,["aapl"]))
+    print(quant(year,["eric"]))
 

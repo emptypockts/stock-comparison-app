@@ -2,7 +2,8 @@ import { defineStore } from "pinia";
 export const useLoadingStore=defineStore('loading',{
     state:()=>({
         loadingCount:0,
-        pendingTasks:{}
+        pendingTasks:{},
+        lastStatus:null
     }),
     getters:{
         isLoading:(state)=>state.loadingCount>0
@@ -12,15 +13,19 @@ export const useLoadingStore=defineStore('loading',{
         startLoading(){
             this.loadingCount++
         },
-        stopLoading(){
+        stopLoading(status="done"){
             this.loadingCount--
             if (this.loadingCount<0) this.loadingCount=0
+            this.lastStatus=status;
+            
+
         },
         addTask(taskId){
             this.pendingTasks[taskId]=true
         },
-        completeTask(taskId){
+        completeTask(taskId,status="done"){
             delete this.pendingTasks[taskId]
+            this.stopLoading(status)
         }
     }
 })

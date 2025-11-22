@@ -7,7 +7,7 @@ from outils import clean_edgar_text,analyze_ticker,save_analysis_report
 from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage,SystemMessage
-from prompts import rittenhouse_synthesis_instructions,rittenhouse_individual_report_instructions,test_lunr,test_lunr_final
+from prompts import rittenhouse_synthesis_instructions,rittenhouse_individual_report_instructions
 load_dotenv()
 
 

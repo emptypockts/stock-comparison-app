@@ -26,10 +26,11 @@ def handle_task_completed(data):
     ws_server.emit('task_done',data)
 
 
-@ws_server.on("message")
+@ws_server.on("task_failed")
 def handle_message(data):
-    print("i received a", data)
-    send(f"whatever you said {data}")
+    join_room(room=data.get('task_id',''))
+    print("this task failed", data)
+    ws_server.emit('task_failed',data)
     
 @ws_server.on("join_room")
 def handle_join(data):
