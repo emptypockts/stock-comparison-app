@@ -26,7 +26,7 @@
                 <td>{{ record['ticker'] }}</td>
                 <td>{{ record['value'] }}</td>
                 <td>{{ record['trend'] }}%</td>
-                <td>{{ record['total_score'] }}</td>
+                <td>{{ record['score'] }}</td>
               </tr>
             </tbody>
           </table>
