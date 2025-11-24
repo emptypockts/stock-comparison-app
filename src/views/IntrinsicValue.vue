@@ -160,13 +160,13 @@
       <legend style="font-weight: bold; font-size: 1rem; padding: 0 6px;">
     📌 How to Interpret Valuation Models
   </legend>
-      <button @click="toggleCollapse" class="buttons">
+      <button @click="toggleCollapse2" class="buttons">
         ⟬⟬ expand/collapse ⟭⟭
       </button>
       
-      <div v-if="!collapsed">
+      <div v-if="!collapsed2">
 
-        <fieldset style="margin-bottom: 14px; padding: 12px; border: 1px solid #666; border-radius: 6px;">
+        <fieldset style="margin-bottom: 14px;width: 82%; padding: 12px; border: 1px solid #666; border-radius: 6px;">
 
   <small style="line-height: 1.4; display: block; color: #ddd; font-size: 0.85rem;">
     Not all valuation models apply equally to every business. Use the method(s) most aligned with the company’s
@@ -216,6 +216,7 @@ export default {
   setup(props) {
     const intrinsicData = ref([]);
     const collapsed = ref(true);
+    const collapsed2 = ref(true);
     const loading = useLoadingStore();
     const intrinsicParams = reactive({});
     const errorMessage = ref(''); // Variable to store error messages
@@ -248,6 +249,9 @@ export default {
 
     const toggleCollapse = () => {
       collapsed.value = !collapsed.value;
+    };
+        const toggleCollapse2 = () => {
+      collapsed2.value = !collapsed2.value;
     };
 
     const fetchIntrinsicValues = async (tickers) => {
@@ -333,8 +337,10 @@ export default {
       collapsed,
       loading,
       intrinsicParams,
-      errorMessage, // Return errorMessage for template
+      errorMessage, 
       toggleCollapse,
+      toggleCollapse2,
+      collapsed2,
       calculateIntrinsicValue,
       safetyIcon,
       safetyStyle,
