@@ -65,7 +65,7 @@ def calculate_intrinsic_value(ticker, growth_rate, discount_rate, terminal_growt
     if fcf.empty:
         print("Free Cash Flow data is not available for this stock.")
         return 0
-    currency = stock.info['currency']
+    currency = stock.info.get('currency')
     
     
     avg_fcf = fcf.tail(5).median()
@@ -77,7 +77,7 @@ def calculate_intrinsic_value(ticker, growth_rate, discount_rate, terminal_growt
     discounted_terminal_value = terminal_value / (1 + discount_rate) ** projection_years
     intrinsic_value = sum(discounted_fcf) + discounted_terminal_value
     
-    shares_outstanding = stock.info['sharesOutstanding']
+    shares_outstanding = stock.info.get('sharesOutstanding')
     intrinsic_value_per_share = intrinsic_value / shares_outstanding
     return intrinsic_value_per_share
 
@@ -86,11 +86,11 @@ def calculate_grahams_formula_2(ticker, growth_rate=5.0):
     # print(f"calculating grahams value 2nd method for  {ticker, growth_rate}")
     growth_rate /= 100.0
     stock = yf.Ticker(ticker)
-    eps = stock.info['trailingEps']
+    eps = stock.info.get('trailingEps')
     if eps is None or eps<0:
         print(f"EPS data is not available for {ticker} or eps negative")
         return 0
-    currency = stock.info['currency']
+    currency = stock.info.get('currency')
     # eps = convert_to_usd(eps, currency)
     graham_value = eps * (8.5 + 2 * growth_rate) * 4.4 / 3
     return graham_value
@@ -98,7 +98,7 @@ def calculate_grahams_formula_2(ticker, growth_rate=5.0):
 def calculate_grahams_formula(ticker,growth_rate=5.0):
     # print(f"calculating grahams value for  {ticker, growth_rate}")
     stock = yf.Ticker(ticker)
-    eps = stock.info['trailingEps']
+    eps = stock.info.get('trailingEps')
     
     tangible_book_value_per_share = stock.balancesheet.loc['Tangible Book Value'] / stock.fast_info['shares']
 
@@ -116,7 +116,7 @@ def calculate_ddm(ticker, dividend_growth_rate, discount_rate):
     if dividend is None:
         print(f"Dividend data is not available for {ticker}.")
         return 0
-    currency = stock.info['currency']
+    currency = stock.info.get('currency')
     dividend = convert_to_usd(dividend, currency)
     intrinsic_value = dividend * (1 + dividend_growth_rate) / (discount_rate - dividend_growth_rate)
     return intrinsic_value
@@ -124,12 +124,12 @@ def calculate_ddm(ticker, dividend_growth_rate, discount_rate):
 
 def calculate_residual_income(ticker, equity_cost_of_capital, growth_rate):
     stock = yf.Ticker(ticker)
-    roe = stock.info['returnOnEquity']
-    bvps = stock.info['bookValue']
+    roe = stock.info.get('returnOnEquity')
+    bvps = stock.info.get('bookValue')
     if roe is None or bvps is None:
         print("ROE or BVPS data is not available for this stock.")
         return 0
-    currency = stock.info['currency']
+    currency = stock.info.get('currency')
     bvps = convert_to_usd(bvps, currency)
     residual_income = bvps * (roe - equity_cost_of_capital)
     intrinsic_value = residual_income / (1 + growth_rate)
@@ -139,54 +139,54 @@ def calculate_residual_income(ticker, equity_cost_of_capital, growth_rate):
 def calculate_apv(ticker, wacc, growth_rate, debt_ratio):
     stock = yf.Ticker(ticker)
     try:
-        ebit = stock.info['ebitda']
+        ebit = stock.info.get('ebitda')
     except:
         ebit = None
     if ebit is None:
         print("EBIT data is not available for this stock.")
         return 0
-    currency = stock.info['currency']
+    currency = stock.info.get('currency')
     ebit = convert_to_usd(ebit, currency)
     # could change to 28%
     tax_rate = stock.info.get('taxRate', 0.21)
     intrinsic_value = ebit * (1 - tax_rate) / (wacc - growth_rate)
     unlevered_value = intrinsic_value * (1 - debt_ratio)
-    return unlevered_value/stock.info['sharesOutstanding']
+    return unlevered_value/stock.info.get('sharesOutstanding')
 
 
 def calculate_epv(ticker,wacc):
     stock = yf.Ticker(ticker)
     try:
-        ebit = (stock.info['ebitda'] -stock.info.get('depreciation',0)) # Using EBITDA as a proxy for EBIT
+        ebit = (stock.info.get('ebitda') -stock.info.get('depreciation',0)) # Using EBITDA as a proxy for EBIT
     except:
         ebit=None
     if ebit is None:
         print("EBIT data is not available for this stock.")
         return 0
-    currency = stock.info['currency']
+    currency = stock.info.get('currency')
     ebit = convert_to_usd(ebit, currency)
     
     
     intrinsic_value = ebit / wacc
     
-    return intrinsic_value/stock.info['sharesOutstanding']
+    return intrinsic_value/stock.info.get('sharesOutstanding')
 
 
 def calculate_asset_based_value(ticker):
     stock = yf.Ticker(ticker)
     total_assets = stock.balance_sheet.loc['Total Assets'].iloc[0]
     total_liabilities = stock.balance_sheet.loc['Total Liabilities Net Minority Interest'].iloc[0]
-    currency = stock.info['currency']
+    currency = stock.info.get('currency')
     total_assets = convert_to_usd(total_assets, currency)
     total_liabilities = convert_to_usd(total_liabilities, currency)
     intrinsic_value = total_assets - total_liabilities
-    return round(intrinsic_value / stock.info['sharesOutstanding'],2)
+    return round(intrinsic_value / stock.info.get('sharesOutstanding'),2)
 
 
 def get_current_price(ticker):
     stock = yf.Ticker(ticker)
     current_price = stock.fast_info.last_price
-    currency = stock.info['currency']
+    currency = stock.info.get('currency')
     return convert_to_usd(current_price, currency)
 
 
@@ -196,7 +196,7 @@ def get_company_name(ticker):
         print(f"Stock is not available {ticker}")
         return 0
     else:
-        return stock.info['longName']
+        return stock.info.get('longName')
 
 
 def getAllIntrinsicValues(ticker, growth_rate=5.0, discount_rate=10.0, terminal_growth_rate=2.0, projection_years=5)->list:
@@ -264,7 +264,7 @@ def getAllIntrinsicValues(ticker, growth_rate=5.0, discount_rate=10.0, terminal_
 # Example usage
 if __name__ == "__main__":
 
-    tickers = ['cof']
+    tickers = ['dpz']
     data={
         ticker:{
             "data": getAllIntrinsicValues(ticker,growth_rate=5.0, discount_rate=10.0, terminal_growth_rate=2.0, projection_years=5)
