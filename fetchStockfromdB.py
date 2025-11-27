@@ -59,12 +59,12 @@ def stockFetch(db,page=1, items_per_page=100,exchange=''):
         stock['Earnings Yield'] = format_percentage(stock.get('Earnings Yield'))
         stock['Market Cap'] = format_currency(stock.get('Market Cap'))
         stock['Growth']=format_percentage_growth(stock.get('Growth'))
-        symbol = stock['Symbol']
+        symbol = stock['ticker']
         if symbol not in grouped_stocks:
             grouped_stocks[symbol] = []
         grouped_stocks[symbol].append(stock)
     
-    total_symbols = stock_collection.distinct("Symbol")
+    total_symbols = stock_collection.distinct("ticker")
     total_symbols_count = len(total_symbols)
     return grouped_stocks,total_symbols_count
 

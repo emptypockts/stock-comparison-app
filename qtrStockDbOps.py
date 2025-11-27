@@ -31,8 +31,8 @@ def aggregateScoreToQtrRevTrend(collection:Collection):
                 {
                     '$project':{
                         '_id':0,
-                        'total_score':'$total_score',
-                        'Sector': '$Sector'
+                        'score':'$score',
+                        'sector': '$sector'
                     }
                 }
             ],
@@ -49,8 +49,8 @@ def aggregateScoreToQtrRevTrend(collection:Collection):
             {"ticker":item["ticker"]},
             {
                 "$set":{
-                    "total_score":(',').join(str(score["total_score"]) for score in item["result"]),
-                    "sector":item["result"][0]["Sector"] if item["result"] else None
+                    "score":(',').join(str(score["score"]) for score in item["result"]),
+                    "sector":item["result"][0]["sector"] if item["result"] else None
                 }
             },
             upsert=False

@@ -22,7 +22,7 @@
         <span>eacsa> </span>company details:
       </div>
       <ul class="list-container">
-        <li v-for="(e, ticker) in companyData" :key="ticker">
+        <li v-for="(e, ticker) in companyData" :key="ticker">      
           <strong>
             Company:
           </strong>
@@ -33,7 +33,12 @@
           ${{ e.gStockData.current_price }}
           <strong>
             Last Filing :
-          </strong> {{ e.last_filing_date }}
+          </strong> 
+          {{ e.last_filing_date }}
+          <strong>
+            Desc:
+          </strong>
+          {{ e.gStockData.sic_description }}.
         </li>
       </ul>
     </div>

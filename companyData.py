@@ -32,17 +32,18 @@ def get_StockInfo(ticker):
         market_cap= alpha_get_market_cap(ticker)
         jsonObj = response.json()
         if market_cap==0:
-            market_cap=jsonObj['results']['market_cap'],
+            market_cap=jsonObj['results'].get('market_cap',1),
             if isinstance(market_cap,tuple):
                 market_cap=market_cap[0]
         if 'results' not in jsonObj or not jsonObj['results']:
             raise ValueError(f"No results found for ticker: {ticker}")
         stockData = {
-            'symbol': jsonObj['results']['ticker'],
-            'name': jsonObj['results']['name'],
-            'share_class_shares_outstanding': jsonObj['results']['weighted_shares_outstanding'],
+            'symbol': jsonObj['results'].get('ticker','ticker not available'),
+            'name': jsonObj['results'].get('name','name not available'),
+            'share_class_shares_outstanding': jsonObj['results'].get('weighted_shares_outstanding',1),
             'market_cap': market_cap,
-            'current_price': round(market_cap / jsonObj['results']['weighted_shares_outstanding'],2)
+            'current_price': round(market_cap / jsonObj['results'].get('weighted_shares_outstanding',1),2),
+            'sic_description':jsonObj['results'].get('sic_description','')
         }
         return stockData
 

@@ -19,6 +19,7 @@
                 <th @click="sortTable('value')">Value in $ Billions <span class="sortClass"></span></th>
                 <th @click="sortTable('trend')">last year q comparison in %<span class="sortClass"></span></th>
                 <th @click="sortTable('total_score')">last 5 years stock score<span class="sortClass"></span></th>
+                <th @click="sortTable('sector')">Sector<span class="sortClass"></span></th>
               </tr>
             </thead>
             <tbody>
@@ -27,6 +28,7 @@
                 <td>{{ record['value'] }}</td>
                 <td>{{ record['trend'] }}%</td>
                 <td>{{ record['score'] }}</td>
+                <td>{{ record['sector'] }}</td>
               </tr>
             </tbody>
           </table>

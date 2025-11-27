@@ -1,12 +1,11 @@
 <template>
       <div class="icon-bar">
-    
     <economyIdxLogo />
-    <GoBack />
     <StockChartLogo />
-    <StockChartLogo route="/stockcharthk" tooltip="HK Stock Chart"/>
     <QtrStockChartLogo />
+    <GoBack />
     <Logout/>
+    
     </div>
     </template>
 

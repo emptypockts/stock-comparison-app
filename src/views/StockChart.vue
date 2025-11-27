@@ -20,6 +20,7 @@
                 <th @click="sortTable('Date')">Date<span class="sortClass"></span></th>
                 <th @click="sortTable('Total Score')">Total Score<span class="sortClass"></span></th>
                 <th @click="sortTable('Growth')">E_Growth 1Y<span class="sortClass"></span></th>
+                <th @click="sortTable('Sector')">Sector<span class="sortClass"></span></th>
                 <th v-if="!collapsed">Basic Average Shares</th>
                 <th v-if="!collapsed">Basic EPS</th>
                 <th v-if="!collapsed">Diluted EPS</th>
@@ -47,11 +48,12 @@
             <tbody>
               
               <tr v-for="(record, index) in paginatedRecords" :key="index">
-                <td>{{ record['Symbol'] }}</td>
+                <td>{{ record['ticker'] }}</td>
                 <td>{{ record['Name'] }}</td>
                 <td>{{ record['Date'] }}</td>
-                <td>{{ record['Total Score'] }}</td>
+                <td>{{ record['score'] }}</td>
                 <td>{{ record['Growth'] }}</td>
+                <td>{{ record['sector'] }}</td>
                 <td v-if="!collapsed">{{ record['Basic Average Shares'] }}</td>
                 <td v-if="!collapsed">{{ record['Basic EPS'] }}</td>
                 <td v-if="!collapsed">{{ record['Diluted EPS'] }}</td>
@@ -191,8 +193,8 @@ export default {
           totalSymbols.value = response.data.total_symbols;
           totalPages.value=Math.ceil(totalSymbols.value/100)
           // Flatten the structure
-          flatRecords.value = Object.entries(stocks.value).flatMap(([symbol, records]) => {
-            return records.map(record => ({ symbol, ...record }));
+          flatRecords.value = Object.entries(stocks.value).flatMap(([ticker, records]) => {
+            return records.map(record => ({ ticker, ...record }));
           });
         } else {
           console.error('API response is not in the expected format:', response.data.data);
