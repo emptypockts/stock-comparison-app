@@ -10,6 +10,8 @@ from math import atan, degrees
 import numpy as np
 from datetime import datetime
 
+
+
 # join qtr rev trend table with stock score 
 def aggregateScoreToQtrRevTrend(collection:Collection):
     
@@ -29,7 +31,8 @@ def aggregateScoreToQtrRevTrend(collection:Collection):
                 {
                     '$project':{
                         '_id':0,
-                        'total_score':'$total_score'
+                        'total_score':'$total_score',
+                        'Sector': '$Sector'
                     }
                 }
             ],
@@ -44,7 +47,12 @@ def aggregateScoreToQtrRevTrend(collection:Collection):
         jsonObject.append(
             UpdateOne(
             {"ticker":item["ticker"]},
-            {"$set":{"total_score":(',').join(str(score["total_score"]) for score in item["result"])}},
+            {
+                "$set":{
+                    "total_score":(',').join(str(score["total_score"]) for score in item["result"]),
+                    "sector":item["result"][0]["Sector"] if item["result"] else None
+                }
+            },
             upsert=False
         )
         )
@@ -322,11 +330,11 @@ if __name__=="__main__":
 
 
     # # function to update main revenue trends per quarter in the db   
-    for skip in range((collectionSize//limit_size)+1):
-        response =PullProcessMergeRevenueGrowthQtrStockData(db['QtrStockData'],skip,limit_size)
+    # for skip in range((collectionSize//limit_size)+1):
+        # response =PullProcessMergeRevenueGrowthQtrStockData(db['QtrStockData'],skip,limit_size)
         
-        pushMergedRevenueGrowthQtrStockData(response,db['temp_QtrStockRevTrend'])
-    swap_temp_prod(db,collection='QtrStockRevTrend')
+        # pushMergedRevenueGrowthQtrStockData(response,db['temp_QtrStockRevTrend'])
+    # swap_temp_prod(db,collection='QtrStockRevTrend')
     
     # join the qtr stock rev trend with the stock value score
     aggregateScoreToQtrRevTrend(db['QtrStockRevTrend'])
