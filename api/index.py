@@ -1,5 +1,6 @@
 from flask import Flask, jsonify,send_file,render_template,request,redirect,url_for
 import jwt.algorithms
+from .auth import require_cf_token
 from datetime import datetime
 from aiReport import ai_query, compile
 from flask_cors import CORS
@@ -41,7 +42,22 @@ edgar_collection=db['rawEdgarCollection']
 ai_tasks_collection=db['aiTasks']
 app = Flask(__name__)
 app.config.from_object(app_constants)
-CORS(app)
+ENV=os.getenv('ENV')
+if ENV=="prod":
+    CORS(app, resources={
+        r"/api/*":{
+            "origins":[
+                "https://www.eacsa.us",
+                "wss://www.eacsa.us"
+            ],
+            "supports_credentials":False,
+            "allow_headers":["Content-Type","Authorization","token"]
+        }
+    })
+if ENV=="dev":
+    CORS(app)
+if ENV=='':
+    raise Exception("environment not defined. potential attack!")
 Session(app)
 DOWNLOAD_DIR = os.getenv('DIRECTORY')
 
@@ -360,7 +376,14 @@ def get_a_token():
             "error":"missing token"
         }),401
     headers = jwt.get_unverified_header(token)
-    key = next(k for k in CERT_KYS["keys"] if k["kid"]==headers["kid"])
+    try:
+        key = next(k for k in CERT_KYS["keys"] if k["kid"]==headers["kid"])
+    except StopIteration:
+        return jsonify({
+            "success":False,
+            "message":"invalid key id"
+        }),401
+    
     public_key = jwt.algorithms.RSAAlgorithm.from_jwk(key)
     try:
         decoded = jwt.decode(
@@ -491,6 +514,13 @@ def quantize():
             }),202
         except Exception as e:
                 return jsonify({'error':str(e)}),400
-
+@app.route('/api/private')
+@require_cf_token
+def secret_area():
+    return jsonify({
+        "message": "Access granted",
+        "identity": request.cf_identity
+    })
 if __name__ == '__main__':
-    app.run(debug=True)
+    debug_mode= os.getenv("FLASK_DEBUG","0")=="1"
+    app.run(host="0.0.0.0",port=5000,debug=debug_mode)
