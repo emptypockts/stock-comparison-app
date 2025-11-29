@@ -421,6 +421,7 @@ def fetch_4qtr_financial_data():
         return jsonify({"error": "Failed to fetch any qtr data"}), 500
     return jsonify(all_data),200
 @app.route('/api/v1/cfToken',methods=['GET'])
+@limiter.limit("5 per minute")
 def get_a_token():
     token = request.headers.get("Cf-Access-Jwt-Assertion") or request.cookies.get("CF_Authorization")
     if not token:
