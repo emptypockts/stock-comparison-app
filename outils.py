@@ -121,3 +121,16 @@ def json_validator(agent,r6)->str:
         raise Exception("quota exceeded",response)
     response=response.json()
     return response["candidates"][0]["content"]["parts"][0]["text"]
+
+def parse_tickers(tickers):
+    TICKER_RE = re.compile(r"^[a-z0-9\.\-]{1,10}$")
+    clean_tickers=[]
+    for ticker in tickers:
+        if not ticker:
+            continue
+        if not TICKER_RE.match(ticker.lower().strip()):
+            continue
+        clean_tickers.append(ticker)
+
+    return clean_tickers
+

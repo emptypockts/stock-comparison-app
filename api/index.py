@@ -1,5 +1,9 @@
 from flask import Flask, jsonify,send_file,render_template,request,redirect,url_for
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+import redis
 import jwt.algorithms
+from outils import parse_tickers
 from .auth import require_cf_token
 from datetime import datetime
 from aiReport import ai_query, compile
@@ -32,6 +36,7 @@ from worker import generate_ai_report,celery, generate_ai_7powers,generate_ai_qu
 from s3_bucket_ops import s3_upload,s3_presigned_url
 from quant import quant
 load_dotenv()
+
 CF_CERT_URL = f"https://{os.getenv('CF_URL_CDN_CGI_CERTS')}/cdn-cgi/access/certs"
 CERT_KYS = requests.get(CF_CERT_URL).json()
 CF_AUDIENCE_ID = os.getenv('CF_AUD_ID')
@@ -54,15 +59,27 @@ if ENV=="prod":
             "allow_headers":["Content-Type","Authorization","token"]
         }
     })
+    limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    storage_uri="redis://localhost:6379/3"
+    )
 if ENV=="dev":
     CORS(app)
+    limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    storage_uri="memory://",
+    enabled=False
+    )
 if ENV=='':
     raise Exception("environment not defined. potential attack!")
 Session(app)
 DOWNLOAD_DIR = os.getenv('DIRECTORY')
 
-
 @app.route('/api/economy_index', methods=['GET'])
+@require_cf_token
+@limiter.limit("5 per minute") 
 def fetch_economy_index():
     all_data = {}
     indexList= ["STLFSI4","SP500","HOUST1F","UNRATE","SOFR","DRCLACBS","WTREGEN","DCOILWTICO","WTISPLC","POILBREUSDM","PNGASEUUSDM","PNGASUSUSDM","MNGLCP","RRPONTSYD","FPCPITOTLZGUSA","DGS10","T10YIE","DGS2","U6RATE"]
@@ -72,8 +89,11 @@ def fetch_economy_index():
     return jsonify(all_data)
 #fetch company names, price and earnings day
 @app.route('/api/company_data', methods=['GET'])
+@require_cf_token
+@limiter.limit("3 per minute") 
 def fetch_company_data():
-    tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
+    raw_tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
+    tickers= parse_tickers(raw_tickers)
     if not tickers:
         return jsonify({'error': 'No tickers provided'}), 400
     company_data = companyData.compile_stockData(tickers)
@@ -81,25 +101,34 @@ def fetch_company_data():
     return company_data
 #fetch the stock price
 @app.route('/api/stock_price', methods=['GET'])
+@require_cf_token
+@limiter.limit("5 per minute") 
 def fetch_stock_price():
     price=[]
-    tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
+    raw_tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
+    tickers=parse_tickers(raw_tickers)
     if not tickers:
         return jsonify({'error': 'No tickers provided'}), 400
     data = {ticker: getStockPrice.fetch_stock_price_data(ticker) for ticker in tickers}
     return jsonify(data)
 #fetch other metrics for value for plots
 @app.route('/api/financial_data', methods=['GET'])
+@require_cf_token
+@limiter.limit("5 per minute") 
 def fetch_financial_data():
-    tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
+    raw_tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
+    tickers=parse_tickers(raw_tickers)
     if not tickers:
         return jsonify({'error': 'No tickers provided'}), 400    
     data = {ticker: stockPlotData.fetch_financials(ticker) for ticker in tickers} 
     return jsonify({"financial_data": data}),200
 # New API for value stock analysis
 @app.route('/api/5y_data', methods=['GET'])
+@require_cf_token
+@limiter.limit("5 per minute") 
 def fetch_5y_financial_data():
-    tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
+    raw_tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
+    tickers=parse_tickers(raw_tickers)
     if not tickers:
         return jsonify({'error': 'No tickers provided'}), 400
     all_data = []
@@ -122,6 +151,8 @@ def fetch_5y_financial_data():
     return jsonify(result),200
 #Rittenhouse Analysis API
 @app.route('/api/v1/analyze_rittenhouse', methods=['POST'])
+@require_cf_token
+@limiter.limit("1 per minute") 
 def analyze_rittenhouse():
     data=request.json
     if 'user_id' not in data or 'tickers' not in data or 'report_type' not in data:
@@ -140,12 +171,14 @@ def analyze_rittenhouse():
             'report_type':report_type
             }),202
         except Exception as e:
-                return jsonify({'error':str(e)}),400
+                return jsonify({'error':"internal server error"}),500
 # calculate intrinsic values
 @app.route('/api/intrinsic_value', methods=['GET'])
+@require_cf_token
+@limiter.limit("5 per minute") 
 def analyze_intrinsic_value():
-    tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
-
+    raw_tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
+    tickers=parse_tickers(raw_tickers)
     intrinsic_values = []
 
     for index, ticker in enumerate(tickers):
@@ -165,7 +198,7 @@ def analyze_intrinsic_value():
                 intrinsic_values.extend(result)
 
         except Exception as e:
-            return jsonify({'error': f'Error processing ticker {ticker}: {str(e)}'}), 500
+            return jsonify({'error': f'Error processing ticker {ticker}'}), 500
 
     if intrinsic_values:
         return jsonify(intrinsic_values), 200
@@ -173,6 +206,7 @@ def analyze_intrinsic_value():
         return jsonify({'error': 'No valid data to display.'}), 400
 # API route for login
 @app.route('/api/login', methods=['POST'])
+@limiter.limit("5 per minute") 
 def login():
     data = request.json
     username = data.get('username')
@@ -199,6 +233,7 @@ def login():
         return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
 # # API route for registration
 @app.route('/api/register', methods=['POST'])
+@limiter.limit("5 per minute") 
 def register():
     data = request.json
     username = data.get('username')
@@ -213,6 +248,7 @@ def register():
         return jsonify(result), 400
 # # Middleware to verify JWT token
 @app.route('/api/verify', methods=['POST'])
+@limiter.limit("5 per minute") 
 def verify_token():
     
     token = request.headers.get('token')
@@ -226,6 +262,8 @@ def verify_token():
     except jwt.InvalidTokenError:
         return jsonify({'success': False, 'message': 'Invalid token'}), 401
 @app.route('/api/v1/seven_p', methods=['POST'])
+@require_cf_token
+@limiter.limit("5 per minute") 
 def messageBot():
     data = request.json
     tickers = data.get('tickers')
@@ -243,8 +281,10 @@ def messageBot():
             'report_type':report_type
             }),202
     except Exception as e:
-        return jsonify({'error':e}),400
+        return jsonify({'error':"internal server error"}),500
 @app.route('/api/v1/gemini',methods=['POST'])
+@require_cf_token
+@limiter.limit("5 per minute") 
 def gemini_post():
     data=request.json
     tickers = data.get('tickers','')
@@ -267,8 +307,10 @@ def gemini_post():
             'report_type':report_type
         }),202
     except Exception as e:
-            return jsonify({'error':str(e)}),400
+            return jsonify({'error':"internal server error"}),500
 @app.route('/api/v1/gemini/report',methods=['POST'])
+@require_cf_token
+@limiter.limit("5 per minute") 
 def report_generate_and_upload():
     data= request.json
     task_id=data.get('task_id')
@@ -288,9 +330,11 @@ def report_generate_and_upload():
             }),200
         except Exception as e:
             return jsonify({
-                "error":str(e)
+                "error":"internal server error"
             }),500
 @app.route('/api/fetchStockfromDB', methods=['GET'])
+@require_cf_token
+@limiter.limit("5 per minute") 
 def MongoFetchStock():
     try:
         # Get pagination parameters
@@ -311,11 +355,14 @@ def MongoFetchStock():
             'total_symbols':total_symbols
         }), 200
     except Exception as e:
-        return jsonify({'error': str(e)}), 400
+        return jsonify({'error': "internal server error"}), 500
 @app.route('/api/QStockScore', methods=['GET'])
+@require_cf_token
+@limiter.limit("5 per minute") 
 def QtrStockScore ():
     stockData=[]
-    tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
+    raw_tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
+    tickers=parse_tickers(raw_tickers)
     if not tickers:
         return jsonify({'error': 'No tickers provided'}), 400
     for ticker in tickers:
@@ -328,9 +375,11 @@ def QtrStockScore ():
             }for item in response])
 
         except Exception as e:
-            return jsonify({'error': str(e)}), 400
+            return jsonify({'error': "internal server error"}), 500
     return jsonify(stockData)
 @app.route('/api/AllQStockTrend',methods=['GET'])
+@require_cf_token
+@limiter.limit("5 per minute") 
 def AllQtrStockRevTrend():
     try:
         # Get pagination parameters
@@ -352,10 +401,13 @@ def AllQtrStockRevTrend():
             'total_symbols':total_symbols
             }), 200
     except Exception as e:
-        return jsonify({'error': str(e)}), 400   
+        return jsonify({'error': "internal server error"}), 500   
 @app.route('/api/financial_data_qtr', methods=['GET'])
+@require_cf_token
+@limiter.limit("5 per minute") 
 def fetch_4qtr_financial_data():
-    tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
+    raw_tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
+    tickers=parse_tickers(raw_tickers)
     if not tickers:
         return jsonify({'error': 'No tickers provided'}), 400
 
@@ -408,6 +460,8 @@ def get_a_token():
         return jsonify({"success": False, "message": "Invalid token"}), 401
  #check celery task status   
 @app.route('/api/v1/gemini/status/<task_id>',methods=['GET'])
+@require_cf_token
+@limiter.limit("5 per minute") 
 def gemini_task_status(task_id):
     try:
         task=celery.AsyncResult(task_id)
@@ -429,9 +483,11 @@ def gemini_task_status(task_id):
             }),202
     except Exception as e:
         return jsonify({
-            'error':e
-        })
+            'error':"internal server error"
+        }),500
 @app.route('/api/v1/user_reports',methods=['GET'])
+@require_cf_token
+@limiter.limit("5 per minute") 
 def query_reports():
     user_id=request.args.get('user_id')
     if not user_id:
@@ -472,14 +528,16 @@ def query_reports():
         }),200
     except Exception as e:
         return jsonify({
-            "error":str(e)
+            "error":"internal server error"
         }),500
 @app.route('/api/v1/user_report',methods=['GET'])
+@require_cf_token
+@limiter.limit("5 per minute") 
 def download_report():
     bucket_name=request.args.get('bucket_name','')
     file_name=request.args.get('file_name','')
     client_method=request.args.get('client_method','')
-    if not bucket_name or not file_name or not client_method:
+    if not bucket_name or not file_name or not client_method or client_method!="get_object":
         return jsonify({
             "error":"missing fields"
         }),400
@@ -492,9 +550,11 @@ def download_report():
             }),200
         except Exception as e:
             return jsonify({
-                "error":str(e)
-            }),400
+                "error":"internal server error"
+            }),500
 @app.route('/api/v1/quant',methods=['POST'])
+@require_cf_token
+@limiter.limit("5 per minute") 
 def quantize():
     data=request.json
     if 'user_id' not in data or 'tickers' not in data or 'report_type' not in data:
@@ -513,9 +573,10 @@ def quantize():
             'report_type':report_type
             }),202
         except Exception as e:
-                return jsonify({'error':str(e)}),400
+                return jsonify({'error':"internal server error"}),500
 @app.route('/api/private')
 @require_cf_token
+@limiter.limit("5 per minute") 
 def secret_area():
     return jsonify({
         "message": "Access granted",

@@ -23,7 +23,14 @@ def stockFetch(db,page=1, items_per_page=100,exchange=''):
     print("Page size ",items_per_page)
 
     stock_collection = db[f"StockScore{exchange}"]
-  
+    
+    #check limit
+
+    total_symbols = stock_collection.distinct("ticker")
+    if items_per_page>100 or items_per_page<1:
+        items_per_page=100
+    if (page+1*items_per_page)>len(total_symbols):
+        page=1
     # Fetch records with pagination
     stocks = stock_collection.aggregate([
         {
@@ -64,7 +71,7 @@ def stockFetch(db,page=1, items_per_page=100,exchange=''):
             grouped_stocks[symbol] = []
         grouped_stocks[symbol].append(stock)
     
-    total_symbols = stock_collection.distinct("ticker")
+    
     total_symbols_count = len(total_symbols)
     return grouped_stocks,total_symbols_count
 
