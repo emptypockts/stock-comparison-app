@@ -34,6 +34,8 @@ export const verifyCfToken = async () => {
   }
   catch (err) {
     console.error('error verifying cf token', err)
+    window.location.href='https://www.eacsa.us/cdn-cgi/access/logout'
+    window.location.href='https://www.eacsa.us'
     return false;
   }
 

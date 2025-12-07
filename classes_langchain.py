@@ -3,8 +3,7 @@ from langchain.tools import BaseTool
 from langgraph.graph import MessagesState
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
-from pydantic import Field,BaseModel
-from outils import get_today_str
+from pydantic import Field,BaseModel,RootModel
 from typing_extensions import Optional, Annotated, List, Sequence, TypedDict
 import operator
 
@@ -84,5 +83,37 @@ class QuantState(TypedDict):
     section:Section
     completed_sections:Annotated[list,operator.add]
 
+class Chunk(BaseModel):
+    """
+    Docstring for Chunk
+    """
+    chunk:str=Field(
+        None,description="contains the chunk of SEC report summarized"
+    )
+
+from typing import List, Literal, Union
+from pydantic import BaseModel, Field
 
 
+class TitleBlock(BaseModel):
+    type: Literal["title"]
+    content: str = Field(..., description="Title text")
+
+
+class ParagraphBlock(BaseModel):
+    type: Literal["paragraph"]
+    content: str = Field(..., description="Paragraph text")
+
+
+class BulletsBlock(BaseModel):
+    type: Literal["bullets"]
+    content: List[str] = Field(
+        ..., description="List of bullet strings"
+    )
+
+
+# UNION for LangChain strict output
+ReportBlock = Union[TitleBlock, ParagraphBlock, BulletsBlock]
+
+class ReportBlocks(RootModel[List[ReportBlock]]):
+    pass

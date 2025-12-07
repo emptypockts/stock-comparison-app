@@ -18,7 +18,7 @@ GEMINI_API=os.getenv('GEMINI_API')
 DIRECTORY=os.getenv('DIRECTORY')
 
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash",api_key=GEMINI_API,max_retries=1)
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash",api_key=GEMINI_API,max_retries=1)
 # llm=ChatOllama(model="llama3.2:latest")
 
     
@@ -84,5 +84,5 @@ def quant(year,tickers:list)->str:
 
 if __name__=="__main__":
     year= str(datetime.now().year)
-    print(quant(year,["eric"]))
+    print(quant(year,["sofi"]))
 

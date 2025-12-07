@@ -8,6 +8,7 @@ from typing import Literal
 from secDBFetch import get_sec_filings
 from dotenv import load_dotenv
 import requests
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 load_dotenv()
 API_KEY = os.getenv("GEMINI_API")
 url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
@@ -134,3 +135,10 @@ def parse_tickers(tickers):
 
     return clean_tickers
 
+def chunk_report(report:str)->list:
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=1500,
+        chunk_overlap=150,
+        separators=["\n\n","\n","."," "]
+    )
+    return splitter.split_text(report)

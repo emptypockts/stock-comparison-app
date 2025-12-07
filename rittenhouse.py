@@ -1,5 +1,3 @@
-import re
-import secDBFetch
 import json
 import os
 from datetime import datetime, timedelta
@@ -30,6 +28,7 @@ def load_and_preprocess(file_path):
 
 
 def rittenhouse_analysis(report)->str:
+    print("checking report",report[:10:])
     response = llm.invoke(
         [
             SystemMessage(content=rittenhouse_individual_report_instructions),
@@ -95,7 +94,7 @@ def quant_rittenhouse(year,tickers:list)->str:
 # Example function call
 if __name__ == "__main__":
       # Root directory where ticker folders are stored
-    ticker = ['nvda']  # Example ticker
+    ticker = ['sofi']  # Example ticker
     current_year=datetime.now().year
     directory = f"{DIRECTORY}/{current_year}"
     last_year=current_year-1

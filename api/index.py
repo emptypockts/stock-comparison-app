@@ -114,7 +114,7 @@ def fetch_stock_price():
 #fetch other metrics for value for plots
 @app.route('/api/financial_data', methods=['GET'])
 @require_cf_token
-@limiter.limit("5 per minute") 
+@limiter.limit("10 per minute") 
 def fetch_financial_data():
     raw_tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
     tickers=parse_tickers(raw_tickers)
@@ -248,7 +248,6 @@ def register():
         return jsonify(result), 400
 # # Middleware to verify JWT token
 @app.route('/api/verify', methods=['POST'])
-@limiter.limit("5 per minute") 
 def verify_token():
     
     token = request.headers.get('token')
@@ -358,7 +357,7 @@ def MongoFetchStock():
         return jsonify({'error': "internal server error"}), 500
 @app.route('/api/QStockScore', methods=['GET'])
 @require_cf_token
-@limiter.limit("5 per minute") 
+@limiter.limit("10 per minute") 
 def QtrStockScore ():
     stockData=[]
     raw_tickers = [request.args.get(f'ticker{i}') for i in range(1, 4) if request.args.get(f'ticker{i}')]
@@ -421,7 +420,7 @@ def fetch_4qtr_financial_data():
         return jsonify({"error": "Failed to fetch any qtr data"}), 500
     return jsonify(all_data),200
 @app.route('/api/v1/cfToken',methods=['GET'])
-@limiter.limit("5 per minute")
+
 def get_a_token():
     token = request.headers.get("Cf-Access-Jwt-Assertion") or request.cookies.get("CF_Authorization")
     if not token:
