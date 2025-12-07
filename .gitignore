@@ -10,3 +10,4 @@ ai_reports/
 tmp/
 /venv/
 flask_session/
+foo.py

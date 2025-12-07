@@ -77,7 +77,6 @@ router.beforeEach(async (to, from) => {
     }
     else{
       window.location.href='https://www.eacsa.us/cdn-cgi/access/logout'
-      window.location.href='https://www.eacsa.us'
       return false
     }
   }
