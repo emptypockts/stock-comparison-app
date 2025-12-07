@@ -52,7 +52,8 @@ export function useSocket() {
         })
         socket.on('task_failed',(data)=>{
             loading.stopLoading("error")
-            showTempMessage(notification,`Notification,"error executing ai task ${data.error}`,"error")
+            loading.completeTask(data.task_id,"error")
+            console.log(`error executing task: ${data.error}`)
         })
 
 

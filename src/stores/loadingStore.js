@@ -17,8 +17,6 @@ export const useLoadingStore=defineStore('loading',{
             this.loadingCount--
             if (this.loadingCount<0) this.loadingCount=0
             this.lastStatus=status;
-            
-
         },
         addTask(taskId){
             this.pendingTasks[taskId]=true

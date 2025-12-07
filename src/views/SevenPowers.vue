@@ -49,11 +49,14 @@ watch(loading,()=>{
         localTaskID=null;
         if(loading.lastStatus=="done")
         {
-            showTempMessage(notification,"report completed. go to the s3 report section","notification",20000);
+            showTempMessage(notification,"report completed. go to the s3 report section","notification",5000);
         }
         else if(loading.lastStatus=="error")
         {
-            showTempMessage(notification,"error trying to generate the pdf. refresh the browser and try again","error",20000);
+            showTempMessage(notification,"error trying to generate the pdf. refresh the browser and try again","error",5000);
+            const last = tickers.value.at(-1)
+            tickerHistory.value.delete(last)
+            tickerHistory.value = new Set(tickerHistory.value)
         }
     }
 })

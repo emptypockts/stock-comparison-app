@@ -132,6 +132,8 @@
         <Navigation />
         <CookieBanner />
         <LoginAlert />
+        {{ localTaskID }}
+        {{ loading.pendingTasks[localTaskID] }}
     </div>
     
 </template>
@@ -192,11 +194,21 @@ onMounted(async () => {
     ai_reports.value = await fetch_reports();
 })
 
-watch(loading.pendingTasks,()=>{
+watch(loading,()=>{
     if(localTaskID &&!loading.pendingTasks[localTaskID]){
         isLoadingLocal.value=false
         localTaskID=null;
-        showTempMessage(notification,"report completed. go to the s3 report section","notification",20000);
+        if(loading.lastStatus=="done")
+        {
+            showTempMessage(notification,"report completed. go to the s3 report section","notification",5000);
+        }
+        else if(loading.lastStatus=="error")
+        {
+            showTempMessage(notification,"error trying to generate the pdf. refresh the browser and try again","error",5000);
+            const last = tickers.value.at(-1)
+            tickerHistory.value.delete(last)
+            tickerHistory.value = new Set(tickerHistory.value)
+        }
     }
 })
 watch(isConnected.isConnected,()=>{
@@ -236,6 +248,7 @@ const get_report = async () => {
                 localTaskID=response.data.task_id
                 loading.addTask(localTaskID)
             }
+        
             
             catch (err) {
                 console.error('error trying to generate report:', err)

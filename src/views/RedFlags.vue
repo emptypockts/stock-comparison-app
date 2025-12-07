@@ -33,7 +33,6 @@
         {{ notification.text}}
     </div>
     </div>
-
 </template>
 
 <script setup>
@@ -67,11 +66,14 @@ watch(loading,()=>{
         localTaskID=null;
         if(loading.lastStatus=="done")
         {
-            showTempMessage(notification,"report completed. go to the s3 report section","notification",20000);
+            showTempMessage(notification,"report completed. go to the s3 report section","notification",5000);
         }
         else if(loading.lastStatus=="error")
         {
-            showTempMessage(notification,"error trying to generate the pdf. refresh the browser and try again","error",20000);
+            showTempMessage(notification,"error trying to generate the pdf. refresh the browser and try again","error",5000);
+            const last = tickers.value.at(-1)
+            tickerHistory.value.delete(last)
+            tickerHistory.value = new Set(tickerHistory.value)
         }
     }
 })
@@ -117,16 +119,12 @@ async function red_flag_analysis() {
                     });
                     localTaskID=response.data.task_id;
                     loading.addTask[localTaskID]
+                    tickers.value.forEach(t => tickerHistory.value.add(t.toLowerCase()));
                 }
                 catch (error) {
                     console.error('Error sending query', error);
                     isLoadingLocal.value=false;
                     showTempMessage(notification,"Error sending query","error")
-                }
-                finally {
-                    
-                    tickers.value.forEach(t => tickerHistory.value.add(t.toLowerCase()));
-
                 }
             }
             else {
