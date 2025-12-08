@@ -32,7 +32,7 @@ from pymongo.server_api import ServerApi
 from stockPlotDataQtr import fetch_4qtr_data
 from PDFReport import PDFReport
 import requests
-from worker import generate_ai_report,celery, generate_ai_7powers,generate_ai_quant,generate_ai_quant_rittenhouse
+from worker import generate_ai_report,celery, generate_ai_7powers,generate_ai_quant,generate_ai_quant_rittenhouse,test_task
 from s3_bucket_ops import s3_upload,s3_presigned_url
 from quant import quant
 load_dotenv()
@@ -77,6 +77,7 @@ if ENV=='':
 Session(app)
 DOWNLOAD_DIR = os.getenv('DIRECTORY')
 
+#fetch company names, price and earnings day
 @app.route('/api/economy_index', methods=['GET'])
 @require_cf_token
 @limiter.limit("5 per minute") 
@@ -87,7 +88,8 @@ def fetch_economy_index():
       indexData = EconomyStats.getEconomicIndex(myIndex)
       all_data[myIndex] = indexData
     return jsonify(all_data)
-#fetch company names, price and earnings day
+
+# fetch company data
 @app.route('/api/company_data', methods=['GET'])
 @require_cf_token
 @limiter.limit("3 per minute") 
@@ -99,6 +101,7 @@ def fetch_company_data():
     company_data = companyData.compile_stockData(tickers)
 
     return company_data
+
 #fetch the stock price
 @app.route('/api/stock_price', methods=['GET'])
 @require_cf_token
@@ -111,6 +114,7 @@ def fetch_stock_price():
         return jsonify({'error': 'No tickers provided'}), 400
     data = {ticker: getStockPrice.fetch_stock_price_data(ticker) for ticker in tickers}
     return jsonify(data)
+
 #fetch other metrics for value for plots
 @app.route('/api/financial_data', methods=['GET'])
 @require_cf_token
@@ -122,6 +126,7 @@ def fetch_financial_data():
         return jsonify({'error': 'No tickers provided'}), 400    
     data = {ticker: stockPlotData.fetch_financials(ticker) for ticker in tickers} 
     return jsonify({"financial_data": data}),200
+
 # New API for value stock analysis
 @app.route('/api/5y_data', methods=['GET'])
 @require_cf_token
@@ -149,6 +154,7 @@ def fetch_5y_financial_data():
     # Convert DataFrame to JSON serializable format
     result = combined_data.to_dict(orient='records')
     return jsonify(result),200
+
 #Rittenhouse Analysis API
 @app.route('/api/v1/analyze_rittenhouse', methods=['POST'])
 @require_cf_token
@@ -172,6 +178,7 @@ def analyze_rittenhouse():
             }),202
         except Exception as e:
                 return jsonify({'error':"internal server error"}),500
+
 # calculate intrinsic values
 @app.route('/api/intrinsic_value', methods=['GET'])
 @require_cf_token
@@ -204,6 +211,7 @@ def analyze_intrinsic_value():
         return jsonify(intrinsic_values), 200
     else:
         return jsonify({'error': 'No valid data to display.'}), 400
+
 # API route for login
 @app.route('/api/login', methods=['POST'])
 @limiter.limit("5 per minute") 
@@ -231,7 +239,8 @@ def login():
         return jsonify({'success': True, 'token': token,'expiresAt': int(expiration_time.timestamp())}), 200
     else:
         return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
-# # API route for registration
+
+# API route for registration
 @app.route('/api/register', methods=['POST'])
 @limiter.limit("5 per minute") 
 def register():
@@ -246,7 +255,8 @@ def register():
         return jsonify(result), 201
     else:
         return jsonify(result), 400
-# # Middleware to verify JWT token
+
+# Middleware to verify JWT token
 @app.route('/api/verify', methods=['POST'])
 def verify_token():
     
@@ -260,6 +270,8 @@ def verify_token():
         return jsonify({'success': False, 'message': 'Token has expired'}), 401
     except jwt.InvalidTokenError:
         return jsonify({'success': False, 'message': 'Invalid token'}), 401
+
+# analyse sentiment and polarity
 @app.route('/api/v1/seven_p', methods=['POST'])
 @require_cf_token
 @limiter.limit("5 per minute") 
@@ -281,6 +293,8 @@ def messageBot():
             }),202
     except Exception as e:
         return jsonify({'error':"internal server error"}),500
+
+# overall financials ai report
 @app.route('/api/v1/gemini',methods=['POST'])
 @require_cf_token
 @limiter.limit("5 per minute") 
@@ -307,6 +321,8 @@ def gemini_post():
         }),202
     except Exception as e:
             return jsonify({'error':"internal server error"}),500
+
+# generate and upload report
 @app.route('/api/v1/gemini/report',methods=['POST'])
 @require_cf_token
 @limiter.limit("5 per minute") 
@@ -331,6 +347,8 @@ def report_generate_and_upload():
             return jsonify({
                 "error":"internal server error"
             }),500
+
+# fetch data from database 
 @app.route('/api/fetchStockfromDB', methods=['GET'])
 @require_cf_token
 @limiter.limit("5 per minute") 
@@ -355,6 +373,8 @@ def MongoFetchStock():
         }), 200
     except Exception as e:
         return jsonify({'error': "internal server error"}), 500
+
+#fetch data from database per qtr
 @app.route('/api/QStockScore', methods=['GET'])
 @require_cf_token
 @limiter.limit("10 per minute") 
@@ -376,6 +396,8 @@ def QtrStockScore ():
         except Exception as e:
             return jsonify({'error': "internal server error"}), 500
     return jsonify(stockData)
+
+# fetch stock trend per qtr
 @app.route('/api/AllQStockTrend',methods=['GET'])
 @require_cf_token
 @limiter.limit("5 per minute") 
@@ -401,6 +423,8 @@ def AllQtrStockRevTrend():
             }), 200
     except Exception as e:
         return jsonify({'error': "internal server error"}), 500   
+
+# fetch financial data per qtr
 @app.route('/api/financial_data_qtr', methods=['GET'])
 @require_cf_token
 @limiter.limit("5 per minute") 
@@ -419,6 +443,8 @@ def fetch_4qtr_financial_data():
     if not all_data:
         return jsonify({"error": "Failed to fetch any qtr data"}), 500
     return jsonify(all_data),200
+
+# validate cloudflare token
 @app.route('/api/v1/cfToken',methods=['GET'])
 
 def get_a_token():
@@ -459,6 +485,8 @@ def get_a_token():
     except jwt.InvalidTokenError:
         return jsonify({"success": False, "message": "Invalid token"}), 401
  #check celery task status   
+
+# check task status
 @app.route('/api/v1/gemini/status/<task_id>',methods=['GET'])
 @require_cf_token
 @limiter.limit("5 per minute") 
@@ -485,6 +513,8 @@ def gemini_task_status(task_id):
         return jsonify({
             'error':"internal server error"
         }),500
+
+# fetch available reports from the db per user
 @app.route('/api/v1/user_reports',methods=['GET'])
 @require_cf_token
 @limiter.limit("5 per minute") 
@@ -530,6 +560,8 @@ def query_reports():
         return jsonify({
             "error":"internal server error"
         }),500
+
+# download report from aws s3 bucket
 @app.route('/api/v1/user_report',methods=['GET'])
 @require_cf_token
 @limiter.limit("5 per minute") 
@@ -552,6 +584,8 @@ def download_report():
             return jsonify({
                 "error":"internal server error"
             }),500
+
+# risk and red flag analysis
 @app.route('/api/v1/quant',methods=['POST'])
 @require_cf_token
 @limiter.limit("5 per minute") 
@@ -574,6 +608,8 @@ def quantize():
             }),202
         except Exception as e:
                 return jsonify({'error':"internal server error"}),500
+
+# test 
 @app.route('/api/private')
 @require_cf_token
 @limiter.limit("5 per minute") 
@@ -582,6 +618,13 @@ def secret_area():
         "message": "Access granted",
         "identity": request.cf_identity
     })
+@app.route('/api/v1/test_task')
+def test_my_task():
+    task=test_task.delay()
+    return jsonify({
+        "message":"test"
+    }),200
 if __name__ == '__main__':
     debug_mode= os.getenv("FLASK_DEBUG","0")=="1"
     app.run(host="0.0.0.0",port=5000,debug=debug_mode)
+    

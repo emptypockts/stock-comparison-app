@@ -7,12 +7,18 @@ from stockPlotData import fetch_financials
 from stockPlotDataQtr import fetch_4qtr_data
 from stockIntrinsicVal import getAllIntrinsicValues
 from financialUtils import fetch_name
+from langchain_ollama import ChatOllama
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 import pandas as pd
 import json
 load_dotenv()
-API_KEY = os.getenv("GEMINI_API")
-url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
-querystring = {"key": API_KEY}
+GEMINI_API=os.getenv('GEMINI_API')
+DIRECTORY=os.getenv('DIRECTORY')
+llm=ChatOllama(model="gpt-oss:120b",base_url="https://ollama.com")
+# llm=ChatOllama(model="llama2-uncensored:latest")
+# llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash",api_key=GEMINI_API,max_retries=1)
+
 def get_company_data_agent(tickers)->str:
     return f"""
     You are a financial analysis AI assistant designed to generate concise, insightful feedback for investors.
@@ -199,62 +205,47 @@ Additional rules:
 """
 def ai_query(agent, data)->str:
 
-    payload = {
-        "system_instruction": {"parts": [{"text": agent}]},
-        "contents": [
-            {
-                "parts": [
-                    {"text": "here is the stock data \n" + json.dumps(data, indent=2)}
-                ]
-            }
-        ],
-    }
-    headers = {"Content-Type": "application/json"}
-    response = requests.post(url, json=payload, headers=headers, params=querystring)
-    if response.status_code==429:
-        raise Exception("quota exceeded",response)
-    response = response.json()
+
+    response=llm.invoke(
+        [
+            SystemMessage(content=agent),
+            HumanMessage(content=f"here is the data {json.dumps(data)}")
+        ]
+    )
+    if response.content:
+        return response.content.strip().lower()
+    else:
+        raise Exception(f"response has no content. see details: {response}")
+        return {}
     
-    return response["candidates"][0]["content"]["parts"][0]["text"]
 def get_full_report(agent,r1,r2,r3,r4,r5)->str:
-    payload = {
-            "system_instruction": {"parts": [{"text": agent}]},
-            "contents": [
-                {
-                    "parts": [
-                        {
-                            "text": f"""current status report\n {r1}\n value score report\n{r2}
-                            yearly report\n{r3}\n quarterly report{r4}\n intrinsic value report{r5}
-                            """ }
-                    ]
-                }
-            ],
-    }
-    headers = {"Content-Type": "application/json"}
-    response = requests.post(url, json=payload, headers=headers, params=querystring)
-    if response.status_code==429:
-        raise Exception("quota exceeded",response)
-    response = response.json()
-    return response["candidates"][0]["content"]["parts"][0]["text"]
+    response=llm.invoke(
+        [
+            SystemMessage(content=agent),
+            HumanMessage(content=f"""current status report\n{r1}\nvalue score report\n{r2}
+                            yearly report\n{r3}\nquarterly report{r4}\nintrinsic value report{r5}""")
+        ]
+    )
+    if response.content:
+        return response.content
+    else:
+        raise Exception(f"response has no content. see details: {response}")
+        return {}
+
 def validate_json(agent,r6)->str:
-    payload={
-        "system_instruction":{"parts":[{"text":agent}]},
-        "contents":[
-            {
-                "parts":[
-                    {
-                        "text":r6
-                    }
-                ]
-            }
-        ],
-    }
-    headers= {"Content-Type":"application/json"}
-    response=requests.post(url,json=payload,headers=headers,params=querystring)
-    if response.status_code==429:
-        raise Exception("quota exceeded",response)
-    response=response.json()
-    return response["candidates"][0]["content"]["parts"][0]["text"]
+    response=llm.invoke(
+        [
+            SystemMessage(content=agent),
+            HumanMessage(content=f"text:{r6}")
+        ]
+    )
+    if response.content:
+        validated_json=json.loads(response.content.replace("```json","").replace("```","").strip().lower())
+        return validated_json
+    else:
+        raise Exception(f"response has no content. see details: {response}")
+        return {}
+    
 def compile(tickers)->str:
     try:
         #ai agent that analyses company basic data such as revenue and stock price
@@ -304,16 +295,13 @@ def compile(tickers)->str:
             r6 =get_full_report(full_report_agent,r1,r2,r3,r4,r5)
         except Exception as e:
             print(str(e))
-            raise(f"error getting full report is {str(e)}")
-        #validate json object
-        json_validator_agent=get_json_validator()
-        response = validate_json(json_validator_agent,r6.replace("```","").replace("json","").strip().lower())
-        r7=json.loads(response.replace("```json","").replace("```","").strip().lower())
-        return r7
+            return None
+        return r6.lower().strip()
         
         
     except Exception as e:
-        return e
+        print("error is: ",str(e))
+        return None
 if __name__ == "__main__":
     tickers = ["mu"]
 

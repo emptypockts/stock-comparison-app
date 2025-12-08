@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 import os
 from datetime import datetime,timezone
 from celery.exceptions import Ignore
+from PDFReport import PDFReport
+from s3_bucket_ops import s3_upload
 
 
 load_dotenv()
@@ -18,11 +20,11 @@ celery = Celery(
     backend=os.getenv('REDIS_SERVER')
 )
 
-def notify_task_result(event_name,payload):
+def notify_task_result(event_name,payload,name_space):
     if not sio.connected:
-        sio.connect(WS_SOCKET_URI)
+        sio.connect(WS_SOCKET_URI,namespaces=[name_space])
     try:
-        sio.emit(event_name,payload,namespace='/')
+        sio.emit(event_name,payload,namespace=name_space)
         sio.sleep(0)
     except Exception as e:
         print(f"error trying to connect to the ws socket {sio} error {str(e)}")
@@ -30,16 +32,23 @@ def notify_task_result(event_name,payload):
 def connect_to_ws_server():
     sio.connect(WS_SOCKET_URI)
 
-# ==============overal financials==============
+# ==============overall financials==============
 @celery.task(bind=True)
 def generate_ai_report(self,tickers,user_id,report_type):
-    
+    task_id=self.request.id
     from aiReport import compile
+    notify_task_result('task_start',{
+        'user_id':user_id,
+        'task_id':task_id,
+        'tickers':tickers,
+        'report_type':report_type,
+        "tickers":tickers,
+        "timestamp":datetime.now().isoformat()+"Z"
+    },'/ai')    
     
     try:
         if not user_id:
             raise Ignore()
-        task_id = self.request.id
         result= compile(tickers)
 
         if result:
@@ -56,6 +65,9 @@ def generate_ai_report(self,tickers,user_id,report_type):
 
             })
 
+            pdf_report = PDFReport(task_id)
+            pdf_report.generate()
+            s3_upload(bucket_name=report_type,file_name=f"{task_id}")
 
             
             print('notifying server of completion')
@@ -67,11 +79,11 @@ def generate_ai_report(self,tickers,user_id,report_type):
                 "tickers":tickers,
                 "timestamp":datetime.now().isoformat()+"Z"
 
-            })
+            },'/ai')
             return result
 
     except Exception as e:
-        print(f"error with task execution {str(e)} for tickers {tickers}, task id {task_id}")
+        print(f"error with task execution for tickers {tickers}, task id {task_id}")
         notify_task_result("task_failed", {
             "user_id": user_id,
             "task_id": task_id,
@@ -79,7 +91,7 @@ def generate_ai_report(self,tickers,user_id,report_type):
             "report_type": report_type,
             "timestamp": datetime.now().isoformat() + "Z",
             "error": str(e)
-        })
+        },'/ai')
         
         raise self.retry(exc=e,countdown=5,max_retries=1)
     
@@ -88,10 +100,19 @@ def generate_ai_report(self,tickers,user_id,report_type):
 @celery.task(bind=True)
 def generate_ai_7powers(self,tickers,user_id,report_type):
     from sevenPowers import seven_powers
+    task_id=self.request.id
+    notify_task_result('task_start',{
+        'user_id':user_id,
+        'task_id':task_id,
+        'tickers':tickers,
+        'report_type':report_type,
+        "tickers":tickers,
+        "timestamp":datetime.now().isoformat()+"Z"
+    },'/ai')
     try:
         if not user_id:
             raise Ignore()
-        task_id=self.request.id
+
         result= seven_powers(tickers)
         
         now=datetime.now()
@@ -107,6 +128,9 @@ def generate_ai_7powers(self,tickers,user_id,report_type):
                 "tickers":tickers,
                 "timestamp":datetime.now(timezone.utc)
             })
+            pdf_report = PDFReport(task_id)
+            pdf_report.generate()
+            s3_upload(bucket_name=report_type,file_name=f"{task_id}")
             
             print("notifying server of completion")
             notify_task_result('task_done',{
@@ -116,13 +140,13 @@ def generate_ai_7powers(self,tickers,user_id,report_type):
             'report_type':report_type,
             "tickers":tickers,
             "timestamp":datetime.now().isoformat()+"Z"
-            })
+            },'/ai')
             
             return result
 
             
     except Exception as e:
-        print(f"error with task execution {str(e)} for tickers {tickers}, task id {task_id}")
+        print(f"error with task execution for tickers {tickers}, task id {task_id}")
         notify_task_result("task_failed", {
             "user_id": user_id,
             "task_id": task_id,
@@ -130,7 +154,7 @@ def generate_ai_7powers(self,tickers,user_id,report_type):
             "report_type": report_type,
             "timestamp": datetime.now().isoformat() + "Z",
             "error": str(e)
-        })
+        },'/ai')
         
         raise self.retry(exc=e,countdown=5,max_retries=1)
     
@@ -139,11 +163,19 @@ def generate_ai_7powers(self,tickers,user_id,report_type):
 @celery.task(bind=True)
 def generate_ai_quant(self,tickers,user_id,report_type):
     current_year=(datetime.now().year)
+    task_id=self.request.id
     from quant import quant
+    notify_task_result('task_start',{
+        'user_id':user_id,
+        'task_id':task_id,
+        'tickers':tickers,
+        'report_type':report_type,
+        "tickers":tickers,
+        "timestamp":datetime.now().isoformat()+"Z"
+    },'/ai')
     try:
         if not user_id:
             raise Ignore()
-        task_id=self.request.id
         result=quant(str(current_year),tickers)
         
         now=datetime.now()
@@ -159,6 +191,9 @@ def generate_ai_quant(self,tickers,user_id,report_type):
                 "tickers":tickers,
                 "timestamp":datetime.now(timezone.utc)
             })
+            pdf_report = PDFReport(task_id)
+            pdf_report.generate()
+            s3_upload(bucket_name=report_type,file_name=f"{task_id}")
         
             print("notifying server of completion")
             notify_task_result('task_done',{
@@ -168,13 +203,13 @@ def generate_ai_quant(self,tickers,user_id,report_type):
             'report_type':report_type,
             "tickers":tickers,
             "timestamp":datetime.now().isoformat()+"Z"
-            })
+            },'/ai')
             
             return result
 
     except Exception as e:
          
-        print(f"error with task execution {str(e)} for tickers {tickers}, task id {task_id}")
+        print(f"error with task execution for tickers {tickers}, task id {task_id}")
         notify_task_result("task_failed", {
             "user_id": user_id,
             "task_id": task_id,
@@ -182,18 +217,30 @@ def generate_ai_quant(self,tickers,user_id,report_type):
             "report_type": report_type,
             "timestamp": datetime.now().isoformat() + "Z",
             "error": str(e)
-        })
+        },'/ai')
         
         raise self.retry(exc=e,countdown=5,max_retries=1)
     
+
+# ======= rittenhouse ============
+
 @celery.task(bind=True)
 def generate_ai_quant_rittenhouse(self,tickers,user_id,report_type):
     current_year=(datetime.now().year)
+    task_id=self.request.id
     from rittenhouse import quant_rittenhouse
+    notify_task_result('task_start',{
+        'user_id':user_id,
+        'task_id':task_id,
+        'tickers':tickers,
+        'report_type':report_type,
+        "tickers":tickers,
+        "timestamp":datetime.now().isoformat()+"Z"
+    },'/ai') 
     try:
         if not user_id:
             raise Ignore()
-        task_id=self.request.id
+
         result=quant_rittenhouse(str(current_year),tickers)
         
         now=datetime.now()
@@ -209,6 +256,9 @@ def generate_ai_quant_rittenhouse(self,tickers,user_id,report_type):
                 "tickers":tickers,
                 "timestamp":datetime.now(timezone.utc)
             })
+            pdf_report = PDFReport(task_id)
+            pdf_report.generate()
+            s3_upload(bucket_name=report_type,file_name=f"{task_id}")
         
             print("notifying server of completion")
             notify_task_result('task_done',{
@@ -218,13 +268,13 @@ def generate_ai_quant_rittenhouse(self,tickers,user_id,report_type):
             'report_type':report_type,
             "tickers":tickers,
             "timestamp":datetime.now().isoformat()+"Z"
-            })
+            },'/ai')
             
             return result
 
     except Exception as e:
          
-        print(f"error with task execution {str(e)} for tickers {tickers}, task id {task_id}")
+        print(f"error with task execution for tickers {tickers}, task id {task_id}")
         notify_task_result("task_failed", {
             "user_id": user_id,
             "task_id": task_id,
@@ -232,6 +282,22 @@ def generate_ai_quant_rittenhouse(self,tickers,user_id,report_type):
             "report_type": report_type,
             "timestamp": datetime.now().isoformat() + "Z",
             "error": str(e)
-        })
+        },'/ai')
         
         raise self.retry(exc=e,countdown=5,max_retries=1)
+
+@celery.task(bind=True)
+def test_task(self):
+    task_id= "test"
+    user_id="noreply.info@eacsa.us"
+    tickers=['sofi']
+    report_type='overall-reports'
+    print("notifying server of completion")
+    notify_task_result('task_done',{
+    'user_id':user_id,
+    'task_id':task_id,
+    'tickers':tickers,
+    'report_type':report_type,
+    "tickers":tickers,
+    "timestamp":datetime.now().isoformat()+"Z"
+    },'/ai')

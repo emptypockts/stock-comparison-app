@@ -8,45 +8,43 @@ load_dotenv()
 import os
 app = Flask(__name__)
 ws_server = SocketIO(app,cors_allowed_origins="*",message_queue=os.getenv('REDIS_SERVER'),async_mode='eventlet')
+name_space='/ai'
 
-
-@ws_server.on("connect")
+@ws_server.on("connect",namespace=name_space)
 def handle_connect():
     print(f"new client joined in at {datetime.now()} id: {request.sid}")
 
-@ws_server.on("disconnect")
+@ws_server.on("disconnect",namespace=name_space)
 def handle_disconnect():
     print(f"client got disconnected at {datetime.now()} id: {request.sid}")
 
-@ws_server.on("task_done")
+@ws_server.on("task_done",namespace=name_space)
 def handle_task_completed(data):
     print("task is completed dropping result,",data)
-    join_room(room=data.get('task_id',''))
+    room_name = f"user:{data.get('user_id','')}"
+    join_room(room=room_name,namespace=name_space)
     print(f"client: {data.get('user_id','')} joined the room {data.get('task_id','')} with sid {request.sid}")
-    ws_server.emit('task_done',data)
+    ws_server.emit('task_done',data,namespace=name_space)
 
 
-@ws_server.on("task_failed")
+@ws_server.on("task_failed",namespace=name_space)
 def handle_message(data):
-    join_room(room=data.get('task_id',''))
-    print("this task failed", data)
-    ws_server.emit('task_failed',data)
+    room_name = f"user:{data.get('user_id','')}"
+    join_room(room=room_name,namespace=name_space)
+    print(f"socket server: task_failed: {data['task_id']} namespace: {name_space}")
+    ws_server.emit('task_failed',data,namespace=name_space)
     
-@ws_server.on("join_room")
+@ws_server.on("join_room",namespace=name_space)
 def handle_join(data):
     if data:
         user_id=data.get('user_id','')
         sid=request.sid
-        join_room(user_id)
-        print(f"client {request.sid} joined room {user_id} with id:{sid}")
-
-@ws_server.on('register_user')
-def register_user(data):
-    if data:
-        user_id=data.get('user_id')
-        sid=request.sid
-        print(f"🔗 User {user_id} joined room {user_id} with SID {sid}")
-
+        room_name = f"user:{user_id}"
+        join_room(room_name,namespace=name_space)
+        print(f"client {request.sid} joined room {room_name} with id:{sid}")
+def notify_user(user_id,event_name,payload=None):
+    room_name = f"user:{user_id}"
+    SocketIO.emit(event_name,payload or {},room=room_name,namespace=name_space)
 
 
 if __name__=="__main__":

@@ -5,6 +5,7 @@ from outils import clean_edgar_text,analyze_ticker,save_analysis_report
 from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage,SystemMessage
+from langchain_ollama import ChatOllama
 from prompts import rittenhouse_synthesis_instructions,rittenhouse_individual_report_instructions
 load_dotenv()
 
@@ -13,7 +14,8 @@ GEMINI_API=os.getenv('GEMINI_API')
 DIRECTORY=os.getenv('DIRECTORY')
 
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash",api_key=GEMINI_API,max_retries=1)
+# llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash",api_key=GEMINI_API,max_retries=1)
+llm=ChatOllama(model="gpt-oss:120b",base_url="https://ollama.com")
 
 #define the form types to fetch the files if needed
 form_types = ['10-K', '10-Q', '8-K', 'DEF 14A','20-F','6-K'] 

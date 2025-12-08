@@ -17,8 +17,8 @@ import os
 GEMINI_API=os.getenv('GEMINI_API')
 DIRECTORY=os.getenv('DIRECTORY')
 
-
-llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash",api_key=GEMINI_API,max_retries=1)
+llm=ChatOllama(model="gpt-oss:120b",base_url="https://ollama.com")
+# llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash",api_key=GEMINI_API,max_retries=1)
 def seven_powers(tickers)->str:
     response = llm.invoke(
         [

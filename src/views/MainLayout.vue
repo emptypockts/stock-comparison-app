@@ -132,8 +132,6 @@
         <Navigation />
         <CookieBanner />
         <LoginAlert />
-        {{ localTaskID }}
-        {{ loading.pendingTasks[localTaskID] }}
     </div>
     
 </template>

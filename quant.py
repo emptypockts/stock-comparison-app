@@ -1,5 +1,6 @@
 from langchain_ollama import ChatOllama
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage,SystemMessage
 import json
@@ -18,10 +19,8 @@ GEMINI_API=os.getenv('GEMINI_API')
 DIRECTORY=os.getenv('DIRECTORY')
 
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash",api_key=GEMINI_API,max_retries=1)
-# llm=ChatOllama(model="llama3.2:latest")
-
-    
+# llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash",api_key=GEMINI_API,max_retries=1)
+llm=ChatOllama(model="gpt-oss:120b",base_url="https://ollama.com")
 def quant(year,tickers:list)->str:
     """
     quant analyzes a ticker 10K, 10Q, 8K, DEF 14A reports and identify red flags and opportunities
