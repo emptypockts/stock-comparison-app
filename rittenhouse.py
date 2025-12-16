@@ -1,21 +1,17 @@
 import json
 import os
 from datetime import datetime, timedelta
-from outils import clean_edgar_text,analyze_ticker,save_analysis_report
+from outils import clean_edgar_text,analyze_ticker,save_analysis_report,process_sec_chunks,synthetize_summaries,llm
 from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage,SystemMessage
 from langchain_ollama import ChatOllama
-from prompts import rittenhouse_synthesis_instructions,rittenhouse_individual_report_instructions
+from prompts import rittenhouse_synthesis_instructions,summarize_chunk_instructions
 load_dotenv()
-
-
-GEMINI_API=os.getenv('GEMINI_API')
 DIRECTORY=os.getenv('DIRECTORY')
 
 
-# llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash",api_key=GEMINI_API,max_retries=1)
-llm=ChatOllama(model="gpt-oss:120b",base_url="https://ollama.com")
+
 
 #define the form types to fetch the files if needed
 form_types = ['10-K', '10-Q', '8-K', 'DEF 14A','20-F','6-K'] 
@@ -30,21 +26,18 @@ def load_and_preprocess(file_path):
 
 
 def rittenhouse_analysis(report)->str:
-    print("checking report",report[:10:])
-    response = llm.invoke(
-        [
-            SystemMessage(content=rittenhouse_individual_report_instructions),
-            HumanMessage(content=f"report: {report}")
-        ]
-    )
-    
-    if response.content:
-        validated_json=json.loads(response.content.replace("```json","").replace("```","").strip().lower())
+    try:
+        summaries = process_sec_chunks(report=report,instructions=summarize_chunk_instructions)
+        final_report = synthetize_summaries(summaries=summaries,instructions=rittenhouse_synthesis_instructions)
+        if final_report:
+            return final_report
+        else:
+            raise Exception(f"response has no content. see details: {response}")
+            return {}
+    except Exception as e:
+        print("error executing final summary", str(e))
+        return None
 
-        return validated_json
-    else:
-        raise Exception(f"response has no content. see details: {response}")
-        return {}
     
 def synthetize_rittenhouse_reports(reports)->str:
     response=llm.invoke(

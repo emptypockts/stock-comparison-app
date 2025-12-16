@@ -4,15 +4,27 @@ from datetime import datetime,timedelta
 import os
 import json
 import re 
+from langchain_core.messages import HumanMessage,SystemMessage
 from typing import Literal
 from secDBFetch import get_sec_filings
 from dotenv import load_dotenv
 import requests
+from langchain_ollama import ChatOllama
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from classes_langchain import Chunk
 load_dotenv()
-API_KEY = os.getenv("GEMINI_API")
+
+
 url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
-querystring = {"key": API_KEY}
+GEMINI_API=os.getenv('GEMINI_API')
+DIRECTORY=os.getenv('DIRECTORY')
+querystring = {"key": GEMINI_API}
+
+# llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash",api_key=GEMINI_API,max_retries=1)
+llm=ChatOllama(model="gpt-oss:120b",base_url="https://ollama.com")
+# llm=ChatOllama(model="llama2-uncensored:latest")
+
 
 form_types = ['10-K', '10-Q', '8-K', 'DEF 14A','20-F','6-K'] 
 def clean_edgar_text(content: str) -> str:
@@ -137,8 +149,58 @@ def parse_tickers(tickers):
 
 def chunk_report(report:str)->list:
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1500,
-        chunk_overlap=150,
+        chunk_size=100000,
+        chunk_overlap=300,
         separators=["\n\n","\n","."," "]
     )
     return splitter.split_text(report)
+
+def split_and_map_chunks(text):
+    chunks=chunk_report(text)
+    return [{"chunk":e,}for e in chunks]
+
+def process_sec_chunks(report:str,instructions:str)->list:
+    """
+    function to chunk a long text and summarize it. it will return a list of chunks.
+    
+    :param report: Description
+    :type report: str
+    :param instructions: Description
+    :type instructions: str
+    :return: list of summarized chunks
+    :rtype: list
+    """
+    dict_chunks = chunk_report(report)
+    structured_llm=llm.with_structured_output(Chunk)
+    responses=[]
+    idx = 0
+    for i in dict_chunks:
+        response = structured_llm.invoke(
+            [
+                SystemMessage(content=instructions),
+                HumanMessage(content=i)
+            ]
+        )
+        responses.append({"chunk_index":idx,
+                        "chunk":response.chunk})
+        idx+=1
+        print("response chunk idx: ",idx)
+    return responses
+
+def synthetize_summaries(summaries:list,instructions)->list:
+    """
+    function to synthetize summaries and provide a final summary ready for pdf conversion.
+    
+    :param summaries: 
+    :type summaries: list
+    :param instructions: Description
+    :return: llm response in structured output for pdf (title, content, bullets)
+    :rtype: list
+    """
+    response = llm.invoke(
+        [
+            SystemMessage(content=instructions),
+            HumanMessage(content=f"here is the report: {summaries}")
+        ]
+    )
+    return response.content if response.content else None

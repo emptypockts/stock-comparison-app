@@ -1,6 +1,6 @@
 <template>
   <div class="input-row">
-    <span style="color: red;">eacsa></span><span style="color: gray;"> ticker:</span>
+    <span style="color: red;">eacsa></span><span style="color: gray;"> analyse the ticker:</span>
 
     <input 
     v-model="ticker1"
@@ -12,7 +12,7 @@
                 :disabled="loading.isLoading" 
                 @click="verifyAndFetchCompanyData" 
                 class="buttons">
-            {{loading['isLoading'] ? 'generating report': 'fundamentals'}}
+            {{loading['isLoading'] ? 'generating report': 'start'}}
             </button>
             </div>
   
