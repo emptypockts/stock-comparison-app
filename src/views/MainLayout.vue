@@ -136,7 +136,7 @@
     
 </template>
 <script setup>
-import { ref, onMounted, watch ,onBeforeMount} from 'vue';
+import { ref, onMounted, watch , onUnmounted} from 'vue';
 import IntrinsicValue from '@/views/IntrinsicValue.vue';
 import CompanyData from '@/views/CompanyData.vue';
 import StockFinancialCharts from '@/views/StockFinancialCharts.vue';
@@ -190,6 +190,8 @@ function hideToolTip(){
 
 onMounted(async () => {
     ai_reports.value = await fetch_reports();
+    isSocketReady.value=isConnected.socket.connected
+
 })
 
 watch(loading,()=>{
@@ -222,8 +224,7 @@ function handleClickOutside(event){
 
 }
 onMounted(()=>document.addEventListener('click',handleClickOutside));
-onBeforeMount(()=>document.addEventListener('click',handleClickOutside))
-
+onUnmounted(() => {document.removeEventListener('click', handleClickOutside)})
 const get_report = async () => {
     const tickers = tickerStore.currentTickers;
     const user_id = localStorage.getItem('user_id')

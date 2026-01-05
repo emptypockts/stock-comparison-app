@@ -26,16 +26,23 @@ export function useSocket() {
             console.log("socket client: socket connected with user_id: " + user_id)
             isConnected.value = true;
         })
+        socket.on('reconnect',()=>{
+            const user_id = localStorage.getItem('user_id')
+            socket.emit("join_room", { user_id })
+            console.log("socket client: socket re-connected with user_id: " + user_id)
+            isConnected.value = true;
+
+        })
         socket.on('disconnect', () => {
             isConnected.value = false;
             console.log('socket has been disconnected')
         })
-        socket.on('task_done', (data) => {
+        socket.on('task_done', async (data) => {
             const user_id = localStorage.getItem('user_id')
             taskData.value = data
             if (taskData.value.user_id === user_id) {
                 try {
-                    fetch_reports();
+                    await fetch_reports();
                     notifStore.add({
                         task_id: taskData.value.task_id,
                         tickers: taskData.value.tickers,

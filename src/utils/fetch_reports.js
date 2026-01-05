@@ -1,6 +1,5 @@
 import { ref } from 'vue';
 import axios from 'axios';
-import { useLoadingStore } from '@/stores/loadingStore';
 const ai_reports=ref({});
 export async function fetch_reports() {
     try {

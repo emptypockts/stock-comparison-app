@@ -10,6 +10,7 @@ import App from '@/layouts/App.vue';
 import { useTickerStore } from '@/stores/tickerStore';
 import MainLayout from '@/views/MainLayout.vue';
 import StockChartHK from '@/views/StockChartHK.vue';
+import donateHedera from '@/views/donateHedera.vue';
 
 const router = createRouter({
   history:createWebHistory(),
@@ -32,6 +33,11 @@ const router = createRouter({
     path: 'economyidx',
     name: 'EconomyStats',
     component: EconomyStats,
+  },
+  {
+    path: 'donate',
+    name: 'donateHedera',
+    component: donateHedera,
   },
   {
     path: 'stockchart',

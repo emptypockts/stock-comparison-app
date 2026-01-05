@@ -4,6 +4,7 @@
     <StockChartLogo />
     <QtrStockChartLogo />
     <GoBack />
+    <HederaLogo/>
     <Logout/>
     
     </div>
@@ -16,13 +17,15 @@ import economyIdxLogo from "./economyIdxLogo.vue";
 import GoBack from "./goBack.vue";
 import StockChartLogo from "./StockChartLogo.vue";
 import QtrStockChartLogo from "./QtrStockChartLogo.vue";
+import HederaLogo from "./hederaLogo.vue";
     export default{
         components:{
             Logout,
             economyIdxLogo,
             GoBack,
             StockChartLogo,
-            QtrStockChartLogo
+            QtrStockChartLogo,
+            HederaLogo
         },
     }
 
