@@ -1,21 +1,19 @@
 <template>
     <div>
-<div>
-<input v-model="amount"/>
-</div>
-<div>
+<span>eacsa> </span>
+send hbar ℏ
+<input v-model="amount" class="terminal-input"/>
+
+
   <button
     @click="sendTx"
+    class="buttons"
   >
-    Send transaction {{ amount }}
+    send
   </button>
   </div>
-      </div>
-      {{ data }}
-      {{ isPending }}
-      {{ isSuccess }}
-      {{ isError }}
-      {{ error }}
+
+
 </template>
 
 <script setup lang="ts">

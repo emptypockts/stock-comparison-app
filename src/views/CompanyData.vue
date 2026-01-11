@@ -1,7 +1,7 @@
 <template>
   <div class="input-row">
-    <span style="color: red;">eacsa></span><span style="color: gray;"> analyse the ticker:</span>
-
+    <span>eacsa></span>
+    analyse the ticker:
     <input 
     v-model="ticker1"
     id="ticker 1" 

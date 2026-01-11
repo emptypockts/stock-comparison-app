@@ -7,10 +7,15 @@ import Navigation from '@/components/Navigation.vue';
 </script>
 
 <template>
+  <Connect />
+  
+  <br/>
+  <br/>
   <Connection />
-  <Balance />
-  <Connect />>
+  <br/>
+  <br/>
   <SendTransaction />
+
   <div>
         <Navigation/>
       </div>
