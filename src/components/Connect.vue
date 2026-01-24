@@ -20,7 +20,10 @@ const allConnectors=useConnectors()
 const chainId = useChainId()
 const connect = useConnect()
 const connectors = computed(()=>
+
 allConnectors.value.filter((c)=>{ 
+  console.log("c",c)
+  console.log('url',window.location.origin)
   if (isIos){
     return c.id==='walletConnect'
   }
