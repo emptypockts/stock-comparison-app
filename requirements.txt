@@ -65,7 +65,7 @@ jsonpatch==1.33
 jsonpointer==3.0.0
 kombu==5.5.4
 langchain==1.0.3
-langchain-core==1.2.6
+langchain-core==1.2.5
 langchain-google-genai==3.0.0
 langchain-ollama==1.0.0
 langchain-openai==1.1.0
