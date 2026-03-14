@@ -166,6 +166,7 @@ def push_StockData(db, objects, collection:str,ordered_mode:bool=True,index_list
         assert stock_collection.count_documents({})>0
         db[prod_collection].rename(bakcup_collection)
         db[temp_collection].rename(prod_collection)
+        print(f"swap of collection {collection} completed")
     except errors.BulkWriteError as bwe:
         print(f"Bulk write error: {bwe.details}")
     except errors.ConnectionFailure as cf:
@@ -183,7 +184,7 @@ def swap_temp_prod(db,collection):
         db[prod_collection].rename(bakcup_collection)
         db[temp_collection].rename(prod_collection)
         db.drop_collection(temp_collection)
-        print('temp to prod swap done successfully')
+        print(f"temp to prod swap of collection {collection} done successfully")
     except errors.BulkWriteError as bwe:
         print(f"Bulk write error: {bwe.details}")
     except errors.ConnectionFailure as cf:

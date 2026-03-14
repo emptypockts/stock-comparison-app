@@ -10,7 +10,9 @@ from math import atan, degrees
 import numpy as np
 from datetime import datetime
 
-
+# load env variables
+path =os.getenv('COMPANY_FACT_PATH')
+NASDAQ_FILE = os.getenv('NASDAQ_FILE')
 
 # join qtr rev trend table with stock score 
 def aggregateScoreToQtrRevTrend(collection:Collection):
@@ -60,12 +62,10 @@ def aggregateScoreToQtrRevTrend(collection:Collection):
         collection.bulk_write(jsonObject)
         print('push completed successfully')
 def fetch_Stock_Info():
-
+    nasdaq=pd.read_csv(NASDAQ_FILE)
     collection=db['tickerCIK']
-    path = r"C:\\Users\\ejujo\\Downloads\\companyfacts\\"
     files = os.listdir(path)
     qtr_obj = []
-    nasdaq =pd.read_csv(r"C:\\Users\ejujo\\coding\\nasdaq.csv")
     metric_keys =get_metric_keys()
     for file in files:
         # use to debug
@@ -106,13 +106,8 @@ def fetch_Stock_Info():
             # Convert the deduplicated frames into a list
     return qtr_obj
 def fetch_dei_info():
-    path = f"C:\\Users\\ejujo\\Downloads\\companyfacts\\"
     files = os.listdir(path)
     qtr_obj = []
-
-    
-
-
     # for file in files[:3:]:
     for file in files:
         cik_integer = int(file[:-5].lstrip("CIK").lstrip("0"))
@@ -324,21 +319,24 @@ if __name__=="__main__":
     #go to this link to download the company facts https://www.sec.gov/Archives/edgar/daily-index/xbrl/companyfacts.zip
    
     # # Flow to update stock info from json files  (GAAP)
+    print("pushing financial data ",datetime.now())
     # object = fetch_Stock_Info()
     # push_StockData(db,object,collection='QtrStockData')    
     
 
 
-    # # function to update main revenue trends per quarter in the db   
-    # for skip in range((collectionSize//limit_size)+1):
-        # response =PullProcessMergeRevenueGrowthQtrStockData(db['QtrStockData'],skip,limit_size)
-        
-        # pushMergedRevenueGrowthQtrStockData(response,db['temp_QtrStockRevTrend'])
-    # swap_temp_prod(db,collection='QtrStockRevTrend')
-    
+    # # function to update main revenue trends per quarter in the db
+    print("process qtr data and calculating trends. ",datetime.now())
+    for skip in range((collectionSize//limit_size)+1):
+        response =PullProcessMergeRevenueGrowthQtrStockData(db['QtrStockData'],skip,limit_size)
+        print(f"pushing batch: {skip} to the db {datetime.now()}")
+        pushMergedRevenueGrowthQtrStockData(response,db['temp_QtrStockRevTrend'])
+    print("doing collection swap ",datetime.now())
+    swap_temp_prod(db,collection='QtrStockRevTrend')
+    print("aggregating data with scores ",datetime.now())
     # join the qtr stock rev trend with the stock value score
     aggregateScoreToQtrRevTrend(db['QtrStockRevTrend'])
-
+    print("job done at: ",datetime.now())
     # create index for each collection
     # create_index(db)
     
