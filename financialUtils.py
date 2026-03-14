@@ -444,8 +444,41 @@ def fetch_name(tickers:list)->str:
     cursor=ticker_collection.find(filter=filter,projection=project)
     return [e['title'] for e in cursor]
     return cursor
+def pull_QStockData(ticker, collection):
+    QStockData = collection.find({"ticker": ticker.upper()})
+    return QStockData
+def PullQtrStockRevenueTrends(collection:Collection,page=1,items_per_page=100):
+    print("Page",page)
+    print("Page size ",items_per_page)
+    
+    # Fetch records with pagination
+    stocks = collection.aggregate([
 
+        {
+        '$sort' :{'trend':-1}
+        },{
+        
+        '$skip': (page-1)*items_per_page
+        },{
+        '$limit': items_per_page
+        }
+    ])
+    # Group the fetched records by symbol
+    grouped_stocks = {}
+    for stock in stocks:
+        stock['_id'] = str(stock['_id'])  # Convert ObjectId to string
+                # Apply formatting to each relevant field
+        ticker = stock['ticker']
+        value = stock['value']
+        trend = stock['trend']
+        if ticker not in grouped_stocks:
+            grouped_stocks[ticker] = []
+        grouped_stocks[ticker].append(stock)
+    
+    total_tickers = collection.distinct("ticker")
+    total_tickers_count = len(total_tickers)
 
+    return grouped_stocks,total_tickers_count
     
 
 if __name__=="__main__":

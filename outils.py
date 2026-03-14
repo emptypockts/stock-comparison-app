@@ -9,6 +9,7 @@ from typing import Literal
 from secDBFetch import get_sec_filings
 from dotenv import load_dotenv
 import requests
+import uuid
 from langchain_ollama import ChatOllama
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -21,34 +22,91 @@ GEMINI_API=os.getenv('GEMINI_API')
 DIRECTORY=os.getenv('DIRECTORY')
 querystring = {"key": GEMINI_API}
 
-# llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash",api_key=GEMINI_API,max_retries=1)
+SEC_DOC_TYPE_DESCRIPTIONS = {
+    "8-K": "Form 8-K Current Report. Discloses material corporate events such as earnings releases, mergers, acquisitions, executive changes, or other significant developments.",
+    "EX-99.1": "Exhibit 99.1. Typically an earnings press release or investor-facing announcement included with the filing.",
+    "EX-99.2": "Exhibit 99.2. Supplemental investor materials such as presentations, schedules, or supporting financial information.",
+    # XBRL exhibits (machine-readable financial metadata)
+    "EX-101.SCH": "XBRL schema file defining financial reporting elements, data types, and relationships. Not narrative text.",
+    "EX-101.DEF": "XBRL definition linkbase defining dimensional relationships such as axes, domains, and members. Not narrative text.",
+    "EX-101.LAB": "XBRL label linkbase providing human-readable labels for financial elements. Not narrative text.",
+    "EX-101.PRE": "XBRL presentation linkbase defining the ordering and hierarchy of financial statements. Not narrative text.",
+}
+TYPE_EXCLUSIONS = ['GRAPHIC','XML','JSON','ZIP']
+
+def replace_smart_punctuation(text: str) -> str:
+    replacements = {
+        "\u2018": "'",
+        "\u2019": "'",
+        "\u201c": '"',
+        "\u201d": '"',
+        "\u2013": "-",
+        "\u2014": "-",
+        "\u00a0": " ",
+    }
+    for k, v in replacements.items():
+        text = text.replace(k, v)
+    return text
+
+def normalize_whitespace_chunk(s: str) -> str:
+    text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+        encoding_name='cl100k_base',
+        chunk_size=500,
+        chunk_overlap=0
+    )
+    text = re.sub(r'\s+', ' ', s).strip()
+    text = replace_smart_punctuation(text)
+    texts= text_splitter.split_text(text)
+    return texts
+
+def clean_edgar_text (text)->list:
+    document_json = []
+    soup  = BeautifulSoup(text,"lxml")
+    documents = soup.find_all("document")
+    for doc in documents:
+        type = (doc.type.next).strip()
+        for table in doc.find_all("table"):
+            table.decompose()
+        texts = normalize_whitespace_chunk(doc.text)
+        if type not in TYPE_EXCLUSIONS:
+            document_json.append(
+                {
+                    "id":str(uuid.uuid4()),
+                    "type":type,
+                    "type_description":SEC_DOC_TYPE_DESCRIPTIONS.get(type,''),
+                    "text":texts
+                }
+            )
+    return json.dumps(document_json)
+
+# llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash",api_key=GEMINI_API,max_retries=1)
 llm=ChatOllama(model="gpt-oss:120b",base_url="https://ollama.com")
 # llm=ChatOllama(model="llama2-uncensored:latest")
 
 
 form_types = ['10-K', '10-Q', '8-K', 'DEF 14A','20-F','6-K'] 
-def clean_edgar_text(content: str) -> str:
-    """
-    Extracts and cleans the text from only the first document (<DOCUMENT>...</DOCUMENT>)
-    in an SEC submission file, excluding embedded image/base64 content.
-    """
+# def clean_edgar_text(content: str) -> str:
+#     """
+#     Extracts and cleans the text from only the first document (<DOCUMENT>...</DOCUMENT>)
+#     in an SEC submission file, excluding embedded image/base64 content.
+#     """
     
-    match = re.search(r"<DOCUMENT>(.*?)</DOCUMENT>", content, re.DOTALL | re.IGNORECASE)
-    if not match:
-        raise ValueError("No <DOCUMENT> section found.")
-    first_doc = match.group(1)
+#     match = re.search(r"<DOCUMENT>(.*?)</DOCUMENT>", content, re.DOTALL | re.IGNORECASE)
+#     if not match:
+#         raise ValueError("No <DOCUMENT> section found.")
+#     first_doc = match.group(1)
 
     
-    first_doc = re.sub(r"begin [\s\S]+?end", "", first_doc, flags=re.IGNORECASE)
+#     first_doc = re.sub(r"begin [\s\S]+?end", "", first_doc, flags=re.IGNORECASE)
 
     
-    soup = BeautifulSoup(first_doc, "html.parser")
-    text = soup.get_text(separator=" ", strip=True)
+#     soup = BeautifulSoup(first_doc, "html.parser")
+#     text = soup.get_text(separator=" ", strip=True)
 
     
-    text = re.sub(r"\s+", " ", text)
+#     text = re.sub(r"\s+", " ", text)
 
-    return text.strip()
+#     return text.strip()
 
 def is_new_analysis_needed(ticker_dir,extension:Literal[".json",".quant",".rtn"]):
     three_months_ago = datetime.now() - timedelta(days=90)
