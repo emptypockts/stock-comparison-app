@@ -32,9 +32,25 @@ SEC_DOC_TYPE_DESCRIPTIONS = {
     "EX-101.LAB": "XBRL label linkbase providing human-readable labels for financial elements. Not narrative text.",
     "EX-101.PRE": "XBRL presentation linkbase defining the ordering and hierarchy of financial statements. Not narrative text.",
 }
-TYPE_EXCLUSIONS = ['GRAPHIC','XML','JSON','ZIP']
+
+NON_NARRATIVE_TYPES = (
+    'GRAPHIC',
+    'XML',
+    'JSON',
+    'ZIP',
+    'EX-101',
+    'EX-104',
+    'EX-31',
+    'EX-32',
+)
 
 def replace_smart_punctuation(text: str) -> str:
+    """
+    Replace common smart punctuation characters with their standard equivalents.
+    params:
+        text: string to be normalized
+    returns:     normalized string
+    """
     replacements = {
         "\u2018": "'",
         "\u2019": "'",
@@ -43,18 +59,27 @@ def replace_smart_punctuation(text: str) -> str:
         "\u2013": "-",
         "\u2014": "-",
         "\u00a0": " ",
+        "\u2011": "-",
+        "\u200b": " ",
     }
     for k, v in replacements.items():
         text = text.replace(k, v)
+    text = re.sub(r'\s+', ' ', text).strip()
     return text
 
-def normalize_whitespace_chunk(s: str) -> str:
+def normalize_whitespace_chunk(text: str) -> list:
+    """
+    function to recursively chunk and normalize text
+    params:
+        text: string of the sec report
+    returns: list of chunks
+    """
+
     text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
         encoding_name='cl100k_base',
-        chunk_size=500,
-        chunk_overlap=0
+        chunk_size=6000,
+        chunk_overlap=200
     )
-    text = re.sub(r'\s+', ' ', s).strip()
     text = replace_smart_punctuation(text)
     texts= text_splitter.split_text(text)
     return texts
@@ -68,7 +93,7 @@ def clean_edgar_text (text)->list:
         for table in doc.find_all("table"):
             table.decompose()
         texts = normalize_whitespace_chunk(doc.text)
-        if type not in TYPE_EXCLUSIONS:
+        if type not in NON_NARRATIVE_TYPES:
             document_json.append(
                 {
                     "id":str(uuid.uuid4()),
