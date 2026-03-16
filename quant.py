@@ -5,22 +5,28 @@ from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage,SystemMessage
 import json
 from datetime import datetime
-from prompts import quant_instructions,synthesis_instructions,json_validator_instructions
-from outils import (
-    clean_edgar_text, 
+from prompts import (
+    quant_instructions,
+    synthesis_instructions,
+    json_validator_instructions,
+    recursive_summarize_instructions
+)
+from outils import ( 
     analyze_ticker,
     save_analysis_report,
-    json_validator
+    json_validator,
+    extract_sections,
+    llm,
+    quant_report,
+    replace_smart_punctuation,
+    sections_summarizer,
+    types_synthetiser,
+    save_file_test
 )
 load_dotenv()
-
 import os
-GEMINI_API=os.getenv('GEMINI_API')
 DIRECTORY=os.getenv('DIRECTORY')
-
-
-# llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash",api_key=GEMINI_API,max_retries=1)
-llm=ChatOllama(model="gpt-oss:120b",base_url="https://ollama.com")
+# analyses the sec reports from edgar db and provides a summary with red flags and suspicious patterns
 def quant(year,tickers:list)->str:
     """
     quant analyzes a ticker 10K, 10Q, 8K, DEF 14A reports and identify red flags and opportunities
@@ -46,7 +52,9 @@ def quant(year,tickers:list)->str:
                 print("error returning a json object", e)
                 return existing_report
 
-        submitted_reports={}
+        report_blocks=[]
+        summaries={}
+        summary_reports=[]
         files = os.listdir(ticker_dir)
         for file in files:
             if file.endswith((".json",".quant",".rtn")):
@@ -55,33 +63,53 @@ def quant(year,tickers:list)->str:
                 file_name=os.path.join(ticker_dir,file)
                 with open(file_name) as f:
                     report=f.read()
-                    clean_report=clean_edgar_text(report)
-                    response = llm.invoke(
-                        [
-                            SystemMessage(content=quant_instructions),
-                            HumanMessage(content=f"here is the report: {clean_report}")
-                        ]
-                    )
-                    submitted_reports[file.split('.')[0]]=response.content
-        final_response=llm.invoke(
-            [
-                HumanMessage(content=synthesis_instructions.format(filing_summaries=submitted_reports))
-            ]
-        )
-        if final_response.content:
+                    # level 1, chunk and structure report in sections, ex 10, 10q, 10k etc.
+                    report_blocks.append(extract_sections(report,file))
+
+        for types in report_blocks:
+            for t in types:
+                texts = t.get('texts_synthesis',[])
+                if not texts:
+                    t['summary']=""
+                    continue
+                elif len (texts)==1:
+                    # if summarized texts are only 1 then it is the summary
+                    t['summary']=texts[0]
+                else:
+                    # level 2 summarize the chunks into one per section
+                    print ("summarizing sections of the report ",datetime.now())
+                    t['summary']= replace_smart_punctuation(sections_summarizer(texts))
+            
+            summaries[types[0]['file_name']]=[
+                {"section_type": sec['section_type'],"summary":sec['summary']}
+                for sec in types if sec.get('section_type') and sec.get('summary')
+                ]
+                                    
+
+        
+        for k,v in summaries.items():
+            print("synthetising the report... ",datetime.now())
+            summary_reports.append(
+                {
+                    "file":k,
+                    # level 3 summarizes the sections into one per report
+                    "file_summary":replace_smart_punctuation(types_synthetiser(v))
+                }
+            )
+            # level 4 summarizes the sections into one and exports it to a pdf file.
+            print("prettyfying the report. almost done... ",datetime.now())
+        final_report = ' '.join(quant_report(summary_reports).split())
+        if final_report:
             try:
-                validated_json=json.loads(json_validator(json_validator_instructions,final_response.content).replace("```json","").replace("```","").strip().lower())
-                save_analysis_report(ticker_dir, ticker, validated_json,extension=extension)
+                
+                save_analysis_report(ticker_dir, ticker, final_report,extension=extension)
                 print(f"Saved analysis report for ticker {ticker}\n")
-                return  validated_json
+                return  final_report
             except Exception as e:
                 print("error returning a json structure: ",e)
-                return final_response.content
-
-
-
+                return final_report
 
 if __name__=="__main__":
     year= str(datetime.now().year)
-    print(quant(year,["cb"]))
+    print(quant(year,["ko"]))
 

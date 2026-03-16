@@ -14,6 +14,12 @@ from langchain_ollama import ChatOllama
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from classes_langchain import Chunk
+from prompts import (
+    types_synthetiser_instructions,
+    sections_summarizer_instructions,
+    quant_instructions,
+    recursive_summarize_instructions
+    )
 load_dotenv()
 
 
@@ -22,15 +28,52 @@ GEMINI_API=os.getenv('GEMINI_API')
 DIRECTORY=os.getenv('DIRECTORY')
 querystring = {"key": GEMINI_API}
 
+#===========================================#
+#           llm model seclection            #
+#===========================================#
+
+
+# llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash",api_key=GEMINI_API,max_retries=1)
+llm=ChatOllama(model="gpt-oss:20b-cloud",base_url="https://ollama.com")
+llm_big=ChatOllama(model="gpt-oss:120b-cloud",base_url="https://ollama.com")
+# llm=ChatOllama(model="llama2-uncensored:latest")
+
+
 SEC_DOC_TYPE_DESCRIPTIONS = {
+
+    # Core filing
     "8-K": "Form 8-K Current Report. Discloses material corporate events such as earnings releases, mergers, acquisitions, executive changes, or other significant developments.",
+
+    # Common earnings / investor exhibits
     "EX-99.1": "Exhibit 99.1. Typically an earnings press release or investor-facing announcement included with the filing.",
     "EX-99.2": "Exhibit 99.2. Supplemental investor materials such as presentations, schedules, or supporting financial information.",
+    "EX-99.3": "Exhibit 99.3. Additional supplemental materials such as financial tables, investor presentations, or explanatory schedules.",
+
+    # Certification exhibits (common in 10-K / 10-Q)
+    "EX-31.1": "Section 302 certification by the Chief Executive Officer confirming the accuracy of the report and effectiveness of disclosure controls.",
+    "EX-31.2": "Section 302 certification by the Chief Financial Officer confirming the accuracy of the report and effectiveness of disclosure controls.",
+
+    "EX-32.1": "Section 906 certification by the Chief Executive Officer stating the report fully complies with the Securities Exchange Act.",
+    "EX-32.2": "Section 906 certification by the Chief Financial Officer stating the report fully complies with the Securities Exchange Act.",
+
+    # Legal / governance exhibits
+    "EX-10": "Material contract exhibit such as employment agreements, credit agreements, partnership agreements, or other legally significant contracts.",
+    "EX-3.1": "Articles of incorporation or charter documents describing the company's legal formation.",
+    "EX-3.2": "Bylaws of the company defining governance rules and procedures.",
+    "EX-21": "List of subsidiaries of the registrant.",
+    "EX-23": "Consent of independent registered public accounting firm.",
+    "EX-24": "Power of attorney authorizing individuals to sign filings on behalf of officers or directors.",
+
     # XBRL exhibits (machine-readable financial metadata)
+    "EX-101.INS": "XBRL instance document containing the machine-readable financial statement data.",
     "EX-101.SCH": "XBRL schema file defining financial reporting elements, data types, and relationships. Not narrative text.",
+    "EX-101.CAL": "XBRL calculation linkbase defining mathematical relationships between financial statement elements.",
     "EX-101.DEF": "XBRL definition linkbase defining dimensional relationships such as axes, domains, and members. Not narrative text.",
-    "EX-101.LAB": "XBRL label linkbase providing human-readable labels for financial elements. Not narrative text.",
-    "EX-101.PRE": "XBRL presentation linkbase defining the ordering and hierarchy of financial statements. Not narrative text.",
+    "EX-101.LAB": "XBRL label linkbase providing human-readable labels for financial elements.",
+    "EX-101.PRE": "XBRL presentation linkbase defining the ordering and hierarchy of financial statements.",
+
+    # Inline XBRL (modern filings)
+    "EX-104": "Inline XBRL exhibit containing embedded machine-readable financial data within the HTML filing."
 }
 
 NON_NARRATIVE_TYPES = (
@@ -44,6 +87,106 @@ NON_NARRATIVE_TYPES = (
     'EX-32',
 )
 
+#===========================================#
+#     red flag sec report helpers           #
+#===========================================#
+
+# level 1, structure report and chunk text
+def extract_sections (text:str,file:str)->list:
+    """
+    this function will process a sec report text file and extracts the important sections and provide structure.
+    params:
+        text: str that contains the sec report
+        file: str that states the type of report
+        returns: a list of summarized chunks
+    """
+    sections = []
+    soup  = BeautifulSoup(text,"lxml")
+    documents = soup.find_all("document")
+    for doc in documents:
+        for div in doc.find_all("div", {"style": "display:none"}):
+            div.decompose()
+        for tag in doc.find_all(lambda t: t.name and t.name.startswith("ix:")):
+            tag.decompose()
+        for tag in doc.find_all(["s","strike","del"]):
+            tag.unwrap()
+        try:
+            section_type = (doc.type.next).strip()
+        except:
+            print("no section type. assigning empty")
+            continue
+        for table in doc.find_all("table"):
+            table_text=table.get_text(separator=" | ",strip=True)
+            table.replace_with(f"\n[TABLE START]\n{table_text}\n[TABLE END]\n")
+        texts = recursively_chunk(doc.text)
+        if not texts:
+            continue
+        if section_type.startswith(NON_NARRATIVE_TYPES):
+            continue
+        type_description=""
+        for k,v in SEC_DOC_TYPE_DESCRIPTIONS.items():
+            if section_type.startswith(k):
+                type_description=v
+                break
+        print(f"working on file: {file} section: {section_type} at {datetime.now()}")
+        sections.append(
+            {
+                "file_name":file,
+                "id":str(uuid.uuid4()),
+                "section_type":section_type,
+                "type_description":type_description,
+                "text":texts,
+                "texts_synthesis":process_sec_chunks(texts)
+            }
+        )
+    return sections
+# level 2, summarize chunks. recursive
+def process_sec_chunks(chunks:list,level:int=1)->list:
+    """
+    function to chunk a long text and summarize it. it will return a list of summarized chunks.
+    
+    params 
+        report: Description
+        type report: str
+    returns: list of summarized chunks
+    """
+    if not chunks:
+        return []
+    
+    chunks = [c for c in chunks if isinstance(c, str) and c.strip()]
+
+    SYSTEM_MESSAGE = SystemMessage(content=recursive_summarize_instructions + f"\n Currently at synthesis Level {level}" )
+    responses=[]
+    if len(chunks)<=3 and level >1:
+        return chunks
+    responses =[]
+    llm_current = llm_big if level>=2 else llm
+    # pairing chunks
+    for i in range (0,len(chunks),2):
+        batch = chunks[i:i+2]
+        texts_to_combine=[]
+        for b in batch:
+            texts_to_combine.append(str(b))
+        combined_content="\n\n----SECTION BREAK----\n\n".join(texts_to_combine)
+
+        if len(combined_content.strip())<500:
+            continue
+        for attempt in range(2):
+            try:
+                response = llm_current.invoke([
+                    SYSTEM_MESSAGE,
+                    HumanMessage(content=combined_content)
+                ])
+                if response.content is None:
+                    raise ValueError("llm didnt return any content")
+                responses.append(response.content.replace("```json","").replace("```","").strip())
+                break
+            except:
+                if attempt==1:
+                    raise
+    print(f"Level {level} complete. Reduced to {len(responses)} chunks. Recursing...")
+    return process_sec_chunks(responses,level+1)
+# process unicode character
 def replace_smart_punctuation(text: str) -> str:
     """
     Replace common smart punctuation characters with their standard equivalents.
@@ -66,72 +209,99 @@ def replace_smart_punctuation(text: str) -> str:
         text = text.replace(k, v)
     text = re.sub(r'\s+', ' ', text).strip()
     return text
-
-def normalize_whitespace_chunk(text: str) -> list:
+# recursive langchain chunker
+def recursively_chunk(text: str) -> list:
     """
-    function to recursively chunk and normalize text
+    function to recursively chunk
     params:
         text: string of the sec report
     returns: list of chunks
     """
-
+    if len(text)<3000:
+        return [text]
+    if "[TABLE START]" in text:
+        overlap=50
+    else:
+        overlap=200
     text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
         encoding_name='cl100k_base',
         chunk_size=6000,
-        chunk_overlap=200
+        chunk_overlap=overlap
     )
     text = replace_smart_punctuation(text)
     texts= text_splitter.split_text(text)
     return texts
-
-def clean_edgar_text (text)->list:
-    document_json = []
-    soup  = BeautifulSoup(text,"lxml")
-    documents = soup.find_all("document")
-    for doc in documents:
-        type = (doc.type.next).strip()
-        for table in doc.find_all("table"):
-            table.decompose()
-        texts = normalize_whitespace_chunk(doc.text)
-        if type not in NON_NARRATIVE_TYPES:
-            document_json.append(
-                {
-                    "id":str(uuid.uuid4()),
-                    "type":type,
-                    "type_description":SEC_DOC_TYPE_DESCRIPTIONS.get(type,''),
-                    "text":texts
-                }
+# summarize the sections chunks into one per section
+def sections_summarizer(chunks:list)->str:
+    """
+    this function will summarize the chunks of a report. this can be used for any tipe of report, 8k, 10k, 14def etc.
+    params:
+        sections: list of summarized chunks
+    returns:
+        string of the final report summarized
+    """
+    if not chunks:
+        return chunks
+    if len(chunks)==1:
+        return chunks[0]
+    combined_message = "\n\n--- PARTIAL SUMMARY ---\n\n".join(chunks)
+    
+    for attempt in range(2):
+        try:
+            response = llm.invoke([
+                SystemMessage(content=sections_summarizer_instructions),
+                HumanMessage(content=combined_message)
+            ])
+            if response.content is None:
+                raise ValueError("llm did not return any content")
+            break
+            
+        except:
+            if attempt ==1:
+                raise
+        
+    return response.content
+#  summarize the sections into one per report
+def types_synthetiser(summaries_all_types:list)->str:
+    for attempt in range(2):
+        try:
+            response = llm.invoke(
+                [
+                    SystemMessage(content=types_synthetiser_instructions),
+                    HumanMessage(
+                        content=f"""
+                            Below is a list of summarized sections that all belong to the same SEC filing.
+                            Generate one final consolidated summary for the report.
+                            Input:
+                            {summaries_all_types}
+                            Output:
+                            Return a single paragraph or short multi-paragraph executive summary
+                            that represents the entire report.
+                            """
+                                )
+                ]
             )
-    return json.dumps(document_json)
+            if response.content is None:
+                raise ValueError("llm did not return any content")
+            break
+        except:
+            if attempt==1:
+                raise
+    return response.content
+# use for testing summarization levels
+def save_file_test(file_name:str,dict_obj,file_mode:str):
+    """
+    use for saving json and testing summarization levels.
+    """
+    with open(file_name,file_mode) as f:
+        f.write(json.dumps(dict_obj,indent=4))
+        f.close()
 
-# llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash",api_key=GEMINI_API,max_retries=1)
-llm=ChatOllama(model="gpt-oss:120b",base_url="https://ollama.com")
-# llm=ChatOllama(model="llama2-uncensored:latest")
-
+#=================================#
+#   quant logic helpers           #
+#=================================#
 
 form_types = ['10-K', '10-Q', '8-K', 'DEF 14A','20-F','6-K'] 
-# def clean_edgar_text(content: str) -> str:
-#     """
-#     Extracts and cleans the text from only the first document (<DOCUMENT>...</DOCUMENT>)
-#     in an SEC submission file, excluding embedded image/base64 content.
-#     """
-    
-#     match = re.search(r"<DOCUMENT>(.*?)</DOCUMENT>", content, re.DOTALL | re.IGNORECASE)
-#     if not match:
-#         raise ValueError("No <DOCUMENT> section found.")
-#     first_doc = match.group(1)
-
-    
-#     first_doc = re.sub(r"begin [\s\S]+?end", "", first_doc, flags=re.IGNORECASE)
-
-    
-#     soup = BeautifulSoup(first_doc, "html.parser")
-#     text = soup.get_text(separator=" ", strip=True)
-
-    
-#     text = re.sub(r"\s+", " ", text)
-
-#     return text.strip()
 
 def is_new_analysis_needed(ticker_dir,extension:Literal[".json",".quant",".rtn"]):
     three_months_ago = datetime.now() - timedelta(days=90)
@@ -198,6 +368,7 @@ def save_analysis_report(ticker_dir:str, ticker:str, report:str,extension: Liter
         else:
             report = json.dumps(report,indent=4,ensure_ascii=False)
             f.write(report)
+
 def json_validator(agent,r6)->str:
     payload={
     "system_instruction":{"parts":[{"text":agent}]},
@@ -230,46 +401,29 @@ def parse_tickers(tickers):
 
     return clean_tickers
 
-def chunk_report(report:str)->list:
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=100000,
-        chunk_overlap=300,
-        separators=["\n\n","\n","."," "]
-    )
-    return splitter.split_text(report)
+def quant_report(summaries:list)->object:
 
-def split_and_map_chunks(text):
-    chunks=chunk_report(text)
-    return [{"chunk":e,}for e in chunks]
+    for attempt in range(2):
+        try:
+            response =llm.invoke(
+                [
+                    SystemMessage(content=quant_instructions),
+                    HumanMessage(content=f"""summaries: {summaries}""")
+                ]
+            )
+            if response.content is None:
+                raise ValueError("llm did not return any content")
+            break
+        except:
+            if attempt==1:
+                raise
+    return response.content
 
-def process_sec_chunks(report:str,instructions:str)->list:
-    """
-    function to chunk a long text and summarize it. it will return a list of chunks.
-    
-    :param report: Description
-    :type report: str
-    :param instructions: Description
-    :type instructions: str
-    :return: list of summarized chunks
-    :rtype: list
-    """
-    dict_chunks = chunk_report(report)
-    structured_llm=llm.with_structured_output(Chunk)
-    responses=[]
-    idx = 0
-    for i in dict_chunks:
-        response = structured_llm.invoke(
-            [
-                SystemMessage(content=instructions),
-                HumanMessage(content=i)
-            ]
-        )
-        responses.append({"chunk_index":idx,
-                        "chunk":response.chunk})
-        idx+=1
-        print("response chunk idx: ",idx)
-    return responses
+#=================================#
+#   rittenhouse logic helpers     #
+#=================================#
 
+# provide final summary
 def synthetize_summaries(summaries:list,instructions)->list:
     """
     function to synthetize summaries and provide a final summary ready for pdf conversion.
