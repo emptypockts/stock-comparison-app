@@ -116,8 +116,7 @@ def extract_sections (text:str,file:str)->list:
             print("no section type. assigning empty")
             continue
         for table in doc.find_all("table"):
-            table_text=table.get_text(separator=" | ",strip=True)
-            table.replace_with(f"\n[TABLE START]\n{table_text}\n[TABLE END]\n")
+            table.decompose()
         texts = recursively_chunk(doc.text)
         if not texts:
             continue
@@ -154,6 +153,8 @@ def process_sec_chunks(chunks:list,level:int=1)->list:
         return []
     
     chunks = [c for c in chunks if isinstance(c, str) and c.strip()]
+    if not chunks:
+        return []
 
     SYSTEM_MESSAGE = SystemMessage(content=recursive_summarize_instructions + f"\n Currently at synthesis Level {level}" )
     responses=[]
@@ -171,6 +172,7 @@ def process_sec_chunks(chunks:list,level:int=1)->list:
 
         if len(combined_content.strip())<500:
             continue
+
         for attempt in range(2):
             try:
                 response = llm_current.invoke([
@@ -184,6 +186,8 @@ def process_sec_chunks(chunks:list,level:int=1)->list:
             except:
                 if attempt==1:
                     raise
+    if not responses:
+        return []
     print(f"Level {level} complete. Reduced to {len(responses)} chunks. Recursing...")
     return process_sec_chunks(responses,level+1)
 # process unicode character
