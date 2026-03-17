@@ -469,3 +469,38 @@ def clean_edgar_text(content: str) -> str:
     text = re.sub(r"\s+", " ", text)
 
     return text.strip()
+def chunk_report(report:str)->list:
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=60000,
+        chunk_overlap=300,
+        separators=["\n\n","\n","."," "]
+    )
+    return splitter.split_text(report)
+
+def process_sec_chunks_ritten(report:str,instructions:str)->list:
+    """
+    function to chunk a long text and summarize it. it will return a list of chunks.
+    
+    :param report: Description
+    :type report: str
+    :param instructions: Description
+    :type instructions: str
+    :return: list of summarized chunks
+    :rtype: list
+    """
+    dict_chunks = chunk_report(report)
+    structured_llm=llm.with_structured_output(Chunk)
+    responses=[]
+    idx = 0
+    for i in dict_chunks:
+        response = structured_llm.invoke(
+            [
+                SystemMessage(content=instructions),
+                HumanMessage(content=i)
+            ]
+        )
+        responses.append({"chunk_index":idx,
+                        "chunk":response.chunk})
+        idx+=1
+        print("response chunk idx: ",idx)
+    return responses

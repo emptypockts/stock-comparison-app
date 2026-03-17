@@ -1,12 +1,12 @@
 import json
 import os
 from datetime import datetime, timedelta
-from outils import clean_edgar_text,analyze_ticker,save_analysis_report,process_sec_chunks,synthetize_summaries,llm
+from outils import clean_edgar_text,analyze_ticker,save_analysis_report,process_sec_chunks_ritten,synthetize_summaries,llm
 from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage,SystemMessage
 from langchain_ollama import ChatOllama
-from prompts import rittenhouse_synthesis_instructions,summarize_chunk_instructions
+from prompts import rittenhouse_synthesis_instructions,summarize_chunk_instructions_ritten
 load_dotenv()
 DIRECTORY=os.getenv('DIRECTORY')
 
@@ -27,7 +27,7 @@ def load_and_preprocess(file_path):
 
 def rittenhouse_analysis(report)->str:
     try:
-        summaries = process_sec_chunks(report=report,instructions=summarize_chunk_instructions)
+        summaries = process_sec_chunks_ritten(report=report,instructions=summarize_chunk_instructions_ritten)
         final_report = synthetize_summaries(summaries=summaries,instructions=rittenhouse_synthesis_instructions)
         if final_report:
             return final_report
@@ -89,7 +89,7 @@ def quant_rittenhouse(year,tickers:list)->str:
 # Example function call
 if __name__ == "__main__":
       # Root directory where ticker folders are stored
-    ticker = ['sofi']  # Example ticker
+    ticker = ['calm']  # Example ticker
     current_year=datetime.now().year
     directory = f"{DIRECTORY}/{current_year}"
     last_year=current_year-1
