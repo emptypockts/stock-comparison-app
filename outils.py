@@ -85,6 +85,7 @@ NON_NARRATIVE_TYPES = (
     'EX-104',
     'EX-31',
     'EX-32',
+    'PDF'
 )
 
 #===========================================#
@@ -104,10 +105,12 @@ def extract_sections (text:str,file:str)->list:
     soup  = BeautifulSoup(text,"lxml")
     documents = soup.find_all("document")
     for doc in documents:
+        if doc.pdf:
+            continue
         for div in doc.find_all("div", {"style": "display:none"}):
             div.decompose()
-        for tag in doc.find_all(lambda t: t.name and t.name.startswith("ix:")):
-            tag.decompose()
+        for tag in doc.find_all(lambda t: t.name and ":" in t.name):
+            tag.unwrap()
         for tag in doc.find_all(["s","strike","del"]):
             tag.unwrap()
         try:
@@ -116,7 +119,8 @@ def extract_sections (text:str,file:str)->list:
             print("no section type. assigning empty")
             continue
         for table in doc.find_all("table"):
-            table.decompose()
+            table_text=table.get_text(separator=" | ",strip=True)
+            table.replace_with(f"\n[TABLE START]\n{table_text}\n[TABLE END]\n")
         texts = recursively_chunk(doc.text)
         if not texts:
             continue
@@ -127,7 +131,6 @@ def extract_sections (text:str,file:str)->list:
             if section_type.startswith(k):
                 type_description=v
                 break
-        print(f"working on file: {file} section: {section_type} at {datetime.now()}")
         sections.append(
             {
                 "file_name":file,
@@ -169,7 +172,6 @@ def process_sec_chunks(chunks:list,level:int=1)->list:
         for b in batch:
             texts_to_combine.append(str(b))
         combined_content="\n\n----SECTION BREAK----\n\n".join(texts_to_combine)
-
         if len(combined_content.strip())<500:
             continue
 
@@ -188,7 +190,6 @@ def process_sec_chunks(chunks:list,level:int=1)->list:
                     raise
     if not responses:
         return []
-    print(f"Level {level} complete. Reduced to {len(responses)} chunks. Recursing...")
     return process_sec_chunks(responses,level+1)
 # process unicode character
 def replace_smart_punctuation(text: str) -> str:

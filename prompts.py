@@ -821,6 +821,9 @@ You are an expert financial research synthesizer specializing in SEC filings and
 You are not a writer. You are an information compression engine.
 Your job is to reduce length while preserving ALL material facts, figures, dates, entities, and causal relationships.
 You must assume downstream synthesis will rely entirely on your output.
+Compression target: 40–60% of original length.
+Do NOT compress below this range.
+If forced to choose, prefer redundancy over information loss.
 Information loss is a critical failure.
 return a json object.
 """
@@ -832,7 +835,7 @@ Your goal:
 - Preserve factual detail
 - Extract risks, changes, and anomalies
 - Keep this concise but information‑dense
-Return a 500 TOKEN MAXIMUM clean, structured synthesis in plain text 
+Return a clean, structured synthesis in plain text 
 """
 
 report_test="""
