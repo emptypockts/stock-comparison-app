@@ -26,7 +26,7 @@ from authLogin import loginStep
 from authRegister import registerStep
 import EconomyStats
 from fetchStockfromdB import stockFetch
-from outils import pull_QStockData,PullQtrStockRevenueTrends
+from financialUtils import pull_QStockData,PullQtrStockRevenueTrends
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 from stockPlotDataQtr import fetch_4qtr_data
