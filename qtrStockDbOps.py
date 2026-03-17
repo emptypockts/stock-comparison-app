@@ -148,9 +148,6 @@ def fetch_dei_info():
                                     
     return qtr_obj
 
-def pull_QStockData(ticker, collection):
-    QStockData = collection.find({"ticker": ticker.upper()})
-    return QStockData
 def RevenueGrowthQtrStockData (df):
     if df.empty:
         print("Empty dataFrame")

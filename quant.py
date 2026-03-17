@@ -57,7 +57,7 @@ def quant(year,tickers:list)->str:
         summary_reports=[]
         files = os.listdir(ticker_dir)
         # ====================================================== setting 1 file====================================
-        for file in files[3:4]:
+        for file in files:
             if file.endswith((".json",".quant",".rtn")):
                 pass
             else:
@@ -112,5 +112,5 @@ def quant(year,tickers:list)->str:
 
 if __name__=="__main__":
     year= str(datetime.now().year)
-    print(quant(year,["foxa"]))
+    print(quant(year,["son"]))
 
