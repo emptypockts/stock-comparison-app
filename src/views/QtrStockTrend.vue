@@ -1,17 +1,22 @@
 <template>
-    <h1>
-        Quarterly Stock Trend
-    </h1>
-    <h2>Message</h2>
-    <td>
-        the growth comparison in % is same q last year
-    </td>
-    <Navigation/>
+
+  <h1>
+    Quarterly Stock Trend
+  </h1>
+  <h2>Message</h2>
+
+  <td>
+    the growth comparison in % is same q last year
+    <div style="position: flex; margin-right: 10px;">
+      <button @click="scoreOnly = !scoreOnly" class="buttons" :style="{color: scoreOnly ? 'yellow' : 'red'}">Filter {{scoreOnly ? 'ON' : 'OFF'}}</button>
+    </div>
+  </td>
+  <Navigation />
   <div>
-    <div >
+    <div>
       <div v-if="paginatedRecords.length" class="table-container">
-        
-        <div >
+
+        <div>
           <table>
             <thead>
               <tr>
@@ -40,7 +45,7 @@
 
           <!-- Input for page navigation -->
           <input type="number" v-model.number="enteredPage" @keyup.enter="goToPage" :min="1" :max="totalPages"
-            placeholder="@page" class="terminal-input"/>
+            placeholder="@page" class="terminal-input" />
           <button @click="goToPage" class="buttons">Go</button>
 
           <button @click="nextPage" :disabled="currentPage === totalPages" class="buttons">Next</button>
@@ -61,57 +66,67 @@
 <script>
 
 import axios from 'axios';
-import {ref,watch,onMounted,computed} from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import Navigation from '@/components/Navigation.vue';
-export default{
-    props:{
+export default {
+  props: {
     itemsPerPage: {
       type: Number,
       default: 100,
     },
-},
-    components:{
-        Navigation,
-    },
-    setup(props){
-        const currentPage = ref(1);
+  },
+  components: {
+    Navigation,
+  },
+  setup(props) {
+    const currentPage = ref(1);
     const totalSymbols = ref();
     const enteredPage = ref(currentPage.value); // Store entered page number
     const totalPages = ref(10); // Replace with actual total pages logic
     const loading = ref(false);
     const stocks = ref([]);
     const flatRecords = ref([]); // Flattened array of records
+    const filter_state = ref(false);
+    const sortKey = ref('');
+    const sortOrder = ref(1);
+    const scoreOnly = ref(false);
 
 
-    const sortKey = ref(''); 
-    const sortOrder = ref(1); 
-    const sortTable = (key) => { if (sortKey.value === key) { 
-      
-      sortOrder.value = -sortOrder.value; 
-      // Reverse order if same column is sorted again 
-      } 
-      else { 
-        sortKey.value = key; 
+    const sortTable = (key) => {
+      if (sortKey.value === key) {
+
+        sortOrder.value = -sortOrder.value;
+        // Reverse order if same column is sorted again 
+      }
+      else {
+        sortKey.value = key;
         sortOrder.value = 1; // Default order to ascending 
-        } 
-      };
-    
-      const sortedRecords = computed(() => { 
-        const sorted = flatRecords.value.slice().sort((a, b) => { 
-          if (a[sortKey.value] < b[sortKey.value]) 
+      }
+    };
+
+    const sortedRecords = computed(() => {
+      const sorted = flatRecords.value.slice().sort((a, b) => {
+        if (a[sortKey.value] < b[sortKey.value])
           return -sortOrder.value; if (
-        a[sortKey.value] > b[sortKey.value]) 
-        return sortOrder.value; return 0; 
-      }); 
-      return sorted; 
+          a[sortKey.value] > b[sortKey.value])
+          return sortOrder.value; return 0;
+      });
+      return sorted;
     });
     const paginatedRecords = computed(() => {
       const start = (currentPage.value - 1) * props.itemsPerPage;
       const end = start + props.itemsPerPage;
-      return sortedRecords.value.slice(0, 100);
+      
+      if (scoreOnly.value){
+        console.log(sortedRecords.value.slice(10))
+        const records=sortedRecords.value ||[]
+      return records
+      .filter(record =>'score' in record && record.score)
+      .slice(0, 100);
+      }
+      return sortedRecords
+      .value.slice(0, 100);
     });
-
-
     // Watch for changes in currentPage and fetch data for the new page
     watch(currentPage, (newPage) => {
       fetchData(newPage);
@@ -126,19 +141,21 @@ export default{
         const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/AllQStockTrend`, {
           params: { page, page_size: props.itemsPerPage },
         });
-        
-        
+
+
 
         // Assign fetched data to stocks
         if (response.data.data && typeof response.data.data === 'object') {
           stocks.value = response.data.data;
           totalSymbols.value = response.data.total_symbols;
-          totalPages.value=Math.ceil(totalSymbols.value/100)
-          
-          
+          totalPages.value = Math.ceil(totalSymbols.value / 100)
+
+
           // Flatten the structure
           flatRecords.value = Object.entries(stocks.value).flatMap(([symbol, records]) => {
-            return records.map(record => ({ symbol, ...record }));
+            return records
+            .map(record => ({ symbol, ...record }));
+            
           });
         } else {
           console.error('API response is not in the expected format:', response.data.data);
@@ -184,7 +201,9 @@ export default{
       paginatedRecords,
       goToPage,
       sortTable,
-      enteredPage
+      enteredPage,
+      filter_state,
+      scoreOnly
     };
   },
 
@@ -193,6 +212,4 @@ export default{
 
 
 </script>
-<style scoped>
-
- </style>
+<style scoped></style>
