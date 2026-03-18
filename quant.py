@@ -1,20 +1,9 @@
-from langchain_ollama import ChatOllama
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
-from langchain_core.messages import HumanMessage,SystemMessage
 import json
 from datetime import datetime
-from prompts import (
-    quant_instructions,
-    synthesis_instructions,
-    json_validator_instructions,
-    recursive_summarize_instructions
-)
 from outils import ( 
     analyze_ticker,
     save_analysis_report,
-    json_validator,
     extract_sections,
     llm,
     quant_report,
@@ -81,12 +70,11 @@ def quant(year,tickers:list)->str:
                     # level 2 summarize the chunks into one per section
                     t['summary']= replace_smart_punctuation(sections_summarizer(texts))
             print ("\n\n---------summarize all sections-------------\n\n",datetime.now())
-            save_file_test('test.json',report_blocks,'a')
+            
             summaries[types[0]['file_name']]=[
                 {"section_type": sec['section_type'],"summary":sec['summary']}
                 for sec in types if sec.get('section_type') and sec.get('summary')
                 ]
-            save_file_test('test.json',summaries,'a')
 
         
         for k,v in summaries.items():
@@ -98,7 +86,7 @@ def quant(year,tickers:list)->str:
                     "file_summary":replace_smart_punctuation(types_synthetiser(v))
                 }
             )
-            save_file_test('test.json',summaries,'a')
+        
             # level 4 summarizes the sections into one and exports it to a pdf file.
             print("\n\n---------prettyfying report almost done...-------------\n\n",datetime.now())
         final_report = ' '.join(quant_report(summary_reports).split())
@@ -107,7 +95,7 @@ def quant(year,tickers:list)->str:
                 
                 save_analysis_report(ticker_dir, ticker, final_report,extension=extension)
                 print(f"Saved analysis report for ticker {ticker}\n")
-                save_file_test('test.json',final_report,'a')
+                save_file_test('test.json',summary_reports,'a')
                 return  final_report
             except Exception as e:
                 print("error returning a json structure: ",e)

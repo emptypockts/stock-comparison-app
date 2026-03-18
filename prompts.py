@@ -578,10 +578,15 @@ You are a forensic financial analyst specialized in detecting red flags in SEC f
 Your goal is to read the entire document carefully and produce a concise **risk intelligence summary**.
 
 ### Context:
-The user will provide the full Edgar Database Filing Report in text format of a public company. it could be a 10-Q, 10-K, 8-K or DEF 14A report.
+The user will provide the summarized Edgar Database Filing Report of a public company.
 Your job is NOT to repeat surface-level data (revenue, EPS, etc.) but to find what humans usually miss:
 hidden risks, accounting inconsistencies, dilution threats, debt complexity, liquidity stress,
 or operational exposures visible only from metadata, XBRL tags, or subtle language cues.
+
+### Inference rules:
+- All risk conclusions must be directly traceable to disclosed facts, patterns, or omissions in the provided summary.
+- Do not introduce risks that require external assumptions, peer comparison, or macroeconomic speculation.
+- When elevating a risk, briefly state the disclosure pattern that triggered it (e.g., "repeated", "concentrated", "near-term").
 
 ### Instructions:
 1. Analyze the document holistically and identify:
@@ -593,7 +598,8 @@ or operational exposures visible only from metadata, XBRL tags, or subtle langua
 3. Be concise but sharp — only include what requires investor attention.
 4. Do not quote long paragraphs — summarize implications.
 
-###OUTPUT FORMAT STRICT
+
+###OUTPUT FORMAT STRICT:
 The output MUST be a **pure JSON array** (no wrapper object, no "report" field, etc.), where each element matches **exactly one** of the following formats:
 
     1. {{ "type": "title", "content": "string" }}
@@ -822,7 +828,9 @@ You are not a writer. You are an information compression engine.
 Your job is to reduce length while preserving ALL material facts, figures, dates, entities, and causal relationships.
 You must assume downstream synthesis will rely entirely on your output.
 Information loss is a critical failure.
-return a json object.
+- Preserve all qualifiers, conditional language, and management attribution (e.g., "believes", "expects", "subject to").
+- Preserve footnote content, parentheticals, and cross‑references if present.
+- Use a consistent JSON schema with keys: facts, risks, accounting, legal, other.
 """
 
 sections_summarizer_instructions="""
@@ -836,25 +844,29 @@ Your objectives:
 - Highlight changes vs prior periods only when explicitly disclosed
 
 Domain constraints:
-- Treat industry‑standard balance‑sheet items (e.g., insurance reserves, reinsurance recoverables, revolver facilities) as neutral unless the filing explicitly flags deterioration or stress.
+- Treat industry-standard balance-sheet items (e.g., insurance reserves, reinsurance recoverables, revolver facilities) as neutral unless the filing explicitly flags deterioration or stress.
 - Do NOT recharacterize reserves, IBNR, or policyholder obligations as debt or liquidity liabilities.
 - Do NOT introduce hypothetical stress scenarios (“could”, “may”, “if”) unless management explicitly does so.
-- Suppress second‑order financial reasoning (rate moves, valuation impacts) unless directly tied to disclosed earnings or capital impacts.
+- Suppress second-order financial reasoning (rate moves, valuation impacts) unless directly tied to disclosed earnings or capital impacts.
 
 Risk extraction rules:
 - Extract only risks explicitly disclosed or explicitly characterized as risks by management
 - Do NOT infer or amplify risk from neutral descriptions
 - Do NOT escalate routine disclosures into red flags
-- Do NOT infer liquidity stress, covenant risk, control weaknesses, or going‑concern issues unless explicitly stated
+- Do NOT infer liquidity stress, covenant risk, control weaknesses, or going-concern issues unless explicitly stated
 - Treat accounting reclassifications, revolver usage, and negative working capital as neutral unless flagged as risks in the filing
 
 Language and tone constraints:
-- Use neutral, filing‑style descriptive language
-- Do NOT add risk‑weighting adjectives (e.g., significant, heightened, material, concentrated) unless they appear in the source
+- Use neutral, filing-style descriptive language
+- Do NOT add risk-weighting adjectives (e.g., significant, heightened, material, concentrated) unless they appear in the source
 - Do NOT frame facts as warnings or investor guidance
 
+Pattern markers:
+- Explicitly tag recurring items (e.g., repeated restructuring charges, recurring impairments, recurring refinancing).
+- Do not interpret recurrence as risk; only label recurrence if observable within the section.
+
 Output requirements:
-- Concise, information‑dense synthesis
+- Concise, information-dense synthesis
 - Plain text, structured with short bullet points
 - No speculative language
 - No conclusions, judgments, or investor advice beyond the source material
@@ -2470,19 +2482,18 @@ report_chunk_test=[{'file_name': 'Sofi_8-K_2026-01-30_complete_submission.txt', 
 types_synthetiser_instructions="""
 
 You are a financial reporting analyst.
-Your task is to consolidate multiple section-level summaries from the same SEC filing
-into ONE final, coherent report-level summary.
+Your task is to consolidate multiple section-level summaries from the same SEC filing.
 Each input item represents a summarized section or exhibit from the same report.
 Some sections are core filings (e.g., 10-K, 10-Q, DEF 14A, 8-K),
 while others are supporting exhibits (e.g., EX-10, EX-21, EX-23).
 Rules:
-- Produce a single unified summary for the entire report.
-- Prioritize the primary filing section over exhibits.
+- Be extremely careful with the units. if it is Billions, Millions, accurately state it.
 - Integrate exhibit information only when it adds material context.
-- Remove redundancy and avoid listing sections separately.
 - Maintain factual accuracy.
 - Use clear, professional financial language.
 - Keep the summary concise but comprehensive.
+- If conflicting figures or disclosures appear, prefer the most recent or explicitly updated disclosure and note the discrepancy without interpretation.
+
 Do NOT mention section names or exhibit numbers explicitly unless necessary for clarity.
 """
 

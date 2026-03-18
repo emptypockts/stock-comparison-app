@@ -12,6 +12,7 @@ import requests
 import uuid
 from langchain_ollama import ChatOllama
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from classes_langchain import Chunk
 from prompts import (
@@ -26,16 +27,19 @@ load_dotenv()
 url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 GEMINI_API=os.getenv('GEMINI_API')
 DIRECTORY=os.getenv('DIRECTORY')
+DEEP_SEEK_API_KEY = os.getenv('DEEP_SEEK_API_KEY')
 querystring = {"key": GEMINI_API}
 
 #===========================================#
 #           llm model seclection            #
 #===========================================#
 
-
+# llm = ChatOpenAI(model="groq/compound",base_url="https://api.groq.com/openai/v1")
+# llm =ChatOpenAI(model="deepseek-reasoner",base_url="https://api.deepseek.com",api_key=DEEP_SEEK_API_KEY)
 # llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash",api_key=GEMINI_API,max_retries=1)
+# llm=ChatOllama(model="phi4-mini-reasoning:3.8b",base_url="http://localhost:11434")
 llm=ChatOllama(model="gpt-oss:20b-cloud",base_url="https://ollama.com")
-llm_big=ChatOllama(model="gpt-oss:120b-cloud",base_url="https://ollama.com")
+# llm=ChatOllama(model="gpt-oss:120b-cloud",base_url="https://ollama.com")
 # llm=ChatOllama(model="llama2-uncensored:latest")
 
 
@@ -119,7 +123,8 @@ def extract_sections (text:str,file:str)->list:
             print("no section type. assigning empty")
             continue
         for table in doc.find_all("table"):
-            table.decompose()
+            table_text=table.get_text(separator=" | ",strip=True)
+            table.replace_with(f"\n[TABLE START]\n{table_text}\n[TABLE END]\n")
         texts = recursively_chunk(doc.text)
         if not texts:
             continue
@@ -163,7 +168,7 @@ def process_sec_chunks(chunks:list,level:int=1)->list:
     if len(chunks)<=3 and level >1:
         return chunks
     responses =[]
-    llm_current = llm_big if level>=2 else llm
+    llm_current = llm
     # pairing chunks
     for i in range (0,len(chunks),2):
         batch = chunks[i:i+2]
@@ -229,7 +234,7 @@ def recursively_chunk(text: str) -> list:
         overlap=200
     text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
         encoding_name='cl100k_base',
-        chunk_size=6000,
+        chunk_size=20000,
         chunk_overlap=overlap
     )
     text = replace_smart_punctuation(text)
