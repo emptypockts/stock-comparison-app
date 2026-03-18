@@ -65,6 +65,7 @@ def quant(year,tickers:list)->str:
                 with open(file_name) as f:
                     report=f.read()
                     # level 1, chunk and structure report in sections, ex 10, 10q, 10k etc.
+                    print ("\n\n---------summarize chunks-------------\n\n",datetime.now())
                     report_blocks.append(extract_sections(report,file))
 
         for types in report_blocks:
@@ -78,18 +79,18 @@ def quant(year,tickers:list)->str:
                     t['summary']=texts[0]
                 else:
                     # level 2 summarize the chunks into one per section
-                    print ("summarizing sections of the report ",datetime.now())
                     t['summary']= replace_smart_punctuation(sections_summarizer(texts))
-            
+            print ("\n\n---------summarize all sections-------------\n\n",datetime.now())
+            save_file_test('test.json',report_blocks,'a')
             summaries[types[0]['file_name']]=[
                 {"section_type": sec['section_type'],"summary":sec['summary']}
                 for sec in types if sec.get('section_type') and sec.get('summary')
                 ]
-                                    
+            save_file_test('test.json',summaries,'a')
 
         
         for k,v in summaries.items():
-            print("synthetising the report... ",datetime.now())
+            print("\n\n---------synthetise final report-------------\n\n",datetime.now())
             summary_reports.append(
                 {
                     "file":k,
@@ -97,14 +98,16 @@ def quant(year,tickers:list)->str:
                     "file_summary":replace_smart_punctuation(types_synthetiser(v))
                 }
             )
+            save_file_test('test.json',summaries,'a')
             # level 4 summarizes the sections into one and exports it to a pdf file.
-            print("prettyfying the report. almost done... ",datetime.now())
+            print("\n\n---------prettyfying report almost done...-------------\n\n",datetime.now())
         final_report = ' '.join(quant_report(summary_reports).split())
         if final_report:
             try:
                 
                 save_analysis_report(ticker_dir, ticker, final_report,extension=extension)
                 print(f"Saved analysis report for ticker {ticker}\n")
+                save_file_test('test.json',final_report,'a')
                 return  final_report
             except Exception as e:
                 print("error returning a json structure: ",e)

@@ -119,8 +119,7 @@ def extract_sections (text:str,file:str)->list:
             print("no section type. assigning empty")
             continue
         for table in doc.find_all("table"):
-            table_text=table.get_text(separator=" | ",strip=True)
-            table.replace_with(f"\n[TABLE START]\n{table_text}\n[TABLE END]\n")
+            table.decompose()
         texts = recursively_chunk(doc.text)
         if not texts:
             continue

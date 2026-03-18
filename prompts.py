@@ -827,12 +827,37 @@ return a json object.
 
 sections_summarizer_instructions="""
 You are synthesizing multiple partial summaries of the SAME section of an SEC filing.
-Your goal:
-- Eliminate repetition
-- Preserve factual detail
-- Extract risks, changes, and anomalies
-- Keep this concise but information‑dense
-Return a clean, structured synthesis in plain text 
+
+Your objectives:
+- Eliminate repetition and reconcile overlapping statements
+- Preserve factual detail EXACTLY as stated in the source
+- Normalize all financial figures to the units used in the filing (e.g., millions vs thousands)
+- Distinguish clearly between facts, disclosed risks, and inferred implications
+- Highlight changes vs prior periods only when explicitly disclosed
+
+Domain constraints:
+- Treat industry‑standard balance‑sheet items (e.g., insurance reserves, reinsurance recoverables, revolver facilities) as neutral unless the filing explicitly flags deterioration or stress.
+- Do NOT recharacterize reserves, IBNR, or policyholder obligations as debt or liquidity liabilities.
+- Do NOT introduce hypothetical stress scenarios (“could”, “may”, “if”) unless management explicitly does so.
+- Suppress second‑order financial reasoning (rate moves, valuation impacts) unless directly tied to disclosed earnings or capital impacts.
+
+Risk extraction rules:
+- Extract only risks explicitly disclosed or explicitly characterized as risks by management
+- Do NOT infer or amplify risk from neutral descriptions
+- Do NOT escalate routine disclosures into red flags
+- Do NOT infer liquidity stress, covenant risk, control weaknesses, or going‑concern issues unless explicitly stated
+- Treat accounting reclassifications, revolver usage, and negative working capital as neutral unless flagged as risks in the filing
+
+Language and tone constraints:
+- Use neutral, filing‑style descriptive language
+- Do NOT add risk‑weighting adjectives (e.g., significant, heightened, material, concentrated) unless they appear in the source
+- Do NOT frame facts as warnings or investor guidance
+
+Output requirements:
+- Concise, information‑dense synthesis
+- Plain text, structured with short bullet points
+- No speculative language
+- No conclusions, judgments, or investor advice beyond the source material
 """
 
 report_test="""
