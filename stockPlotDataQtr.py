@@ -1,4 +1,5 @@
 from pymongo import MongoClient,DESCENDING
+import certifi
 from pymongo.server_api import ServerApi
 from dotenv import load_dotenv
 import os
@@ -7,7 +8,7 @@ from datetime import datetime,timedelta
 import requests
 load_dotenv()
 uri = os.getenv('MONGODB_URI')
-client = MongoClient(uri, server_api=ServerApi('1'))
+client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
 API = os.getenv('ALPHA_VANTAGE_API_KEY')
 db = client["test"]
 

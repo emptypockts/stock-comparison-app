@@ -28,6 +28,7 @@ import EconomyStats
 from fetchStockfromdB import stockFetch
 from financialUtils import pull_QStockData,PullQtrStockRevenueTrends
 from pymongo import MongoClient
+import certifi
 from pymongo.server_api import ServerApi
 from stockPlotDataQtr import fetch_4qtr_data
 from PDFReport import PDFReport
@@ -41,7 +42,7 @@ CF_CERT_URL = f"https://{os.getenv('CF_URL_CDN_CGI_CERTS')}/cdn-cgi/access/certs
 CERT_KYS = requests.get(CF_CERT_URL).json()
 CF_AUDIENCE_ID = os.getenv('CF_AUD_ID')
 uri = os.getenv('MONGODB_URI')
-client = MongoClient(uri, server_api=ServerApi('1'))
+client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
 db=client['test']
 edgar_collection=db['rawEdgarCollection']
 ai_tasks_collection=db['aiTasks']

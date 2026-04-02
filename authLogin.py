@@ -1,14 +1,16 @@
 from pymongo import MongoClient
+import certifi
 from pymongo.server_api import ServerApi
 from dotenv import load_dotenv
 import os
 import requests
 import jwt
+import certifi
 
 def loginStep(username):
     load_dotenv()
     uri = os.getenv('MONGODB_URI')
-    client = MongoClient(uri, server_api=ServerApi('1'))
+    client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
 
     # Access the 'users' collection in the database
     db = client["test"]
@@ -29,7 +31,7 @@ if __name__ == "__main__":
     CF_AUDIENCE_ID = os.getenv('CF_AUD_ID')
 
     # uri = os.getenv('MONGODB_URI')
-    # client = MongoClient(uri, server_api=ServerApi('1'))
+    # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
     
     # try:
     #     client.admin.command('ping')

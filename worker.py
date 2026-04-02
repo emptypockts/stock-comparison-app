@@ -2,6 +2,7 @@ from celery import Celery
 import socketio
 from pymongo.server_api import ServerApi
 from pymongo import MongoClient
+import certifi
 from dotenv import load_dotenv
 import os
 from datetime import datetime,timezone
@@ -52,7 +53,7 @@ def generate_ai_report(self,tickers,user_id,report_type):
         result= compile(tickers)
 
         if result:
-            client = MongoClient(uri, server_api=ServerApi('1'))
+            client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
             db = client["test"]
             ai_report_collections = db["aiTasks"]
             ai_report_collections.insert_one({
@@ -117,7 +118,7 @@ def generate_ai_7powers(self,tickers,user_id,report_type):
         
         now=datetime.now()
         if result:
-            client = MongoClient(uri, server_api=ServerApi('1'))
+            client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
             db = client["test"]
             ai_report_collections = db["aiTasks"]
             ai_report_collections.insert_one({
@@ -180,7 +181,7 @@ def generate_ai_quant(self,tickers,user_id,report_type):
         
         now=datetime.now()
         if result:
-            client = MongoClient(uri, server_api=ServerApi('1'))
+            client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
             db = client["test"]
             ai_report_collections = db["aiTasks"]
             ai_report_collections.insert_one({
@@ -245,7 +246,7 @@ def generate_ai_quant_rittenhouse(self,tickers,user_id,report_type):
         
         now=datetime.now()
         if result:
-            client = MongoClient(uri, server_api=ServerApi('1'))
+            client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
             db = client["test"]
             ai_report_collections = db["aiTasks"]
             ai_report_collections.insert_one({

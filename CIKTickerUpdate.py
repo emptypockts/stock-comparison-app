@@ -1,5 +1,6 @@
 
 from pymongo import MongoClient
+import certifi
 from pymongo.server_api import ServerApi
 from dotenv import load_dotenv
 from financialUtils import fetch_ticker,fetch_cik
@@ -25,7 +26,7 @@ def createCikTickerCollection(file,collection):
 
     
 if __name__ == "__main__":
-    client = MongoClient(uri, server_api=ServerApi('1'))
+    client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
     db = client["test"]
     collection=db['tickerCIK']
     # file= "C:\\Users\\ejujo\\Downloads\\tickers.json"

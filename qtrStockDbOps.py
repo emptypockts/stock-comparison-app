@@ -9,6 +9,7 @@ from financialUtils import get_metric_keys,fetch_ticker,push_StockData,swap_temp
 from math import atan, degrees
 import numpy as np
 from datetime import datetime
+import certifi
 
 
 
@@ -312,7 +313,7 @@ def CountAggRecordPipeline(collection:Collection):
 
 if __name__=="__main__":
     uri = os.getenv('MONGODB_URI')
-    client = MongoClient(uri, server_api=ServerApi('1'))
+    client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
     db = client["test"]
     # tickers = ['CVS','ROST']
     collectionSize=CountAggRecordPipeline(db['QtrStockData'])

@@ -1,4 +1,5 @@
 from pymongo import MongoClient, errors
+import certifi
 from dotenv import load_dotenv
 import os
 from pymongo.server_api import ServerApi
@@ -10,7 +11,7 @@ def registerStep(username, password, name, email):
     current_time = datetime.now(timezone.utc).isoformat(timespec='milliseconds')
     load_dotenv()
     uri = os.getenv('MONGODB_URI')
-    client = MongoClient(uri, server_api=ServerApi('1'))
+    client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
 
     db = client["test"]
     users_collection = db["User"]
@@ -52,7 +53,7 @@ def registerStep(username, password, name, email):
 if __name__ == "__main__":
     load_dotenv()
     uri = os.getenv('MONGODB_URI')
-    client = MongoClient(uri, server_api=ServerApi('1'))
+    client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
     
     try:
         client.admin.command('ping')

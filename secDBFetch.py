@@ -4,12 +4,13 @@ from bs4 import BeautifulSoup
 from financialUtils import fetch_cik
 from pymongo.server_api import ServerApi
 from pymongo import MongoClient
+import certifi
 from pymongo.collection import Collection,Cursor
 from dotenv import load_dotenv
 from datetime import datetime
 load_dotenv()
 uri = os.getenv('MONGODB_URI')
-client = MongoClient(uri, server_api=ServerApi('1'))
+client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
 db=client['test']
 cik_collection=db['tickerCIK']
 DIRECTORY = os.getenv('DIRECTORY')

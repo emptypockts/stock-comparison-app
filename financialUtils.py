@@ -426,9 +426,10 @@ def fetch_name(tickers:list)->str:
         list of company names
     """
     from pymongo import MongoClient
+    import certifi
     from pymongo.server_api import ServerApi
     uri = os.getenv('MONGODB_URI')
-    client = MongoClient(uri, server_api=ServerApi('1'))
+    client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
     db=client['test']
     ticker_collection=db['tickerCIK']
     tickers=[e.upper() for e in tickers]

@@ -7,10 +7,11 @@ import os
 import ast
 from pymongo.server_api import ServerApi
 from pymongo import MongoClient
+import certifi
 from dotenv import load_dotenv
 load_dotenv()
 uri = os.getenv('MONGODB_URI')
-client = MongoClient(uri, server_api=ServerApi('1'))
+client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
 db = client["test"]
 ai_report_collections = db["aiTasks"]
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))

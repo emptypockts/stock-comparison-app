@@ -4,6 +4,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from pymongo.server_api import ServerApi
 from pymongo import MongoClient
+import certifi
 from companyData import fetch_metric,fetch_price_fmp
 from financialUtils import (
     get_metric_keys,fetch_ticker,
@@ -16,7 +17,7 @@ from typing import Literal
 import json
 load_dotenv()
 uri = os.getenv('MONGODB_URI')
-client = MongoClient(uri, server_api=ServerApi('1'))
+client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
 KY = os.getenv('TWELVE_API_KY')
 URL_BASE = os.getenv('TWELVE_URI')
 def fetch_tickers(collection:Collection)->list:

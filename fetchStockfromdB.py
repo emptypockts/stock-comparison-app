@@ -1,4 +1,5 @@
 from pymongo import MongoClient
+import certifi
 from pymongo.server_api import ServerApi
 from dotenv import load_dotenv
 import os
@@ -84,7 +85,7 @@ def stockInsert(db,jsonData):
 if __name__ == "__main__":
     load_dotenv()
     uri = os.getenv('MONGODB_URI')
-    client = MongoClient(uri, server_api=ServerApi('1'))
+    client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
     db = client["test"]
 
     try:
