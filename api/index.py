@@ -44,7 +44,6 @@ CF_AUDIENCE_ID = os.getenv('CF_AUD_ID')
 uri = os.getenv('MONGODB_URI')
 client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
 db=client['test']
-edgar_collection=db['rawEdgarCollection']
 ai_tasks_collection=db['aiTasks']
 app = Flask(__name__)
 app.config.from_object(app_constants)
