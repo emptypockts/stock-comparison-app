@@ -322,17 +322,17 @@ if __name__=="__main__":
     #go to this link to download the company facts https://www.sec.gov/Archives/edgar/daily-index/xbrl/companyfacts.zip
    
     # # Flow to update stock info from json files  (GAAP)
-    # object = fetch_Stock_Info()
-    # push_StockData(db,object,collection='QtrStockData')    
+    object = fetch_Stock_Info()
+    push_StockData(db,object,collection='QtrStockData')    
     
 
 
     # # function to update main revenue trends per quarter in the db   
-    # for skip in range((collectionSize//limit_size)+1):
-        # response =PullProcessMergeRevenueGrowthQtrStockData(db['QtrStockData'],skip,limit_size)
+    for skip in range((collectionSize//limit_size)+1):
+        response =PullProcessMergeRevenueGrowthQtrStockData(db['QtrStockData'],skip,limit_size)
         
-        # pushMergedRevenueGrowthQtrStockData(response,db['temp_QtrStockRevTrend'])
-    # swap_temp_prod(db,collection='QtrStockRevTrend')
+        pushMergedRevenueGrowthQtrStockData(response,db['temp_QtrStockRevTrend'])
+    swap_temp_prod(db,collection='QtrStockRevTrend')
     
     # join the qtr stock rev trend with the stock value score
     aggregateScoreToQtrRevTrend(db['QtrStockRevTrend'])
