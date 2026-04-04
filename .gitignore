@@ -11,3 +11,7 @@ tmp/
 /venv/
 flask_session/
 foo.py
+*.ipynb
+level_*.txt
+*.service
+.DS_Store

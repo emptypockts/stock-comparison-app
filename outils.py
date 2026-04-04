@@ -234,7 +234,7 @@ def recursively_chunk(text: str) -> list:
         overlap=200
     text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
         encoding_name='cl100k_base',
-        chunk_size=20000,
+        chunk_size=10000,
         chunk_overlap=overlap
     )
     text = replace_smart_punctuation(text)

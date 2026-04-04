@@ -54,9 +54,9 @@ def quant(year,tickers:list)->str:
                 with open(file_name) as f:
                     report=f.read()
                     # level 1, chunk and structure report in sections, ex 10, 10q, 10k etc.
-                    print ("\n\n---------summarize chunks-------------\n\n",datetime.now())
+                    print ("\n\n---------summarize chunks l1-------------\n\n",datetime.now())
                     report_blocks.append(extract_sections(report,file))
-
+        print ("\n\n---------summarize all sections l2-------------\n\n",datetime.now())
         for types in report_blocks:
             for t in types:
                 texts = t.get('texts_synthesis',[])
@@ -69,7 +69,7 @@ def quant(year,tickers:list)->str:
                 else:
                     # level 2 summarize the chunks into one per section
                     t['summary']= replace_smart_punctuation(sections_summarizer(texts))
-            print ("\n\n---------summarize all sections-------------\n\n",datetime.now())
+            
             
             summaries[types[0]['file_name']]=[
                 {"section_type": sec['section_type'],"summary":sec['summary']}
@@ -78,7 +78,7 @@ def quant(year,tickers:list)->str:
 
         
         for k,v in summaries.items():
-            print("\n\n---------synthetise final report-------------\n\n",datetime.now())
+            print("\n\n---------synthetise final report l3-------------\n\n",datetime.now())
             summary_reports.append(
                 {
                     "file":k,
@@ -88,7 +88,7 @@ def quant(year,tickers:list)->str:
             )
         
             # level 4 summarizes the sections into one and exports it to a pdf file.
-            print("\n\n---------prettyfying report almost done...-------------\n\n",datetime.now())
+            print("\n\n---------prettyfying report almost done... l4-------------\n\n",datetime.now())
         final_report = ' '.join(quant_report(summary_reports).split())
         if final_report:
             try:
@@ -103,5 +103,5 @@ def quant(year,tickers:list)->str:
 
 if __name__=="__main__":
     year= str(datetime.now().year)
-    print(quant(year,["son"]))
+    print(quant(year,["ko"]))
 

@@ -165,6 +165,8 @@ def generate_ai_7powers(self,tickers,user_id,report_type):
 def generate_ai_quant(self,tickers,user_id,report_type):
     current_year=(datetime.now().year)
     task_id=self.request.id
+    import sys
+    print(sys.path)
     from quant import quant
     notify_task_result('task_start',{
         'user_id':user_id,
