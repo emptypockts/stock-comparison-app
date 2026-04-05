@@ -1,5 +1,4 @@
 from bs4 import BeautifulSoup
-from lxml import etree
 from datetime import datetime,timedelta
 import os
 import json
@@ -97,6 +96,33 @@ NON_NARRATIVE_TYPES = (
 #===========================================#
 
 # level 1, structure report and chunk text
+
+
+
+def find_init_def14a(main_soup):
+    
+    soup = BeautifulSoup(main_soup,'lxml')
+    docs = soup.find_all(['span'])
+    for doc in docs:
+        if 'table of contents' in doc.get_text(" ",strip=True).strip().lower():
+            return doc.find_parent("document")
+def find_init_8k_10q_10k(main_soup):
+    ITEM_PATTERN = re.compile(r"\bitem\s+\d(\.\d+)?\b", re.IGNORECASE)
+    soup = BeautifulSoup(main_soup,"lxml")
+    docs = soup.find_all(["span"])
+    for doc in docs:
+        text = doc.get_text(" ",strip=True).lower()
+        if ITEM_PATTERN.search(text):
+            return doc.find_parent("document")
+
+def restore_tables(chunk,tables):
+    for i,table_text in enumerate(tables):
+        chunk=chunk.replace(
+            f"[TABLE_BLOCK_{i}]",
+            f"[TABLE START]\n{table_text}\n[TABLE END]"
+        )
+        return chunk
+
 def extract_sections (text:str,file:str)->list:
     """
     this function will process a sec report text file and extracts the important sections and provide structure.
@@ -106,9 +132,34 @@ def extract_sections (text:str,file:str)->list:
         returns: a list of summarized chunks
     """
     sections = []
-    soup  = BeautifulSoup(text,"lxml")
+    start_node = None
+    TABLE_BLOCK_TEMPLATE = "\n[TABLE_BLOCK_{i}]\n"
+    if re.search("DEF 14A",file,re.IGNORECASE):
+        start_node = find_init_def14a(text)
+    elif re.search("8-K|10-K|10-Q",file,re.IGNORECASE):
+        start_node = find_init_8k_10q_10k(text)
+    
+
+    filtered_documents=[]
+    collect=False
+    soup = BeautifulSoup(text,"lxml")
     documents = soup.find_all("document")
-    for doc in documents:
+    for d in documents:
+
+        if d == start_node:
+            collect = True
+        if collect:
+            filtered_documents.append(d)
+    
+    for doc in filtered_documents:
+        try:
+            section_type = (doc.type.next).strip()
+            if section_type.startswith(NON_NARRATIVE_TYPES):
+                continue
+        except:
+            print("no section type. assigning empty")
+            continue
+        
         if doc.pdf:
             continue
         for div in doc.find_all("div", {"style": "display:none"}):
@@ -117,19 +168,22 @@ def extract_sections (text:str,file:str)->list:
             tag.unwrap()
         for tag in doc.find_all(["s","strike","del"]):
             tag.unwrap()
-        try:
-            section_type = (doc.type.next).strip()
-        except:
-            print("no section type. assigning empty")
-            continue
-        for table in doc.find_all("table"):
+        tables=[]
+        for i,table in enumerate(doc.find_all("table")):
             table_text=table.get_text(separator=" | ",strip=True)
-            table.replace_with(f"\n[TABLE START]\n{table_text}\n[TABLE END]\n")
+            # check for foot notes
+            separator_count = len(table_text.split('|'))-1
+            if separator_count==1:
+                table.replace_with(f"\n[FOOT NOTE START]\n{table_text}\n[FOOT NOTE END]\n")
+            elif separator_count==0:
+                continue
+            else:
+                tables.append(table.get_text(" ",strip=True))
+                table.replace_with(TABLE_BLOCK_TEMPLATE.format(i=i))
         texts = recursively_chunk(doc.text)
         if not texts:
             continue
-        if section_type.startswith(NON_NARRATIVE_TYPES):
-            continue
+            
         type_description=""
         for k,v in SEC_DOC_TYPE_DESCRIPTIONS.items():
             if section_type.startswith(k):
@@ -181,6 +235,7 @@ def process_sec_chunks(chunks:list,level:int=1)->list:
 
         for attempt in range(2):
             try:
+                print(f"calling llm with text (first 200 characters): {combined_content[0:200]}")
                 response = llm_current.invoke([
                     SYSTEM_MESSAGE,
                     HumanMessage(content=combined_content)
@@ -188,6 +243,10 @@ def process_sec_chunks(chunks:list,level:int=1)->list:
                 if response.content is None:
                     raise ValueError("llm didnt return any content")
                 responses.append(response.content.replace("```json","").replace("```","").strip())
+                # -------- TODO -----------
+                # add the logic for table recovery y replacing the index with the corresponding table
+                # -------------------------
+                
                 break
             except:
                 if attempt==1:

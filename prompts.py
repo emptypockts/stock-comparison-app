@@ -1013,45 +1013,32 @@ test_lunr={'lunr_DEF 14A_2025-04-22_complete_submission': {'filing_type': 'def 1
 test_lunr_final=[{'type': 'title', 'content': '🌙 intuitive machines: sentiment & tone analysis'}, {'type': 'paragraph', 'content': 'this briefing synthesizes sec filings to assess sentiment drift, leadership integrity, and strategic clarity. recent filings indicate a **deteriorating** tone, trending from optimistic to cautiously optimistic, with increasing emphasis on risks and uncertainties.'}, {'type': 'bullets', 'content': ['**transparency score:** decreased from **75** (def 14a) to **40** (10-q).', '**accountability score:** remains consistently low, reflecting limited ownership of challenges.', '**strategic clarity score:** fluctuates, with forward-looking statements often lacking robust evidence.', '**tone stability rating:** deteriorating', '**sentiment polarity:** shift from positive (def 14a) to neutral (10-q), driven by increasing risk disclosures.']}, {'type': 'title', 'content': '🚩 key observations'}, {'type': 'paragraph', 'content': 'initial optimism surrounding the annual meeting (def 14a) and the lanteris acquisition (8-k) has been tempered by subsequent 10-q filings. these later filings highlight concerns about limited operating history, customer concentration, potential launch delays, and a history of losses. the shift suggests a recalibration of expectations.'}, {'type': 'title', 'content': '🗣️ notable language shifts'}, {'type': 'bullets', 'content': ['increased frequency of risk disclosures related to delays, competition, and capital needs.', "shift from assertive claims of 'leading position' to acknowledgements of 'limited operating history'.", 'greater emphasis on regulatory compliance and potential legal challenges.', "more frequent mentions of 'uncertainty' impacting forward-looking statements."]}, {'type': 'title', 'content': '⚠️ flagged statements'}, {'type': 'bullets', 'content': ['"we believe we have a leading position" (def 14a) - repeated assertion without concrete financial validation.', '"driving critical early conversations" (10-k) - vague and unsubstantiated claim.', '"fundamentally disrupting lunar access economics" (10-k) - overly optimistic given financial performance.', '"our reliance upon the efforts of our key personnel and board of directors to be successful" (10-q) - highlights key-person risk without mitigation strategies.', '"failure of our products to operate in the expected manner or defects in our sub-systems" (10-q) - direct admission of potential product failure, raising concerns about quality control.']}]
 # level 1 summarization
 recursive_summarize_instructions="""
-You are a compression engine for SEC filing sections.
-
-OBJECTIVE: Reduce section to 2:1 ratio while preserving ALL material facts.
-
-PRESERVE WITHOUT EXCEPTION:
-- Financial figures (amounts, %, dates, thresholds)
-- Named entities (subsidiaries, executives, counterparties)
-- Quantified risks and probabilities
-- Legal deadlines, compliance requirements, obligations
-- Causal statements ("X occurred, therefore Y impact")
-- All qualifiers ("believes", "subject to", "estimated")
-
-COMPRESSION RULES:
-- Remove boilerplate language and repetitive phrases
-- Combine thematically related items into categories
-- Consolidate example lists into concise statements
-- Keep only essential cross-references
-
-OUTPUT FORMAT (JSON):
+Extract financial information from the text below.
+Return ONLY valid JSON in this format:
 {
-  "section_id": "Item X.Y",
-  "section_title": "string",
-  "compression_ratio": "X:1",
-  "content": {
-    "financial_figures": ["metric: value [units] [date]", ...],
-    "legal_obligations": ["deadline, requirement, penalty", ...],
-    "operational_facts": ["description: statement", ...],
-    "disclosed_risks": ["risk language as stated in filing", ...],
-    "accounting_changes": ["policy change with prior reference", ...]
-  },
-  "compression_notes": ["omitted: boilerplate language", ...]
+  "chunk_id": "<id>",
+  "figures": [
+    {
+      "k": "<metric name>",
+      "v": "<value as written>",
+      "u": "<unit or currency>",
+      "p": "<time period if stated>",
+      "q": "<exact quote>"
+    }
+  ],
+  "notes": [
+    {
+      "type": "<CEO | CFO | Management | Footnote | AccountingPolicy | Risk | Outlook | Other>",
+      "text": "<concise summary or quote>"
+    }
+  ]
 }
-
-QUALITY GATES:
-- If compression exceeds 2.5:1 per section, preserve 100%
-- Verify all dollar amounts, dates, percentages present
-- Flag any loss of context with [CONTEXT_LOSS]
-
-TONE: Neutral, filing-style. No interpretation.
+Rules:
+- Extract ALL explicitly stated financial numbers.
+- Do NOT infer or calculate.
+- Duplicates are allowed.
+- If no figures or notes exist, return empty arrays.
+- Keep notes concise (1–2 sentences).
 """
 # level 2 summarization
 sections_summarizer_instructions="""
