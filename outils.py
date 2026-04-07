@@ -98,7 +98,7 @@ NON_NARRATIVE_TYPES = (
 # level 1, structure report and chunk text
 
 
-
+# find the first meaningful section for def14a reports
 def find_init_def14a(main_soup):
     
     soup = BeautifulSoup(main_soup,'lxml')
@@ -106,6 +106,7 @@ def find_init_def14a(main_soup):
     for doc in docs:
         if 'table of contents' in doc.get_text(" ",strip=True).strip().lower():
             return doc.find_parent("document")
+# find the first meaningful section for 8k 10q 10k reports
 def find_init_8k_10q_10k(main_soup):
     ITEM_PATTERN = re.compile(r"\bitem\s+\d(\.\d+)?\b", re.IGNORECASE)
     soup = BeautifulSoup(main_soup,"lxml")
@@ -114,15 +115,15 @@ def find_init_8k_10q_10k(main_soup):
         text = doc.get_text(" ",strip=True).lower()
         if ITEM_PATTERN.search(text):
             return doc.find_parent("document")
-
+# add tables back
 def restore_tables(chunk,tables):
     for i,table_text in enumerate(tables):
         chunk=chunk.replace(
             f"[TABLE_BLOCK_{i}]",
             f"[TABLE START]\n{table_text}\n[TABLE END]"
         )
-        return chunk
-
+    return chunk
+# etl with soup on sec report
 def extract_sections (text:str,file:str)->list:
     """
     this function will process a sec report text file and extracts the important sections and provide structure.
@@ -180,7 +181,7 @@ def extract_sections (text:str,file:str)->list:
             else:
                 tables.append(table.get_text(" ",strip=True))
                 table.replace_with(TABLE_BLOCK_TEMPLATE.format(i=i))
-        texts = recursively_chunk(doc.text)
+        texts = recursively_chunk(doc.text,tables)
         if not texts:
             continue
             
@@ -238,14 +239,12 @@ def process_sec_chunks(chunks:list,level:int=1)->list:
                 print(f"calling llm with text (first 200 characters): {combined_content[0:200]}")
                 response = llm_current.invoke([
                     SYSTEM_MESSAGE,
-                    HumanMessage(content=combined_content)
+                    HumanMessage(content=replace_smart_punctuation(combined_content))
                 ])
                 if response.content is None:
                     raise ValueError("llm didnt return any content")
                 responses.append(response.content.replace("```json","").replace("```","").strip())
-                # -------- TODO -----------
-                # add the logic for table recovery y replacing the index with the corresponding table
-                # -------------------------
+
                 
                 break
             except:
@@ -278,17 +277,17 @@ def replace_smart_punctuation(text: str) -> str:
     text = re.sub(r'\s+', ' ', text).strip()
     return text
 # recursive langchain chunker
-def recursively_chunk(text: str) -> list:
+def recursively_chunk(text: str,tables:list) -> list:
     """
-    function to recursively chunk
+    function to recursively chunk and add back the tables after the chunk is completed
     params:
         text: string of the sec report
+        tables: list of tables
     returns: list of chunks
     """
     if len(text)<3000:
+        return [restore_tables(text,tables)]
         return [text]
-    if "[TABLE START]" in text:
-        overlap=50
     else:
         overlap=200
     text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
@@ -298,7 +297,8 @@ def recursively_chunk(text: str) -> list:
     )
     text = replace_smart_punctuation(text)
     texts= text_splitter.split_text(text)
-    return texts
+    texts_w_tables = [restore_tables(t,tables) for t in texts]
+    return texts_w_tables
 # summarize the sections chunks into one per section
 def sections_summarizer(chunks:list)->str:
     """
