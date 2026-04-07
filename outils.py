@@ -105,7 +105,7 @@ def find_init_def14a(main_soup):
     docs = soup.find_all(['span'])
     for doc in docs:
         if 'table of contents' in doc.get_text(" ",strip=True).strip().lower():
-            return doc.find_parent("document")
+            return doc
 # find the first meaningful section for 8k 10q 10k reports
 def find_init_8k_10q_10k(main_soup):
     ITEM_PATTERN = re.compile(r"\bitem\s+\d(\.\d+)?\b", re.IGNORECASE)
@@ -114,13 +114,13 @@ def find_init_8k_10q_10k(main_soup):
     for doc in docs:
         text = doc.get_text(" ",strip=True).lower()
         if ITEM_PATTERN.search(text):
-            return doc.find_parent("document")
+            return doc
 # add tables back
 def restore_tables(chunk,tables):
-    for i,table_text in enumerate(tables):
+    for k,v in tables.items():
         chunk=chunk.replace(
-            f"[TABLE_BLOCK_{i}]",
-            f"[TABLE START]\n{table_text}\n[TABLE END]"
+            k,
+            f"\n\n----[TABLE START]----\n{v}\n\n----[TABLE END]----"
         )
     return chunk
 # etl with soup on sec report
@@ -133,26 +133,17 @@ def extract_sections (text:str,file:str)->list:
         returns: a list of summarized chunks
     """
     sections = []
+    NAMESPACE_PREFIX = ("ix:","xbrli:","dei:","us-gaap:")
     start_node = None
-    TABLE_BLOCK_TEMPLATE = "\n[TABLE_BLOCK_{i}]\n"
+    TABLE_BLOCK_DICT = {}
     if re.search("DEF 14A",file,re.IGNORECASE):
         start_node = find_init_def14a(text)
     elif re.search("8-K|10-K|10-Q",file,re.IGNORECASE):
         start_node = find_init_8k_10q_10k(text)
     
-
-    filtered_documents=[]
-    collect=False
     soup = BeautifulSoup(text,"lxml")
     documents = soup.find_all("document")
-    for d in documents:
-
-        if d == start_node:
-            collect = True
-        if collect:
-            filtered_documents.append(d)
-    
-    for doc in filtered_documents:
+    for doc in documents:    
         try:
             section_type = (doc.type.next).strip()
             if section_type.startswith(NON_NARRATIVE_TYPES):
@@ -165,23 +156,29 @@ def extract_sections (text:str,file:str)->list:
             continue
         for div in doc.find_all("div", {"style": "display:none"}):
             div.decompose()
-        for tag in doc.find_all(lambda t: t.name and ":" in t.name):
+        for tag in doc.find_all(lambda t: t.name and t.name.startswith(NAMESPACE_PREFIX)):
             tag.unwrap()
         for tag in doc.find_all(["s","strike","del"]):
             tag.unwrap()
-        tables=[]
+        start_found=False
         for i,table in enumerate(doc.find_all("table")):
-            table_text=table.get_text(separator=" | ",strip=True)
-            # check for foot notes
-            separator_count = len(table_text.split('|'))-1
-            if separator_count==1:
-                table.replace_with(f"\n[FOOT NOTE START]\n{table_text}\n[FOOT NOTE END]\n")
-            elif separator_count==0:
+            if start_node not in table.find_all("span") and not start_found:
+                table.parent.decompose()
+                table.decompose()
                 continue
             else:
-                tables.append(table.get_text(" ",strip=True))
-                table.replace_with(TABLE_BLOCK_TEMPLATE.format(i=i))
-        texts = recursively_chunk(doc.text,tables)
+                start_found=True
+                table_text=table.get_text(separator=" | ",strip=True)
+                # check for foot notes
+                separator_count = len(table_text.split('|'))-1
+                if separator_count==1:
+                    table.replace_with(f"\n[FOOT NOTE START]\n{table_text}\n[FOOT NOTE END]\n")
+                elif separator_count==0:
+                    continue
+                else:
+                    TABLE_BLOCK_DICT[f"TABLE_{i}"]=table.get_text(" ",strip=True)
+                    table.replace_with(f"TABLE_{i}")
+        texts = recursively_chunk(doc.text,TABLE_BLOCK_DICT)
         if not texts:
             continue
             
@@ -277,7 +274,7 @@ def replace_smart_punctuation(text: str) -> str:
     text = re.sub(r'\s+', ' ', text).strip()
     return text
 # recursive langchain chunker
-def recursively_chunk(text: str,tables:list) -> list:
+def recursively_chunk(text: str,tables:dict) -> list:
     """
     function to recursively chunk and add back the tables after the chunk is completed
     params:
