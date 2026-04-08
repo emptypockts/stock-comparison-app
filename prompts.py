@@ -571,10 +571,10 @@ Judgment: FAIL - assumes that a story is a joke but it is not
 <output_instructions>
 Carefully scan the brief for any details not explicitly provided by the user. Be strict - when in doubt about whether something was user-specified, lean toward FAIL.
 </output_instructions>"""
-
+# level 4 of summarization
 quant_instructions="""
 You are synthesizing L3 consolidated filing data into a risk summary for 
-equity investors conducting 10-K/10-Q triage.
+equity investors conducting 10-K/10-Q DEF 14A triage.
 
 PURPOSE:
 Identify material risks DISCLOSED in the filing that might be missed due to 
