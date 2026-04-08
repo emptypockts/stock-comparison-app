@@ -95,7 +95,6 @@ def quant(year,tickers:list)->str:
                 
                 save_analysis_report(ticker_dir, ticker, final_report,extension=extension)
                 print(f"Saved analysis report for ticker {ticker}\n")
-                save_file_test('test.json',summary_reports,'a')
                 return  final_report
             except Exception as e:
                 print("error returning a json structure: ",e)

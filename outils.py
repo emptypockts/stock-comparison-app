@@ -37,8 +37,8 @@ querystring = {"key": GEMINI_API}
 # llm =ChatOpenAI(model="deepseek-reasoner",base_url="https://api.deepseek.com",api_key=DEEP_SEEK_API_KEY)
 # llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash",api_key=GEMINI_API,max_retries=1)
 # llm=ChatOllama(model="phi4-mini-reasoning:3.8b",base_url="http://localhost:11434")
-llm=ChatOllama(model="gpt-oss:20b-cloud",base_url="https://ollama.com")
-# llm=ChatOllama(model="gpt-oss:120b-cloud",base_url="https://ollama.com")
+# llm=ChatOllama(model="gpt-oss:20b-cloud",base_url="https://ollama.com")
+llm=ChatOllama(model="gpt-oss:120b-cloud",base_url="https://ollama.com")
 # llm=ChatOllama(model="llama2-uncensored:latest")
 
 
@@ -162,10 +162,10 @@ def extract_sections (text:str,file:str)->list:
             tag.unwrap()
         start_found=False
         for i,table in enumerate(doc.find_all("table")):
-            if start_node not in table.find_all("span") and not start_found:
+            spans=table.find_all("span")
+            if start_node not in spans and not start_found and spans:
                 table.parent.decompose()
-                table.decompose()
-                continue
+                    
             else:
                 start_found=True
                 table_text=table.get_text(separator=" | ",strip=True)
