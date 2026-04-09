@@ -42,54 +42,6 @@ llm=ChatOllama(model="gpt-oss:120b-cloud",base_url="https://ollama.com")
 # llm=ChatOllama(model="llama2-uncensored:latest")
 
 
-SEC_DOC_TYPE_DESCRIPTIONS = {
-
-    # Core filing
-    "8-K": "Form 8-K Current Report. Discloses material corporate events such as earnings releases, mergers, acquisitions, executive changes, or other significant developments.",
-
-    # Common earnings / investor exhibits
-    "EX-99.1": "Exhibit 99.1. Typically an earnings press release or investor-facing announcement included with the filing.",
-    "EX-99.2": "Exhibit 99.2. Supplemental investor materials such as presentations, schedules, or supporting financial information.",
-    "EX-99.3": "Exhibit 99.3. Additional supplemental materials such as financial tables, investor presentations, or explanatory schedules.",
-
-    # Certification exhibits (common in 10-K / 10-Q)
-    "EX-31.1": "Section 302 certification by the Chief Executive Officer confirming the accuracy of the report and effectiveness of disclosure controls.",
-    "EX-31.2": "Section 302 certification by the Chief Financial Officer confirming the accuracy of the report and effectiveness of disclosure controls.",
-
-    "EX-32.1": "Section 906 certification by the Chief Executive Officer stating the report fully complies with the Securities Exchange Act.",
-    "EX-32.2": "Section 906 certification by the Chief Financial Officer stating the report fully complies with the Securities Exchange Act.",
-
-    # Legal / governance exhibits
-    "EX-10": "Material contract exhibit such as employment agreements, credit agreements, partnership agreements, or other legally significant contracts.",
-    "EX-3.1": "Articles of incorporation or charter documents describing the company's legal formation.",
-    "EX-3.2": "Bylaws of the company defining governance rules and procedures.",
-    "EX-21": "List of subsidiaries of the registrant.",
-    "EX-23": "Consent of independent registered public accounting firm.",
-    "EX-24": "Power of attorney authorizing individuals to sign filings on behalf of officers or directors.",
-
-    # XBRL exhibits (machine-readable financial metadata)
-    "EX-101.INS": "XBRL instance document containing the machine-readable financial statement data.",
-    "EX-101.SCH": "XBRL schema file defining financial reporting elements, data types, and relationships. Not narrative text.",
-    "EX-101.CAL": "XBRL calculation linkbase defining mathematical relationships between financial statement elements.",
-    "EX-101.DEF": "XBRL definition linkbase defining dimensional relationships such as axes, domains, and members. Not narrative text.",
-    "EX-101.LAB": "XBRL label linkbase providing human-readable labels for financial elements.",
-    "EX-101.PRE": "XBRL presentation linkbase defining the ordering and hierarchy of financial statements.",
-
-    # Inline XBRL (modern filings)
-    "EX-104": "Inline XBRL exhibit containing embedded machine-readable financial data within the HTML filing."
-}
-
-NON_NARRATIVE_TYPES = (
-    'GRAPHIC',
-    'XML',
-    'JSON',
-    'ZIP',
-    'EX-101',
-    'EX-104',
-    'EX-31',
-    'EX-32',
-    'PDF'
-)
 
 #===========================================#
 #     red flag sec report helpers           #
@@ -133,52 +85,103 @@ def extract_sections (text:str,file:str)->list:
         returns: a list of summarized chunks
     """
     sections = []
+    SEC_DOC_TYPE_DESCRIPTIONS = {
+
+    # Core filing
+    "8-K": "Form 8-K Current Report. Discloses material corporate events such as earnings releases, mergers, acquisitions, executive changes, or other significant developments.",
+
+    # Common earnings / investor exhibits
+    "EX-99.1": "Exhibit 99.1. Typically an earnings press release or investor-facing announcement included with the filing.",
+    "EX-99.2": "Exhibit 99.2. Supplemental investor materials such as presentations, schedules, or supporting financial information.",
+    "EX-99.3": "Exhibit 99.3. Additional supplemental materials such as financial tables, investor presentations, or explanatory schedules.",
+
+    # Certification exhibits (common in 10-K / 10-Q)
+    "EX-31.1": "Section 302 certification by the Chief Executive Officer confirming the accuracy of the report and effectiveness of disclosure controls.",
+    "EX-31.2": "Section 302 certification by the Chief Financial Officer confirming the accuracy of the report and effectiveness of disclosure controls.",
+
+    "EX-32.1": "Section 906 certification by the Chief Executive Officer stating the report fully complies with the Securities Exchange Act.",
+    "EX-32.2": "Section 906 certification by the Chief Financial Officer stating the report fully complies with the Securities Exchange Act.",
+
+    # Legal / governance exhibits
+    "EX-10": "Material contract exhibit such as employment agreements, credit agreements, partnership agreements, or other legally significant contracts.",
+    "EX-3.1": "Articles of incorporation or charter documents describing the company's legal formation.",
+    "EX-3.2": "Bylaws of the company defining governance rules and procedures.",
+    "EX-21": "List of subsidiaries of the registrant.",
+    "EX-23": "Consent of independent registered public accounting firm.",
+    "EX-24": "Power of attorney authorizing individuals to sign filings on behalf of officers or directors.",
+
+    # XBRL exhibits (machine-readable financial metadata)
+    "EX-101.INS": "XBRL instance document containing the machine-readable financial statement data.",
+    "EX-101.SCH": "XBRL schema file defining financial reporting elements, data types, and relationships. Not narrative text.",
+    "EX-101.CAL": "XBRL calculation linkbase defining mathematical relationships between financial statement elements.",
+    "EX-101.DEF": "XBRL definition linkbase defining dimensional relationships such as axes, domains, and members. Not narrative text.",
+    "EX-101.LAB": "XBRL label linkbase providing human-readable labels for financial elements.",
+    "EX-101.PRE": "XBRL presentation linkbase defining the ordering and hierarchy of financial statements.",
+
+    # Inline XBRL (modern filings)
+    "EX-104": "Inline XBRL exhibit containing embedded machine-readable financial data within the HTML filing."
+    }
+    NON_NARRATIVE_TYPES = (
+    'GRAPHIC',
+    'XML',
+    'JSON',
+    'ZIP',
+    'EX-101',
+    'EX-104',
+    'EX-31',
+    'EX-32',
+    'PDF'
+    )
     NAMESPACE_PREFIX = ("ix:","xbrli:","dei:","us-gaap:")
-    start_node = None
+    DELETABLE_TAGS = ["s","strike","del","noscript","svg","image","meta","link"]
     TABLE_BLOCK_DICT = {}
-    if re.search("DEF 14A",file,re.IGNORECASE):
-        start_node = find_init_def14a(text)
-    elif re.search("8-K|10-K|10-Q",file,re.IGNORECASE):
-        start_node = find_init_8k_10q_10k(text)
-    
+
     soup = BeautifulSoup(text,"lxml")
     documents = soup.find_all("document")
     for doc in documents:    
+        # start by skipping non narrative document types
+        
         try:
             section_type = (doc.type.next).strip()
             if section_type.startswith(NON_NARRATIVE_TYPES):
+                print(f"\n\n----removing non narrative documents----\n{section_type}\n\n")
                 continue
         except:
             print("no section type. assigning empty")
             continue
-        
+
+            #   skipping pdf
+            #   removing none style divs
+            #   namespaces ix, xbrli, dei and us-gaap
+            #   deletable tags
+            #   anchor/links noise
+              
         if doc.pdf:
             continue
         for div in doc.find_all("div", {"style": "display:none"}):
             div.decompose()
         for tag in doc.find_all(lambda t: t.name and t.name.startswith(NAMESPACE_PREFIX)):
             tag.unwrap()
-        for tag in doc.find_all(["s","strike","del"]):
+        for tag in doc.find_all(DELETABLE_TAGS):
             tag.unwrap()
-        start_found=False
+        for tag in doc.find_all("a"):
+            txt = tag.get_text(" ",strip=True)
+            href = tag.get("href","")
+            if not txt or txt in {"back to top","top"}:
+                tag.decompose()
         for i,table in enumerate(doc.find_all("table")):
-            spans=table.find_all("span")
-            if start_node not in spans and not start_found and spans:
-                table.parent.decompose()
-                    
+            table_text=table.get_text(separator=" | ",strip=True)
+            # check for foot notes
+            separator_count = len(table_text.split('|'))-1
+            if separator_count==1:
+                table.replace_with(f"\n[FOOT NOTE START]\n{table_text}\n[FOOT NOTE END]\n")
+            elif separator_count==0:
+                continue
             else:
-                start_found=True
-                table_text=table.get_text(separator=" | ",strip=True)
-                # check for foot notes
-                separator_count = len(table_text.split('|'))-1
-                if separator_count==1:
-                    table.replace_with(f"\n[FOOT NOTE START]\n{table_text}\n[FOOT NOTE END]\n")
-                elif separator_count==0:
-                    continue
-                else:
-                    TABLE_BLOCK_DICT[f"TABLE_{i}"]=table.get_text(" ",strip=True)
-                    table.replace_with(f"TABLE_{i}")
+                TABLE_BLOCK_DICT[f"TABLE_{i}"]=table.get_text(" ",strip=True)
+                table.replace_with(f"TABLE_{i}")
         texts = recursively_chunk(doc.text,TABLE_BLOCK_DICT)
+        print(process_sec_chunks([doc.text]))
         if not texts:
             continue
             
@@ -194,7 +197,7 @@ def extract_sections (text:str,file:str)->list:
                 "section_type":section_type,
                 "type_description":type_description,
                 "text":texts,
-                "texts_synthesis":process_sec_chunks(texts)
+                # "texts_synthesis":process_sec_chunks(texts)
             }
         )
     return sections
@@ -564,3 +567,6 @@ def process_sec_chunks_ritten(report:str,instructions:str)->list:
         idx+=1
         print("response chunk idx: ",idx)
     return responses
+
+if __name__ =='__main__':
+    print("hello from main")
