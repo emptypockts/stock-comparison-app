@@ -51,7 +51,7 @@ def quant(year,tickers:list)->str:
                 pass
             else:
                 file_name=os.path.join(ticker_dir,file)
-                with open(file_name) as f:
+                with open(file_name,encoding='latin') as f:
                     report=f.read()
                     # level 1, chunk and structure report in sections, ex 10, 10q, 10k etc.
                     print ("\n\n---------summarize chunks l1-------------\n\n",datetime.now())

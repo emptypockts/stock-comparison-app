@@ -69,10 +69,12 @@ def find_init_8k_10q_10k(main_soup):
             return doc
 # add tables back
 def restore_tables(chunk,tables):
+    
     for k,v in tables.items():
-        chunk=chunk.replace(
-            k,
-            f"\n\n----[TABLE START]----\n{v}\n\n----[TABLE END]----"
+        pattern = rf'(?<!\w){re.escape(k)}(?!\w)'
+        chunk=re.sub(
+            pattern,
+            f"\n\n----[TABLE START]----\n{v}\n\n----[TABLE END]----",chunk
         )
     return chunk
 # etl with soup on sec report
@@ -132,10 +134,10 @@ def extract_sections (text:str,file:str)->list:
     'EX-32',
     'PDF'
     )
-    NAMESPACE_PREFIX = ("ix:","xbrli:","dei:","us-gaap:")
-    DELETABLE_TAGS = ["s","strike","del","noscript","svg","image","meta","link"]
+    NAMESPACE_PREFIX = ("ix:","xbrli:","dei:","us-gaap:","xbrldi:")
+    DELETABLE_TAGS = ["b","s","strike","del","noscript","svg","image","meta","link"]
     TABLE_BLOCK_DICT = {}
-
+    table_idx=0
     soup = BeautifulSoup(text,"lxml")
     documents = soup.find_all("document")
     for doc in documents:    
@@ -144,7 +146,7 @@ def extract_sections (text:str,file:str)->list:
         try:
             section_type = (doc.type.next).strip()
             if section_type.startswith(NON_NARRATIVE_TYPES):
-                print(f"\n\n----removing non narrative documents----\n{section_type}\n\n")
+                print(f"----removing non narrative documents----\n{section_type}")
                 continue
         except:
             print("no section type. assigning empty")
@@ -155,11 +157,16 @@ def extract_sections (text:str,file:str)->list:
             #   namespaces ix, xbrli, dei and us-gaap
             #   deletable tags
             #   anchor/links noise
-              
+        
+
         if doc.pdf:
             continue
-        for div in doc.find_all("div", {"style": "display:none"}):
-            div.decompose()
+        # normalize style: none and style:none and other variants
+        for div in doc.find_all("div"):
+            style = div.get("style","")
+            normalized = style.lower().replace(" ","")
+            if "display:none" in normalized:
+                div.decompose()
         for tag in doc.find_all(lambda t: t.name and t.name.startswith(NAMESPACE_PREFIX)):
             tag.unwrap()
         for tag in doc.find_all(DELETABLE_TAGS):
@@ -178,10 +185,11 @@ def extract_sections (text:str,file:str)->list:
             elif separator_count==0:
                 continue
             else:
-                TABLE_BLOCK_DICT[f"TABLE_{i}"]=table.get_text(" ",strip=True)
-                table.replace_with(f"TABLE_{i}")
-        texts = recursively_chunk(doc.text,TABLE_BLOCK_DICT)
-        print(process_sec_chunks([doc.text]))
+                TABLE_BLOCK_DICT[f"TABLE_{table_idx}"]=table_text
+                table.replace_with(f" TABLE_{table_idx} ")
+                table_idx+=1
+        print(f"----------------calling for recusrive chunk--------")
+        texts = [replace_smart_punctuation(t) for t in recursively_chunk(doc.text,TABLE_BLOCK_DICT)]
         if not texts:
             continue
             
@@ -197,7 +205,7 @@ def extract_sections (text:str,file:str)->list:
                 "section_type":section_type,
                 "type_description":type_description,
                 "text":texts,
-                # "texts_synthesis":process_sec_chunks(texts)
+                "texts_synthesis":process_sec_chunks(texts)
             }
         )
     return sections
@@ -271,10 +279,14 @@ def replace_smart_punctuation(text: str) -> str:
         "\u00a0": " ",
         "\u2011": "-",
         "\u200b": " ",
+        "\u2610": " ",
+        "\u2611": " ",
+        "\u2612": " ",
     }
     for k, v in replacements.items():
         text = text.replace(k, v)
     text = re.sub(r'\s+', ' ', text).strip()
+    text = ' '.join(text.split())
     return text
 # recursive langchain chunker
 def recursively_chunk(text: str,tables:dict) -> list:
@@ -287,18 +299,18 @@ def recursively_chunk(text: str,tables:dict) -> list:
     """
     if len(text)<3000:
         return [restore_tables(text,tables)]
-        return [text]
     else:
         overlap=200
     text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
         encoding_name='cl100k_base',
         chunk_size=10000,
-        chunk_overlap=overlap
+        chunk_overlap=overlap,
     )
     text = replace_smart_punctuation(text)
     texts= text_splitter.split_text(text)
     texts_w_tables = [restore_tables(t,tables) for t in texts]
     return texts_w_tables
+    
 # summarize the sections chunks into one per section
 def sections_summarizer(chunks:list)->str:
     """
