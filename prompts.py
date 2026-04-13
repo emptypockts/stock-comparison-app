@@ -572,161 +572,139 @@ Judgment: FAIL - assumes that a story is a joke but it is not
 Carefully scan the brief for any details not explicitly provided by the user. Be strict - when in doubt about whether something was user-specified, lean toward FAIL.
 </output_instructions>"""
 # level 4 of summarization
-quant_instructions="""
+quant_instructions = """
 You are synthesizing L3 consolidated filing data into a risk summary for 
-equity investors conducting 10-K/10-Q DEF 14A triage.
+equity investors conducting 10-K / 10-Q / DEF 14A triage.
 
 PURPOSE:
-Identify material risks DISCLOSED in the filing that might be missed due to 
-document length and data density. Surface patterns within disclosed facts that 
-require investor attention.
+Identify MATERIAL disclosed risk-relevant fact patterns that may be overlooked 
+due to document length and data density. Organize facts into structured signals 
+for investor review.
 
 SCOPE:
-This is a CONSOLIDATION tool, not forensic analysis. You identify and organize 
-disclosed risks; you do NOT infer, interpret, or introduce external context.
+This is a CONSOLIDATION tool, not forensic analysis.
+- Use ONLY disclosed information from the filing (L3 input)
+- Do NOT introduce external knowledge, assumptions, or forecasts
+- Do NOT speculate or assign probability
+- Do NOT label items as “risk” explicitly
+- You MAY apply standard financial reporting conventions to avoid false errors
 
-ALLOWED RISK CATEGORIES:
+---------------------------------------------------------------------
+NORMALIZATION RULES (CRITICAL)
+---------------------------------------------------------------------
+The following are NORMAL and must NOT be flagged as issues:
+- Rounding differences (<1%)
+- Values presented in thousands vs millions vs billions
+- Same metric reported with different precision (e.g., 2,145,000 vs 2,145,044)
+- Different reporting dates (quarter vs annual)
+- Aggregated vs detailed breakdowns
+- GAAP vs non-GAAP presentation differences
 
-1. LIQUIDITY & DEBT MATURITY RISK
-   ✓ Disclosed Fact Pattern:
-     - Debt due <12 months: $X
-     - Liquidity available: $Y
-     - Calculation: "Refinancing requirement: $(X-Y)" [if X > Y]
-   
-   ✓ Examples:
-     - "Debt maturity $500M in 2025; available liquidity $200M; refinancing 
-       requirement $300M within 12 months"
-     - "Revolver undrawn capacity: $50M; facility size $300M; utilization 83%"
-   
-   ✗ Do NOT say: "Refinancing risk", "Liquidity pressure", "May face challenges"
+Only flag a data issue if:
+- Difference >5% AND same metric, same period, unexplained
+- Units cannot be determined from context
+- Direct contradiction within the same reporting scope
 
-2. DEBT COVENANT STRESS
-   ✓ Disclosed Fact Pattern:
-     - Covenant: [metric] threshold [threshold value]
-     - Current level: [current value]
-     - Headroom: [calculation]
-   
-   ✓ Examples:
-     - "Leverage ratio covenant: <4.5x; current: 4.2x; headroom: 7%"
-     - "Covenant tested quarterly; last test [date]: [result]"
-   
-   ✗ Do NOT say: "Covenant violation risk", "Tight compliance"
+---------------------------------------------------------------------
+MATERIALITY FILTER
+---------------------------------------------------------------------
+Only include items that meet at least ONE condition:
+- Magnitude ≥5% of relevant base (revenue, assets, income), OR
+- Absolute value ≥$100M (large-cap context), OR
+- Multi-period pattern (trend, repetition, clustering)
 
-3. MATURITY LADDER CONCENTRATION
-   ✓ Disclosed Fact Pattern:
-     - Debt maturity schedule shows clustering in specific years
-     - Refinancing volume in 3-year window: $X
-   
-   ✓ Examples:
-     - "Debt maturities clustered 2025-2027: $100M + $150M + $200M 
-       ($450M total); annual refinancing ~$150M average"
-     - "No maturities 2024; $400M due 2025 (spike year)"
-   
-   ✗ Do NOT say: "Refinancing risk", "Maturity cliff"
+Exclude:
+- Boilerplate disclosures
+- Regulatory requirements (e.g., clawback policies)
+- Standard compensation structures
+- Immaterial fluctuations
 
-4. CUSTOMER/SUPPLIER CONCENTRATION
-   ✓ Disclosed Fact Pattern:
-     - Single customer/supplier: >X% of total revenue/purchases
-     - Consistency: observable across multiple periods
-   
-   ✓ Examples:
-     - "Top customer: 65% of revenue; consistent across all 4 quarters 
-       disclosed [Q1-Q4 2023]"
-     - "Top 3 suppliers: 55% of purchases; supplier [Name] = 28%"
-   
-   ✗ Do NOT say: "Customer concentration risk", "Dependency concern"
-   Note: State the concentration; do NOT assess its riskiness
+---------------------------------------------------------------------
+CATEGORY VALIDATION RULE
+---------------------------------------------------------------------
 
-5. SHARE DILUTION TREND
-   ✓ Disclosed Fact Pattern:
-     - Share count movement across disclosed periods
-     - Sources: equity issuance, stock-based comp, conversions
-   
-   ✓ Examples:
-     - "Share count: 2022: 100M → 2023: 110M → 2024: 112M; dilution 
-       +12% over 2 years"
-     - "Stock-based compensation: 2M shares annually; equity grants trending up"
-   
-   ✗ Do NOT say: "Shareholder dilution risk", "Unsustainable dilution"
+Before including a bullet:
+- Verify the fact strictly matches the category definition
+- If it does not clearly fit, EXCLUDE it
+
+Examples:
+- Dividends ≠ recurring charges
+- Authorization ≠ share count change
+- Regulatory policy ≠ accounting policy change
+
+
+---------------------------------------------------------------------
+ALLOWED RISK CATEGORIES (FACT-BASED ONLY)
+---------------------------------------------------------------------
+
+1. LIQUIDITY
+- Debt due <12 months: $X
+- Liquidity available: $Y
+- If X > Y → Refinancing requirement: $(X - Y)
+
+2. DEBT COVENANT HEADROOM
+- Covenant threshold vs current level
+- Headroom calculation
+
+3. MATURITY LADDER
+- Debt clustered across specific years
+- Total refinancing volume in 3-year window
+
+4. CUSTOMER / SUPPLIER CONCENTRATION
+- Explicit % disclosure only
+- Must be quantified in filing
+
+5. SHARE COUNT CHANGE
+- Share count movement across periods
+- Source if disclosed (buybacks, SBC, issuance)
 
 6. OFF-BALANCE-SHEET OBLIGATIONS
-   ✓ Disclosed Fact Pattern:
-     - SPE or structured entity disclosed in footnotes
-     - Obligations disclosed (amounts, conditions, contingencies)
-   
-   ✓ Examples:
-     - "Special purpose entity disclosed in Note 5: $X million contingent 
-       obligations if consolidation triggers occur"
-     - "Operating lease obligations: $X million; not capitalized"
-   
-   ✗ Do NOT say: "Hidden leverage", "Accounting risk"
+- Leases, SPEs, contingencies with disclosed amounts
 
-7. RESERVE OR PROVISION ADEQUACY (Observable Only)
-   ✓ Disclosed Fact Pattern:
-     - Reserve balance change: $X [year A] → $Y [year B]
-     - Provision activity disclosed (charges, releases)
-     - Ratio observable (e.g., reserves as % of prior-year losses)
-   
-   ✓ Examples:
-     - "Reserves declined $50M year-over-year: $500M → $450M 
-       (no management explanation provided)"
-     - "Provision for claims: $75M 2023 vs $85M 2022; declining trend"
-   
-   ✗ Do NOT say: "Inadequate reserves", "Claims deteriorating"
-   Note: Flag the change; do NOT interpret its meaning
+7. RESERVE / PROVISION MOVEMENT
+- Balance change across periods
+- Provision or release activity
 
-8. RECURRING CHARGES OR WRITE-DOWNS
-   ✓ Disclosed Fact Pattern:
-     - Same charge type appears in multiple periods
-     - Amounts and frequency disclosed
-   
-   ✓ Examples:
-     - "Restructuring charges: 2021: $50M, 2022: $45M, 2023: $60M 
-       (recurring 3-year pattern)"
-     - "Goodwill impairment: [segment] $X million [2023]; prior impairments 
-       [2021, 2022] disclosed"
-   
-   ✗ Do NOT say: "Structural cost problem", "Asset quality deteriorating"
+8. RECURRING CHARGES
+- Same charge type across multiple periods
 
-9. ACCOUNTING POLICY CHANGES
-   ✓ Disclosed Fact Pattern:
-     - Policy change disclosed in Item 2 or notes
-     - Impact quantified (if disclosed)
-     - Effective date noted
-   
-   ✓ Examples:
-     - "Accounting policy change [effective 2023]: depreciation method 
-       [old → new]; impact: $X million"
-     - "Adoption of [standard]: reclassified $Y million; no material 
-       earnings impact"
-   
-   ✗ Do NOT say: "Suggests aggressive accounting"
+9. ACCOUNTING POLICY CHANGE
+- Change disclosed with effective date and impact
 
-10. DISCLOSURE OMISSION VS PRIOR PERIOD
-    ✓ Disclosed Fact Pattern:
-      - Material disclosure present in prior period (e.g., 2022 10-K) 
-        absent in current period (2023 10-K)
-      - Factual omission, not interpretation
-    
-    ✓ Examples:
-      - "Customer concentration disclosure: 2022 10-K disclosed top-3 
-        customers = 45%; 2023 10-K contains no customer concentration disclosure 
-        [material omission]"
-      - "Supplier risk: 2022 disclosed single-source supplier for Component X; 
-        2023 disclosure absent"
-    
-    ✗ Do NOT say: "Management hiding something"
+10. DISCLOSURE CHANGE (STRICT)
+- Metric disclosed in prior period AND absent in current period
+- Must remove previously quantified visibility
 
-PROHIBITED INFERENCES:
-✗ "Could", "may", "might" (forward scenarios)
-✗ "Suggests", "indicates", "implies" (interpretation)
-✗ "Risk of", "exposure to" (forward-looking)
-✗ Comparative language: "above-average", "worse than", "concerning"
-✗ Management intent: "appears to be hiding", "management is downplaying"
-✗ External context: "vs. peers", "in current environment"
-✗ Causality chains: "X combined with Y creates Z risk"
+---------------------------------------------------------------------
+EXCLUDED ITEMS (DO NOT INCLUDE)
+---------------------------------------------------------------------
+- Executive compensation mechanics
+- Clawback policies (standard regulatory requirement)
+- Generic legal disclosures
+- Standard equity plan structures
+- Non-material accounting language
 
-OUTPUT FORMAT (JSON Array - No Wrapper Object):
+---------------------------------------------------------------------
+BULLET CONSTRUCTION RULE
+---------------------------------------------------------------------
+Format:
+[CATEGORY]: [Disclosed Fact] → [Mechanical Pattern Only]
+
+Allowed pattern observations:
+- Increase / decrease
+- Multi-period trend
+- Concentration
+- Clustering
+- Stability
+
+NOT allowed:
+- Risk interpretation
+- Causality
+- Forward-looking language
+
+---------------------------------------------------------------------
+OUTPUT FORMAT (JSON ARRAY ONLY)
+---------------------------------------------------------------------
 [
   {
     "type": "title",
@@ -734,14 +712,13 @@ OUTPUT FORMAT (JSON Array - No Wrapper Object):
   },
   {
     "type": "paragraph",
-    "content": "[1-2 sentence overview of filing scope and date]"
+    "content": "This filing covers [period and filing types]. The following presents material disclosed financial patterns identified for investor review."
   },
   {
     "type": "bullets",
     "content": [
-      "[RISK CATEGORY]: [Disclosed Fact]. [Observation if applicable].",
-      "[RISK CATEGORY]: [Disclosed Fact]. [Supporting detail].",
-      ...
+      "[CATEGORY]: [Fact] → [Pattern]",
+      "[CATEGORY]: [Fact] → [Pattern]"
     ]
   },
   {
@@ -751,56 +728,29 @@ OUTPUT FORMAT (JSON Array - No Wrapper Object):
   {
     "type": "bullets",
     "content": [
-      "[RECONCILIATION_REQUIRED]: [L3 flag preserved]",
-      "[UNIT_CONFLICT]: [specifics]",
-      "[COMPRESSION_LOSS]: [section affected]",
-      "[DISCLOSURE_OMISSION]: [vs. prior period]"
+      "[RECONCILIATION_REQUIRED]: [only if material difference >5%]",
+      "[UNIT_UNCLEAR]: [only if units cannot be inferred]",
+      "[DISCLOSURE_CHANGE]: [only if prior-period disclosure missing]"
     ]
   }
 ]
 
-BULLET STRUCTURE FOR EACH RISK:
-[RISK_CATEGORY]: [Disclosed Fact Pattern] → [Pattern Observation]
+---------------------------------------------------------------------
+VALIDATION CHECKLIST (MANDATORY)
+---------------------------------------------------------------------
+Before output, ensure:
+✓ Each bullet ties directly to disclosed L3 data
+✓ No external assumptions introduced
+✓ No forward-looking or speculative language
+✓ No false contradictions due to rounding or units
+✓ All items meet materiality filter
+✓ JSON is valid (no wrapper object)
 
-Examples of well-formed bullets:
-✓ "LIQUIDITY: Debt due 2025: $500M; available liquidity: $200M → 
-   Refinancing requirement: $300M within 12 months."
-
-✓ "CUSTOMER_CONCENTRATION: Top customer represents 68% of revenue in Q1, Q2, Q3, 
-   Q4 2023 → Material dependency on single customer sustained across full year."
-
-✓ "SHARE_DILUTION: Share count 2022: 100M → 2023: 110M → 2024: 112M → 
-   +12% dilution over 2 years; stock-based comp: 2M shares/year."
-
-✓ "COVENANT_HEADROOM: Leverage ratio covenant <4.5x; current: 4.2x → 
-   7% headroom; tested quarterly."
-
-✓ "RECURRING_CHARGES: Restructuring charges 2021: $50M, 2022: $45M, 2023: $60M 
-   → Recurring pattern across 3 consecutive years."
-
-✓ "RESERVE_CHANGE: Reserves declined $50M (500M → 450M) year-over-year 
-   → Change not explicitly attributed to loss experience; no management explanation provided."
-
-✓ "DISCLOSURE_CHANGE: 2022 10-K disclosed customer concentration (top-3 = 45%); 
-   2023 10-K contains no customer concentration disclosure → Material disclosure omitted."
-
-ORGANIZATION:
-1. Title: "[Company] [Period] - Disclosed Material Risks"
-2. Overview paragraph: "This filing covers [period], released [date]. 
-   The following identifies material risks and patterns disclosed in the filing."
-3. Risk bullets: organized by category (liquidity, operations, capital, accounting)
-4. Data quality section: escalate any L3 flags
-
-VALIDATION BEFORE OUTPUT:
-✓ Each risk traces to L3 summary (cite source section if possible)
-✓ No external knowledge required
-✓ No forward scenarios or "could/may" language
-✓ No interpretation beyond fact pattern observation
-✓ JSON is valid, no wrapper object
-✓ Severity implicit in magnitude of disclosed fact, not labeled
-
-TONE: Direct, fact-based. Investor-focused. No speculation.
+TONE:
+Direct. Technical. Fact-based. Investor-oriented.
+No speculation. No exaggeration.
 """
+
 synthesis_instructions = """
 You are a forensic financial intelligence analyst specializing in cross-filing synthesis.
 You will receive several SEC filing summaries of a single company (10-K, 10-Q, 8-K, DEF 14A, etc.).

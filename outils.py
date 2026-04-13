@@ -182,12 +182,18 @@ def extract_sections (text:str,file:str)->list:
             separator_count = len(table_text.split('|'))-1
             if separator_count==1:
                 table.replace_with(f"\n[FOOT NOTE START]\n{table_text}\n[FOOT NOTE END]\n")
-            elif separator_count==0:
-                continue
             else:
                 TABLE_BLOCK_DICT[f"TABLE_{table_idx}"]=table_text
                 table.replace_with(f" TABLE_{table_idx} ")
                 table_idx+=1
+                continue
+        ITEM_PATTERN = re.compile(r'\bitem.*7\b',re.IGNORECASE)
+        for div in doc.find_all("div"):
+            text_div = div.get_text(" ",strip=True)
+            if re.search() in text_div:
+                print("found it!")
+                print(text_div)
+
         print(f"----------------calling for recusrive chunk--------")
         texts = [replace_smart_punctuation(t) for t in recursively_chunk(doc.text,TABLE_BLOCK_DICT)]
         if not texts:
@@ -205,7 +211,7 @@ def extract_sections (text:str,file:str)->list:
                 "section_type":section_type,
                 "type_description":type_description,
                 "text":texts,
-                "texts_synthesis":process_sec_chunks(texts)
+                # "texts_synthesis":process_sec_chunks(texts)
             }
         )
     return sections
@@ -298,7 +304,7 @@ def recursively_chunk(text: str,tables:dict) -> list:
     returns: list of chunks
     """
     if len(text)<3000:
-        return [restore_tables(text,tables)]
+        return text
     else:
         overlap=200
     text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
@@ -308,8 +314,7 @@ def recursively_chunk(text: str,tables:dict) -> list:
     )
     text = replace_smart_punctuation(text)
     texts= text_splitter.split_text(text)
-    texts_w_tables = [restore_tables(t,tables) for t in texts]
-    return texts_w_tables
+    return texts
     
 # summarize the sections chunks into one per section
 def sections_summarizer(chunks:list)->str:
