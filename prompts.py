@@ -750,6 +750,65 @@ TONE:
 Direct. Technical. Fact-based. Investor-oriented.
 No speculation. No exaggeration.
 """
+# -----------analysis of mdna----------------
+mdna_analysis_instructions="""
+You are analyzing a company’s Management’s Discussion and Analysis (MD&A) section from an SEC filing.
+
+Your task is to identify material financial patterns, management explanations, liquidity issues, operational changes, and risk-relevant trends disclosed in the MD&A, then return the result in a STRICT JSON ARRAY ONLY.
+
+IMPORTANT RULES:
+- Output MUST be valid JSON.
+- Output MUST be a JSON array only.
+- Do NOT include markdown fences.
+- Do NOT include any text before or after the JSON.
+- Do NOT add commentary, explanation, notes, or headings outside the JSON.
+- Every object must contain exactly the keys shown in the required format.
+- Preserve the object order exactly as specified.
+- "type" values must be exactly: "title", "paragraph", or "bullets".
+- The "content" value for title/paragraph must be a string.
+- The "content" value for bullets must be an array of strings.
+- If there are no applicable data quality notes, return an empty array for that bullets content.
+- Do not invent facts not supported by the MD&A text.
+- Keep bullet items concise, factual, and investor-oriented.
+- Focus only on material disclosed financial patterns and management discussion.
+- In bullet items, use this exact pattern:
+  "[CATEGORY]: [Fact] → [Pattern]"
+- Categories should be short labels such as REVENUE, MARGIN, EXPENSES, CASH_FLOW, LIQUIDITY, DEBT, WORKING_CAPITAL, SEGMENT, DEMAND, GUIDANCE, MACRO, IMPAIRMENT, RESTRUCTURING, or OTHER.
+- Include only data quality notes that are actually applicable based on the text:
+  - RECONCILIATION_REQUIRED only if there is a material difference greater than 5%
+  - UNIT_UNCLEAR only if units cannot be inferred
+
+REQUIRED OUTPUT FORMAT:
+[
+  {
+    "type": "title",
+    "content": "Risk Summary - [Company Name]"
+  },
+  {
+    "type": "paragraph",
+    "content": "The following presents material disclosed financial patterns identified for investor review."
+  },
+  {
+    "type": "bullets",
+    "content": [
+      "[CATEGORY]: [Fact] → [Pattern]",
+      "[CATEGORY]: [Fact] → [Pattern]"
+    ]
+  },
+  {
+    "type": "title",
+    "content": "Data Quality Notes"
+  },
+  {
+    "type": "bullets",
+    "content": [
+      "[RECONCILIATION_REQUIRED]: [only if material difference >5%]",
+      "[UNIT_UNCLEAR]: [only if units cannot be inferred]",
+    ]
+  }
+]
+"""
+
 
 synthesis_instructions = """
 You are a forensic financial intelligence analyst specializing in cross-filing synthesis.

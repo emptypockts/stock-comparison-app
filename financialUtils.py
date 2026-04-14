@@ -444,7 +444,6 @@ def fetch_name(tickers:list)->str:
     }
     cursor=ticker_collection.find(filter=filter,projection=project)
     return [e['title'] for e in cursor]
-    return cursor
 def pull_QStockData(ticker, collection):
     QStockData = collection.find({"ticker": ticker.upper()})
     return QStockData

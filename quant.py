@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 import json
 from datetime import datetime
+from financialUtils import fetch_name
 from outils import ( 
     analyze_ticker,
     save_analysis_report,
@@ -27,11 +28,10 @@ def quant(year,tickers:list)->str:
     
     directory= os.path.join(DIRECTORY,year)
     tickers=[t.capitalize()for t in tickers]
-    for ticker in tickers:
+    companies = fetch_name(tickers)
+    for ticker,company in zip(tickers,companies):
         ticker_dir=os.path.join(directory,ticker)
         extension=".quant"
-
-
         needs_analysis, existing_report = analyze_ticker(directory,ticker,extension=extension)
         if not needs_analysis:
             print(f"Analysis for ticker '{ticker}' is up to date.")
@@ -55,7 +55,7 @@ def quant(year,tickers:list)->str:
                     report=f.read()
                     # level 1, chunk and structure report in sections, ex 10, 10q, 10k etc.
                     print ("\n\n---------summarize chunks l1-------------\n\n",datetime.now())
-                    report_blocks.append(extract_sections(report,file))
+                    report_blocks.append(extract_sections(report,file,company))
         print ("\n\n---------summarize all sections l2-------------\n\n",datetime.now())
         for types in report_blocks:
             for t in types:

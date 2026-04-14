@@ -18,7 +18,8 @@ from prompts import (
     types_synthetiser_instructions,
     sections_summarizer_instructions,
     quant_instructions,
-    recursive_summarize_instructions
+    recursive_summarize_instructions,
+    mdna_analysis_instructions
     )
 load_dotenv()
 
@@ -47,7 +48,57 @@ llm=ChatOllama(model="gpt-oss:120b-cloud",base_url="https://ollama.com")
 #     red flag sec report helpers           #
 #===========================================#
 
-# level 1, structure report and chunk text
+def normalize_text(text: str) -> str:
+    """
+    Replace common smart punctuation characters with their standard equivalents.
+    params:
+        text: string to be normalized
+    returns:     normalized string
+    """
+    replacements = {
+        "\u2018": "'",
+        "\u2019": "'",
+        "\u201c": '"',
+        "\u201d": '"',
+        "\u2013": "-",
+        "\u2014": "-",
+        "\u00a0": " ",
+        "\u2011": "-",
+        "\u200b": " ",
+        "\u2610": " ",
+        "\u2611": " ",
+        "\u2612": " ",
+        "`": "'",
+    }
+    for k, v in replacements.items():
+        text = text.replace(k, v)
+    text = re.sub(r'\s+', ' ', text).strip()
+    text = ' '.join(text.split())
+    return text
+
+# recursive langchain chunker
+def recursively_chunk(text: str,tables:dict) -> list:
+    """
+    function to recursively chunk and add back the tables after the chunk is completed
+    params:
+        text: string of the sec report
+        tables: list of tables
+    returns: list of chunks
+    """
+    if len(text)<3000:
+        return [text]
+    else:
+        overlap=200
+    text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+        encoding_name='cl100k_base',
+        chunk_size=10000,
+        chunk_overlap=overlap,
+    )
+    text = normalize_text(text)
+    texts= text_splitter.split_text(text)
+    return texts
+
+
 
 
 # find the first meaningful section for def14a reports
@@ -77,14 +128,99 @@ def restore_tables(chunk,tables):
             f"\n\n----[TABLE START]----\n{v}\n\n----[TABLE END]----",chunk
         )
     return chunk
+
+#===========================================#
+#           etl                             #
+#===========================================#
+
+# level 2, summarize chunks. recursive
+def process_sec_chunks(chunks:list,level:int=1)->list:
+    """
+    function to chunk a long text and summarize it. it will return a list of summarized chunks.
+    
+    params 
+        report: Description
+        type report: str
+    returns: list of summarized chunks
+    """
+    if not chunks:
+        return []
+    
+    chunks = [c for c in chunks if isinstance(c, str) and c.strip()]
+    if not chunks:
+        return []
+
+    SYSTEM_MESSAGE = SystemMessage(content=recursive_summarize_instructions + f"\n Currently at synthesis Level {level}" )
+    responses=[]
+    if len(chunks)<=3 and level >1:
+        return chunks
+    responses =[]
+    llm_current = llm
+    # pairing chunks
+    for i in range (0,len(chunks),2):
+        batch = chunks[i:i+2]
+        texts_to_combine=[]
+        for b in batch:
+            texts_to_combine.append(str(b))
+        combined_content="\n\n----SECTION BREAK----\n\n".join(texts_to_combine)
+        if len(combined_content.strip())<500:
+            continue
+
+        for attempt in range(2):
+            try:
+                print(f"calling llm with text (first 200 characters): {combined_content[0:200]}")
+                response = llm_current.invoke([
+                    SYSTEM_MESSAGE,
+                    HumanMessage(content=normalize_text(combined_content))
+                ])
+                if response.content is None:
+                    raise ValueError("llm didnt return any content")
+                responses.append(response.content.replace("```json","").replace("```","").strip())
+
+                
+                break
+            except:
+                if attempt==1:
+                    raise
+    if not responses:
+        return []
+    return process_sec_chunks(responses,level+1)
+
+
+# --------analyse mdna---------
+
+def process_mdna(text:str,company:str):
+    """
+    function to analyze the mdna section with ai
+    """
+    if not text:
+        raise ValueError(f"missing text")
+    
+    for attempt in range(2):
+        try:
+            response = llm.invoke([
+                SystemMessage(content=mdna_analysis_instructions),
+                HumanMessage(content=f"text for company:{company}:\n:{text}")
+            ])
+            if response.content is None:
+                raise ValueError("llm did not return any content")
+            break
+            
+        except:
+            if attempt ==1:
+                raise
+        
+    return response.content
+
 # etl with soup on sec report
-def extract_sections (text:str,file:str)->list:
+def extract_sections (text:str,file:str,mode:Literal['full','mdna'],company:str)->list:
     """
     this function will process a sec report text file and extracts the important sections and provide structure.
     params:
         text: str that contains the sec report
         file: str that states the type of report
-        returns: a list of summarized chunks
+        mode: Literal full mode for full analyisis of the sec report or mdna for management discussion section analysis
+        returns: a list of summarized chunks for next level of summarization or an object with the key mdna that contains an object ready to parse for pdf generation
     """
     sections = []
     SEC_DOC_TYPE_DESCRIPTIONS = {
@@ -119,7 +255,7 @@ def extract_sections (text:str,file:str)->list:
     "EX-101.DEF": "XBRL definition linkbase defining dimensional relationships such as axes, domains, and members. Not narrative text.",
     "EX-101.LAB": "XBRL label linkbase providing human-readable labels for financial elements.",
     "EX-101.PRE": "XBRL presentation linkbase defining the ordering and hierarchy of financial statements.",
-
+    "mdna": "Management’s discussion of the company’s financial condition, results of operations, liquidity, capital resources, trends, uncertainties, and other material factors affecting performance.",
     # Inline XBRL (modern filings)
     "EX-104": "Inline XBRL exhibit containing embedded machine-readable financial data within the HTML filing."
     }
@@ -187,134 +323,68 @@ def extract_sections (text:str,file:str)->list:
                 table.replace_with(f" TABLE_{table_idx} ")
                 table_idx+=1
                 continue
-        ITEM_PATTERN = re.compile(r'\bitem.*7\b',re.IGNORECASE)
-        for div in doc.find_all("div"):
-            text_div = div.get_text(" ",strip=True)
-            if re.search() in text_div:
-                print("found it!")
-                print(text_div)
 
-        print(f"----------------calling for recusrive chunk--------")
-        texts = [replace_smart_punctuation(t) for t in recursively_chunk(doc.text,TABLE_BLOCK_DICT)]
-        if not texts:
-            continue
-            
-        type_description=""
-        for k,v in SEC_DOC_TYPE_DESCRIPTIONS.items():
-            if section_type.startswith(k):
-                type_description=v
-                break
-        sections.append(
-            {
-                "file_name":file,
-                "id":str(uuid.uuid4()),
-                "section_type":section_type,
-                "type_description":type_description,
-                "text":texts,
-                # "texts_synthesis":process_sec_chunks(texts)
-            }
-        )
-    return sections
-# level 2, summarize chunks. recursive
-def process_sec_chunks(chunks:list,level:int=1)->list:
-    """
-    function to chunk a long text and summarize it. it will return a list of summarized chunks.
+        # ---------------------------------
+        # this mode will analyze all the sec report. this is requires extra work to trim down the text and implement 
+        # mcp to read financial data.
+        # ---------------------------------
+        if mode == 'full':    
+            print(f"----------------calling for recusrive chunk--------")
+            texts = [normalize_text(t) for t in recursively_chunk(doc.text,TABLE_BLOCK_DICT)]
+            if not texts:
+                continue
+            type_description=""
+            for k,v in SEC_DOC_TYPE_DESCRIPTIONS.items():
+                if section_type.startswith(k):
+                    type_description=v
+                    break
+            sections.append(
+                {
+                    "file_name":file,
+                    "id":str(uuid.uuid4()),
+                    "section_type":section_type,
+                    "type_description":type_description,
+                    "text":texts,
+                    "texts_synthesis":process_sec_chunks(texts)
+                }
+            )
+            return sections
     
-    params 
-        report: Description
-        type report: str
-    returns: list of summarized chunks
-    """
-    if not chunks:
-        return []
-    
-    chunks = [c for c in chunks if isinstance(c, str) and c.strip()]
-    if not chunks:
-        return []
+        if mode=='mdna':
+            ITEM_PATTERN_START = re.compile(
+                r"item\s*7\s*.MANAGEMENT[`']?s\s+DISCUSSION\s+AND\s+ANALYSIS"
+                r"(?:\s+OF\s+FINANCIAL\s+CONDITION\s+AND\s+RESULTS\s+OF\s+OPERATIONS)?",
+                re.IGNORECASE
+                )
+            ITEM_PATTERN_END = re.compile(r"(?im)^\s*item\s*(?:7a|8|2a|3)\.?\s+")
+            mdna_sections=[]
+            collect_item=False
+            for tag_elem in doc.find_all(["div", "p", "td", "font", "b"]):
+                text_on_mdna = normalize_text(tag_elem.get_text(" ",strip=True))
+                if not collect_item and ITEM_PATTERN_START.search(text_on_mdna):
+                    collect_item=True
+                    mdna_sections.append(text_on_mdna)
+                    continue
+                if collect_item:
+                    if ITEM_PATTERN_END.search(text_on_mdna):
+                        break
+                    mdna_sections.append(text_on_mdna)
+            mdna_text = '\n'.join(mdna_sections)
+            mdna_text = normalize_text(mdna_text)
+            sections.append(
+                {
+                    "file_name":file,
+                    "id":str(uuid.uuid4()),
+                    "section_type":"mdna",
+                    "type_description":SEC_DOC_TYPE_DESCRIPTIONS.get("mdna",''),
+                    "texts" : mdna_text,
+                    "text_synthesis": process_mdna(mdna_text,company)
+                }
+            )
+            return sections
 
-    SYSTEM_MESSAGE = SystemMessage(content=recursive_summarize_instructions + f"\n Currently at synthesis Level {level}" )
-    responses=[]
-    if len(chunks)<=3 and level >1:
-        return chunks
-    responses =[]
-    llm_current = llm
-    # pairing chunks
-    for i in range (0,len(chunks),2):
-        batch = chunks[i:i+2]
-        texts_to_combine=[]
-        for b in batch:
-            texts_to_combine.append(str(b))
-        combined_content="\n\n----SECTION BREAK----\n\n".join(texts_to_combine)
-        if len(combined_content.strip())<500:
-            continue
 
-        for attempt in range(2):
-            try:
-                print(f"calling llm with text (first 200 characters): {combined_content[0:200]}")
-                response = llm_current.invoke([
-                    SYSTEM_MESSAGE,
-                    HumanMessage(content=replace_smart_punctuation(combined_content))
-                ])
-                if response.content is None:
-                    raise ValueError("llm didnt return any content")
-                responses.append(response.content.replace("```json","").replace("```","").strip())
 
-                
-                break
-            except:
-                if attempt==1:
-                    raise
-    if not responses:
-        return []
-    return process_sec_chunks(responses,level+1)
-# process unicode character
-def replace_smart_punctuation(text: str) -> str:
-    """
-    Replace common smart punctuation characters with their standard equivalents.
-    params:
-        text: string to be normalized
-    returns:     normalized string
-    """
-    replacements = {
-        "\u2018": "'",
-        "\u2019": "'",
-        "\u201c": '"',
-        "\u201d": '"',
-        "\u2013": "-",
-        "\u2014": "-",
-        "\u00a0": " ",
-        "\u2011": "-",
-        "\u200b": " ",
-        "\u2610": " ",
-        "\u2611": " ",
-        "\u2612": " ",
-    }
-    for k, v in replacements.items():
-        text = text.replace(k, v)
-    text = re.sub(r'\s+', ' ', text).strip()
-    text = ' '.join(text.split())
-    return text
-# recursive langchain chunker
-def recursively_chunk(text: str,tables:dict) -> list:
-    """
-    function to recursively chunk and add back the tables after the chunk is completed
-    params:
-        text: string of the sec report
-        tables: list of tables
-    returns: list of chunks
-    """
-    if len(text)<3000:
-        return text
-    else:
-        overlap=200
-    text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-        encoding_name='cl100k_base',
-        chunk_size=10000,
-        chunk_overlap=overlap,
-    )
-    text = replace_smart_punctuation(text)
-    texts= text_splitter.split_text(text)
-    return texts
     
 # summarize the sections chunks into one per section
 def sections_summarizer(chunks:list)->str:
