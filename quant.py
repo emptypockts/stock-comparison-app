@@ -5,7 +5,7 @@ from financialUtils import fetch_name
 from outils import ( 
     analyze_ticker,
     save_analysis_report,
-    extract_sections,
+    generic_trim_document,
     llm,
     quant_report,
     replace_smart_punctuation,
@@ -53,9 +53,11 @@ def quant(year,tickers:list)->str:
                 file_name=os.path.join(ticker_dir,file)
                 with open(file_name,encoding='latin') as f:
                     report=f.read()
-                    # summarize mdna
-                    print ("\n\n---------summarize mdna-------------\n\n",datetime.now())
-                    report_blocks.append(extract_sections(report,file,company))
+                    print ("\n\n---------generic prune-------------\n\n",datetime.now())
+                    file_name_split = file_name.split('_')
+                    report_type = file_name_split[1].strip()
+                    report_date = file_name_split[2].strip()
+                    report_blocks.append(generic_trim_document(report,ticker,report_type,report_date,company))
         print ("\n\n---------summarize all sections l2-------------\n\n",datetime.now())
         for types in report_blocks:
             for t in types:
