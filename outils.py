@@ -219,6 +219,12 @@ def process_mdna(text:str,company:str):
         
     return response.content
 
+
+def normalize_heading(text)->str:
+    text = normalize_text(text).lower()
+    text=re.sub(r"[^a-z0-9\s\-\.\(\)]","",text)
+    return text
+
 # etl with soup on sec report
 
 def generic_trim_document(
@@ -246,20 +252,75 @@ def generic_trim_document(
     )
     NAMESPACE_PREFIX = ("ix:","xbrli:","dei:","us-gaap:","xbrldi:")
     DELETABLE_TAGS = ["b","s","strike","del","noscript","svg","image","meta","link"]
+    SECTION_PATTERNS = {
+    "meeting": [
+        r"notice of annual meeting",
+        r"notice of special meeting",
+        r"annual meeting of shareholders",
+        r"annual meeting of stockholders",
+        r"general information about the meeting",
+        r"questions and answers about the meeting"
+    ],
+    "proposals": [
+        r"proposal\s+\d+",
+        r"matters to be voted on",
+        r"items of business",
+        r"election of directors",
+        r"ratification of.*auditor",
+        r"advisory vote.*executive compensation",
+        r"say-on-pay",
+        r"say-on-frequency"
+    ],
+    "directors": [
+        r"board of directors",
+        r"director nominees?",
+        r"nominees for director",
+        r"election of directors",
+        r"corporate governance"
+    ],
+    "executive_compensation": [
+        r"executive compensation",
+        r"compensation discussion and analysis",
+        r"cd&a",
+        r"compensation committee report",
+        r"pay versus performance"
+    ],
+    "ownership": [
+        r"security ownership",
+        r"beneficial ownership",
+        r"principal shareholders",
+        r"ownership of common stock"
+    ],
+    "auditor": [
+        r"ratification of.*auditor",
+        r"independent registered public accounting firm",
+        r"audit committee report",
+        r"auditor fees",
+        r"principal accountant fees"
+    ],
+    "related_party_transactions": [
+        r"related party transactions",
+        r"certain relationships and related transactions",
+        r"transactions with related persons",
+        r"review, approval, or ratification of related party transactions"
+    ],
+    "risk_oversight": [
+        r"risk oversight",
+        r"board leadership structure",
+        r"board'?s role in risk oversight"
+    ]
+    }
     TABLE_BLOCK_DICT = {}
     table_idx=0
-    sections=[]
     soup = BeautifulSoup(text,"lxml")
     documents = soup.find_all("document")
     cleaned_docs={
-        ticker:
-        {
+            'ticker':ticker,
             'report_type' : report_type,
             'report_date' : report_date,
             'company': company
         }
-    }
-    unknown_section_idx = 0
+    candidates=[]
     for doc in documents:    
         # start by skipping non narrative document types
     
@@ -276,33 +337,33 @@ def generic_trim_document(
         if doc.pdf:
             continue
         # normalize style: none and style:none and other variants
-        PATTERN_ITEM = re.compile(r"(?i)^(item\s+\d+(?:\.\d+)?)\b(.*)(?=^item\s+)")
+        PATTERN_ITEM = re.compile(r"(?is)(^item\s+\d+(?:[a-z]\.\d+)?\.?)(.*?)(?=item\s+\d+(?:\.\d+)?\.?|$)")
         for div in doc.find_all("div"):
-            style = div.get("style","")
-            style_normalized = style.lower().replace(" ","")
-            if "display:none" in style_normalized:
-                div.decompose()
-                continue
-            normalized = normalize_text(div.get_text(" ",strip=True))
-            m = PATTERN_ITEM.match(normalized)
-            if m:
-                for child in list(div.find_all()):
-                    child.unwrap()
-        
+            if div is not None and div.attrs is not None:
+                style = div.get("style","")
+                style_normalized = style.lower().replace(" ","")
+                if "display:none" in style_normalized:
+                    div.decompose()
+                    continue
                 normalized = normalize_text(div.get_text(" ",strip=True))
-                new_text = re.sub(r'(?i)^item\b','XITEMX ',normalized,count=1)
-                div.replace_with(f"{new_text}")
-                
+                m = PATTERN_ITEM.match(normalized)
+                if m:
+                    new_text = PATTERN_ITEM.sub(lambda x: f"X{x.group(0)} XX ",normalized)
+                    div.replace_with(f"\n{new_text}")
+            else:
+                continue
 
         for tag in doc.find_all(lambda t: t.name and t.name.startswith(NAMESPACE_PREFIX)):
             tag.unwrap()
         for tag in doc.find_all(DELETABLE_TAGS):
             tag.unwrap()
         for tag in doc.find_all("a"):
-            txt = tag.get_text(" ",strip=True)
-            href = tag.get("href","")
-            if not txt or txt in {"back to top","top"}:
-                tag.decompose()
+            if tag is not None and tag.attrs is not None:
+                txt = tag.get_text(" ",strip=True)
+                if not txt or txt in {"back to top","top"}:
+                    tag.decompose()
+            else:
+                continue
         for i,table in enumerate(doc.find_all("table")):
             table_text=table.get_text(separator=" | ",strip=True)
             # check for foot notes
@@ -316,26 +377,45 @@ def generic_trim_document(
                 continue
             else:
                 continue
-        text_out = doc.get_text("\n",strip=True)
-        # text_out = re.sub(r'\n{3,}','\n',text_out)
+        text_out = doc.get_text(" ",strip=True)
         text_out = normalize_text(text_out)
-        find_section_name = re.search(' ',text_out)
-        if find_section_name:
-            items={}
-            section_name = text_out[:find_section_name.start()]
-            text_out = text_out.replace(section_name,'')
-            PATTERN_XITEMX = re.compile(r"(?i)(xitemx\s+\d+(?:\.\d+)?)\b")
-            all_items = re.finditer(PATTERN_XITEMX,text_out)
-            for a in list(all_items):
-                key_val = a.group().replace('XITEMX','ITEM')
-                items[key_val]=text_out[a.start():].replace(a.group(),'').strip()
-            sections.append(items)
-        elif not find_section_name and text_out:
-            sections.append({unknown_section_idx:items})
-            unknown_section_idx+=1
-    cleaned_docs[ticker]['sections']=sections
+        items={}
+        key_val_list=[]
+        PATTERN_XITEMX = re.compile(r"(?is)xitem(.*?)(?=xx)")
+        KEY_PATTERN = re.compile(r'(?i)item\s+\d+(?:[a-z])?(?:\.\d+)?')
+        all_items = re.finditer(PATTERN_XITEMX,text_out)
+        list_all_items =list(all_items)
+        for l in range(len(list_all_items)-1):
+            key_val = re.search(KEY_PATTERN,list_all_items[l].group(0)).group()
+            if key_val in items:
+                key_val = f"{key_val}_{key_val_list.count(key_val)+1}"
+            items[key_val]=text_out[list_all_items[l].start():list_all_items[l+1].start()].replace(list_all_items[l].group(),'').replace('XX','').strip()
+            cleaned_docs['sections']=items
+            key_val_list.append(key_val)
+  
+        # def 14a extraction section
+        if report_type=='DEF 14A':
+            
+            HEADING_TAGS = ["p", "div", "b", "strong", "font", "td"]
+            for tag in doc.find_all(HEADING_TAGS):
+                if tag is not None and tag.attrs is not None:
+                    text_to_check = tag.get_text(" ",strip=True)
+                    text_to_check=normalize_heading(text_to_check)
+                    if (len(text_to_check)<150 or len(text_to_check.split())<20):
+                        for k_section_name,v_patterns in SECTION_PATTERNS.items():
+                            for pattern in v_patterns:
+                                if re.search(pattern,text_to_check,re.I):
+                                    candidates.append({
+                                        k_section_name:text_to_check
+                                    })
+            
+            cleaned_docs['sections']=candidates
+    return cleaned_docs  
 
-    return cleaned_docs
+
+      
+
+    
 
 def focused_extraction (document:object)->list:
     """
