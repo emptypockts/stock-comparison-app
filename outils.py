@@ -254,64 +254,66 @@ def generic_trim_document(
     DELETABLE_TAGS = ["b","s","strike","del","noscript","svg","image","meta","link"]
     SECTION_PATTERNS = {
     "meeting": [
-        r"notice of annual meeting",
-        r"notice of special meeting",
-        r"annual meeting of shareholders",
-        r"annual meeting of stockholders",
-        r"general information about the meeting",
-        r"questions and answers about the meeting"
+        r"^notice of annual meeting",
+        r"^notice of special meeting",
+        r"^annual meeting of shareholders",
+        r"^annual meeting of stockholders",
+        r"^general information about the meeting",
+        r"^questions and answers about the meeting",
+        r"^proxy summary",
     ],
     "proposals": [
-        r"proposal\s+\d+",
-        r"matters to be voted on",
-        r"items of business",
-        r"election of directors",
-        r"ratification of.*auditor",
-        r"advisory vote.*executive compensation",
-        r"say-on-pay",
-        r"say-on-frequency"
+        r"^proposal\s+\d+",
+        r"^matters to be voted on",
+        r"^items of business",
+        r"^election of directors",
+        r"^ratification of.*auditor",
+        r"^advisory vote.*executive compensation",
+        r"^say-on-pay",
+        r"^say-on-frequency"
     ],
     "directors": [
-        r"board of directors",
-        r"director nominees?",
-        r"nominees for director",
-        r"election of directors",
-        r"corporate governance"
+        r"^board of directors",
+        r"^director nominees?",
+        r"^nominees for director",
+        r"^election of directors",
+        r"^corporate governance"
     ],
     "executive_compensation": [
-        r"executive compensation",
-        r"compensation discussion and analysis",
-        r"cd&a",
-        r"compensation committee report",
-        r"pay versus performance"
+        r"^executive compensation",
+        r"^compensation discussion and analysis",
+        r"^cd&a",
+        r"^compensation committee report",
+        r"^pay versus performance"
     ],
     "ownership": [
-        r"security ownership",
-        r"beneficial ownership",
-        r"principal shareholders",
-        r"ownership of common stock"
+        r"^security ownership",
+        r"^beneficial ownership",
+        r"^principal shareholders",
+        r"^ownership of common stock"
     ],
     "auditor": [
-        r"ratification of.*auditor",
-        r"independent registered public accounting firm",
-        r"audit committee report",
-        r"auditor fees",
-        r"principal accountant fees"
+        r"^ratification of.*auditor",
+        r"^independent registered public accounting firm",
+        r"^audit committee report",
+        r"^auditor fees",
+        r"^principal accountant fees"
     ],
     "related_party_transactions": [
-        r"related party transactions",
-        r"certain relationships and related transactions",
-        r"transactions with related persons",
-        r"review, approval, or ratification of related party transactions"
+        r"^related party transactions",
+        r"^certain relationships and related transactions",
+        r"^transactions with related persons",
+        r"^review, approval, or ratification of related party transactions"
     ],
     "risk_oversight": [
-        r"risk oversight",
-        r"board leadership structure",
-        r"board'?s role in risk oversight"
+        r"^risk oversight",
+        r"^board leadership structure",
+        r"^board'?s role in risk oversight"
     ]
     }
     TABLE_BLOCK_DICT = {}
     table_idx=0
+    sections={}
     soup = BeautifulSoup(text,"lxml")
     documents = soup.find_all("document")
     cleaned_docs={
@@ -320,17 +322,15 @@ def generic_trim_document(
             'report_date' : report_date,
             'company': company
         }
-    candidates=[]
-    for doc in documents:    
-        # start by skipping non narrative document types
     
+    for doc in documents:   
+        # start by skipping non narrative document types  
         try:
             type_tag = doc.find("type")
             section_type = type_tag.get_text(" ",strip=True) if type_tag else ""
             if section_type.startswith(NON_NARRATIVE_TYPES):
                 print(f"----removing non narrative documents----\n{section_type[:50]}")
                 continue
-
         except:
             print("no section type. assigning empty")
             continue
@@ -352,15 +352,14 @@ def generic_trim_document(
                     div.replace_with(f"\n{new_text}")
             else:
                 continue
-
         for tag in doc.find_all(lambda t: t.name and t.name.startswith(NAMESPACE_PREFIX)):
             tag.unwrap()
         for tag in doc.find_all(DELETABLE_TAGS):
-            tag.unwrap()
+            tag.decompose()
         for tag in doc.find_all("a"):
             if tag is not None and tag.attrs is not None:
                 txt = tag.get_text(" ",strip=True)
-                if not txt or txt in {"back to top","top"}:
+                if not txt or txt in {"back to top","top","#toc"}:
                     tag.decompose()
             else:
                 continue
@@ -399,17 +398,17 @@ def generic_trim_document(
             HEADING_TAGS = ["p", "div", "b", "strong", "font", "td"]
             for tag in doc.find_all(HEADING_TAGS):
                 if tag is not None and tag.attrs is not None:
-                    text_to_check = tag.get_text(" ",strip=True)
+                    text_to_check = tag.get_text("\n",strip=True)
                     text_to_check=normalize_heading(text_to_check)
-                    if (len(text_to_check)<150 or len(text_to_check.split())<20):
-                        for k_section_name,v_patterns in SECTION_PATTERNS.items():
-                            for pattern in v_patterns:
-                                if re.search(pattern,text_to_check,re.I):
-                                    candidates.append({
-                                        k_section_name:text_to_check
-                                    })
-            
-            cleaned_docs['sections']=candidates
+                    for section_key,section_value in SECTION_PATTERNS.items():
+                        for v in section_value:
+                            if re.match(v,text_to_check,re.I):
+                                sections.setdefault(section_key,[])
+                                if text_to_check not in sections[section_key]:
+                                    sections[section_key].append(text_to_check)
+                                break
+                                                            
+            cleaned_docs['sections']=sections  
     return cleaned_docs  
 
 
