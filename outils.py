@@ -402,7 +402,7 @@ def generic_trim_document(
                     text_to_check=normalize_heading(text_to_check)
                     for section_key,section_value in SECTION_PATTERNS.items():
                         for v in section_value:
-                            if re.match(v,text_to_check,re.I):
+                            if re.match(v,text_to_check,re.I) and v!=text_to_check and len(text_to_check)>100:
                                 sections.setdefault(section_key,[])
                                 if text_to_check not in sections[section_key]:
                                     sections[section_key].append(text_to_check)
