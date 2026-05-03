@@ -322,8 +322,9 @@ def generic_trim_document(
             'report_date' : report_date,
             'company': company
         }
-    
+    text_out=""
     for doc in documents:   
+        
         # start by skipping non narrative document types  
         try:
             type_tag = doc.find("type")
@@ -345,11 +346,9 @@ def generic_trim_document(
                 if "display:none" in style_normalized:
                     div.decompose()
                     continue
-                normalized = normalize_text(div.get_text(" ",strip=True))
-                m = PATTERN_ITEM.match(normalized)
-                if m:
-                    new_text = PATTERN_ITEM.sub(lambda x: f"X{x.group(0)} XX ",normalized)
-                    div.replace_with(f"\n{new_text}")
+                div_text = div.get_text("\n",strip=True)
+                if ":bold" in style_normalized and len(div_text)<100:
+                    div.replace_with(f"[TITLE_START]{div_text}[TITLE_END]")
             else:
                 continue
         for tag in doc.find_all(lambda t: t.name and t.name.startswith(NAMESPACE_PREFIX)):
@@ -376,139 +375,9 @@ def generic_trim_document(
                 continue
             else:
                 continue
-        text_out = doc.get_text(" ",strip=True)
-        text_out = normalize_text(text_out)
-        items={}
-        key_val_list=[]
-        PATTERN_XITEMX = re.compile(r"(?is)xitem(.*?)(?=xx)")
-        KEY_PATTERN = re.compile(r'(?i)item\s+\d+(?:[a-z])?(?:\.\d+)?')
-        all_items = re.finditer(PATTERN_XITEMX,text_out)
-        list_all_items =list(all_items)
-        for l in range(len(list_all_items)-1):
-            key_val = re.search(KEY_PATTERN,list_all_items[l].group(0)).group()
-            if key_val in items:
-                key_val = f"{key_val}_{key_val_list.count(key_val)+1}"
-            items[key_val]=text_out[list_all_items[l].start():list_all_items[l+1].start()].replace(list_all_items[l].group(),'').replace('XX','').strip()
-            cleaned_docs['sections']=items
-            key_val_list.append(key_val)
-  
-        # def 14a extraction section
-        if report_type=='DEF 14A':
-            
-            HEADING_TAGS = ["p", "div", "b", "strong", "font", "td"]
-            for tag in doc.find_all(HEADING_TAGS):
-                if tag is not None and tag.attrs is not None:
-                    text_to_check = tag.get_text("\n",strip=True)
-                    text_to_check=normalize_heading(text_to_check)
-                    for section_key,section_value in SECTION_PATTERNS.items():
-                        for v in section_value:
-                            if re.match(v,text_to_check,re.I) and v!=text_to_check and len(text_to_check)>100:
-                                sections.setdefault(section_key,[])
-                                if text_to_check not in sections[section_key]:
-                                    sections[section_key].append(text_to_check)
-                                break
-                                                            
-            cleaned_docs['sections']=sections  
-    return cleaned_docs  
-
-
-      
-
-    
-
-def focused_extraction (document:object)->list:
-    """
-    this function will process a sec report text file and extracts the important sections and provide structure.
-    params:
-        text: str that contains the sec report
-        file: str that states the type of report
-        mode: Literal full mode for full analyisis of the sec report or mdna for management discussion section analysis
-        returns: a list of summarized chunks for next level of summarization or an object with the key mdna that contains an object ready to parse for pdf generation
-    """
-    SEC_DOC_TYPE_DESCRIPTIONS = {
-
-    # Core filing
-    "8-K": "Form 8-K Current Report. Discloses material corporate events such as earnings releases, mergers, acquisitions, executive changes, or other significant developments.",
-
-    # Common earnings / investor exhibits
-    "EX-99.1": "Exhibit 99.1. Typically an earnings press release or investor-facing announcement included with the filing.",
-    "EX-99.2": "Exhibit 99.2. Supplemental investor materials such as presentations, schedules, or supporting financial information.",
-    "EX-99.3": "Exhibit 99.3. Additional supplemental materials such as financial tables, investor presentations, or explanatory schedules.",
-
-    # Certification exhibits (common in 10-K / 10-Q)
-    "EX-31.1": "Section 302 certification by the Chief Executive Officer confirming the accuracy of the report and effectiveness of disclosure controls.",
-    "EX-31.2": "Section 302 certification by the Chief Financial Officer confirming the accuracy of the report and effectiveness of disclosure controls.",
-
-    "EX-32.1": "Section 906 certification by the Chief Executive Officer stating the report fully complies with the Securities Exchange Act.",
-    "EX-32.2": "Section 906 certification by the Chief Financial Officer stating the report fully complies with the Securities Exchange Act.",
-
-    # Legal / governance exhibits
-    "EX-10": "Material contract exhibit such as employment agreements, credit agreements, partnership agreements, or other legally significant contracts.",
-    "EX-3.1": "Articles of incorporation or charter documents describing the company's legal formation.",
-    "EX-3.2": "Bylaws of the company defining governance rules and procedures.",
-    "EX-21": "List of subsidiaries of the registrant.",
-    "EX-23": "Consent of independent registered public accounting firm.",
-    "EX-24": "Power of attorney authorizing individuals to sign filings on behalf of officers or directors.",
-
-    # XBRL exhibits (machine-readable financial metadata)
-    "EX-101.INS": "XBRL instance document containing the machine-readable financial statement data.",
-    "EX-101.SCH": "XBRL schema file defining financial reporting elements, data types, and relationships. Not narrative text.",
-    "EX-101.CAL": "XBRL calculation linkbase defining mathematical relationships between financial statement elements.",
-    "EX-101.DEF": "XBRL definition linkbase defining dimensional relationships such as axes, domains, and members. Not narrative text.",
-    "EX-101.LAB": "XBRL label linkbase providing human-readable labels for financial elements.",
-    "EX-101.PRE": "XBRL presentation linkbase defining the ordering and hierarchy of financial statements.",
-    "mdna": "Management’s discussion of the company’s financial condition, results of operations, liquidity, capital resources, trends, uncertainties, and other material factors affecting performance.",
-    # Inline XBRL (modern filings)
-    "EX-104": "Inline XBRL exhibit containing embedded machine-readable financial data within the HTML filing."
-    }
-
-        # ---------------------------------
-        # this mode will analyze all the sec report. this is requires extra work to trim down the text and implement 
-        # mcp to read financial data.
-        # ---------------------------------
-
-    
-    tickers = [k for k in document.keys()]
-    for t in tickers:
-        if  t['report_type']== '8K':    
-            print(f"----------------calling for recusrive chunk--------")
-            texts = [s for s in recursively_chunk(t['sections'])]
-            if not texts:
-                continue
-
-        if mode=='mdna':
-            ITEM_PATTERN_START = re.compile(
-                r"item\s*7|2\s*.MANAGEMENT[`']?s\s+DISCUSSION\s+AND\s+ANALYSIS"
-                r"(?:\s+OF\s+FINANCIAL\s+CONDITION\s+AND\s+RESULTS\s+OF\s+OPERATIONS)?",
-                re.IGNORECASE
-                )
-            ITEM_PATTERN_END = re.compile(r"(?im)^\s*item\s*(?:7a|8|2a|3)\.?\s+")
-            mdna_sections=[]
-            collect_item=False
-            for tag_elem in doc.find_all(["div", "p", "td", "font", "b"]):
-                text_on_mdna = normalize_text(tag_elem.get_text(" ",strip=True))
-                if not collect_item and ITEM_PATTERN_START.search(text_on_mdna):
-                    collect_item=True
-                    mdna_sections.append(text_on_mdna)
-                    continue
-                if collect_item:
-                    if ITEM_PATTERN_END.search(text_on_mdna):
-                        break
-                    mdna_sections.append(text_on_mdna)
-            mdna_text = '\n'.join(mdna_sections)
-            mdna_text = normalize_text(mdna_text)
-            sections.append(
-                {
-                    "file_name":file,
-                    "id":str(uuid.uuid4()),
-                    "section_type":"mdna",
-                    "type_description":SEC_DOC_TYPE_DESCRIPTIONS.get("mdna",''),
-                    "texts" : mdna_text,
-                    "text_synthesis": process_mdna(mdna_text,company)
-                }
-            )
-            return sections
-
+        text_out = text_out+ doc.get_text("\n",strip=True)
+        
+    return text_out  
 
 
     

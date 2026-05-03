@@ -8,7 +8,7 @@ from outils import (
     generic_trim_document,
     llm,
     quant_report,
-    replace_smart_punctuation,
+    normalize_text,
     sections_summarizer,
     types_synthetiser,
     save_file_test
@@ -59,39 +59,7 @@ def quant(year,tickers:list)->str:
                     report_date = file_name_split[2].strip()
                     report_blocks.append(generic_trim_document(report,ticker,report_type,report_date,company))
         print ("\n\n---------summarize all sections l2-------------\n\n",datetime.now())
-        for types in report_blocks:
-            for t in types:
-                texts = t.get('texts_synthesis',[])
-                if not texts:
-                    t['summary']=""
-                    continue
-                elif len (texts)==1:
-                    # if summarized texts are only 1 then it is the summary
-                    t['summary']=texts[0]
-                else:
-                    # level 2 summarize the chunks into one per section
-                    t['summary']= replace_smart_punctuation(sections_summarizer(texts))
-            
-            
-            summaries[types[0]['file_name']]=[
-                {"section_type": sec['section_type'],"summary":sec['summary']}
-                for sec in types if sec.get('section_type') and sec.get('summary')
-                ]
-
-        
-        for k,v in summaries.items():
-            print("\n\n---------synthetise final report l3-------------\n\n",datetime.now())
-            summary_reports.append(
-                {
-                    "file":k,
-                    # level 3 summarizes the sections into one per report
-                    "file_summary":replace_smart_punctuation(types_synthetiser(v))
-                }
-            )
-        
-            # level 4 summarizes the sections into one and exports it to a pdf file.
-            print("\n\n---------prettyfying report almost done... l4-------------\n\n",datetime.now())
-        final_report = ' '.join(quant_report(summary_reports).split())
+        final_report = ' '.join(quant_report(report_blocks).split())
         if final_report:
             try:
                 
