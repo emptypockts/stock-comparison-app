@@ -10,9 +10,9 @@ load_dotenv()
 KY = os.getenv('TWELVE_API_KY')
 URL_BASE = os.getenv('TWELVE_URI')
 def fetch_tickers(collection:Collection)->list:
-    path = r"C:\\Users\\ejujo\\Downloads\\companyfacts\\"
+    path = r"/home/jjmr86/quarterly_stock_ops/companyfacts/"
     files = os.listdir(path)
-    nasdaq =pd.read_csv(r"C:\\Users\ejujo\\coding\\nasdaq.csv")
+    nasdaq =pd.read_csv(r"/home/jjmr86/quarterly_stock_ops/nasdaq.csv")
     ciks=[int(e[:-5].lstrip("CIK").lstrip("0"))for e in files]
     tickers=fetch_ticker(ciks,collection)
     stock_list=[]
