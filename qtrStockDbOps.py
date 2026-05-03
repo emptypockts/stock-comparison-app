@@ -63,10 +63,10 @@ def aggregateScoreToQtrRevTrend(collection:Collection):
 def fetch_Stock_Info():
 
     collection=db['tickerCIK']
-    path = r"C:\\Users\\ejujo\\Downloads\\companyfacts\\"
+    path = r"/home/jjmr86/quarterly_stock_ops/companyfacts/"
     files = os.listdir(path)
     qtr_obj = []
-    nasdaq =pd.read_csv(r"C:\\Users\ejujo\\coding\\nasdaq.csv")
+    nasdaq =pd.read_csv(r"/home/jjmr86/quarterly_stock_ops/nasdaq.csv")
     metric_keys =get_metric_keys()
     for file in files:
         # use to debug
@@ -107,7 +107,7 @@ def fetch_Stock_Info():
             # Convert the deduplicated frames into a list
     return qtr_obj
 def fetch_dei_info():
-    path = f"C:\\Users\\ejujo\\Downloads\\companyfacts\\"
+    path = f"/home/jjmr86/quarterly_stock_ops/companyfacts/"
     files = os.listdir(path)
     qtr_obj = []
 
