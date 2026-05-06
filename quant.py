@@ -59,9 +59,7 @@ def quant(year,tickers:list)->str:
                     pruned_doc = generic_trim_document(report,ticker,report_type,report_date,company)
                     pruned_doc_chunks = chunk_report(pruned_doc)
                     summary = sections_summarizer(pruned_doc_chunks)
-                    print("-"*88)
-                    print(summary)
-                    print("-"*88)
+                    report_blocks.append(summary)
         final_report = ' '.join(quant_report(report_blocks).split())
         if final_report:
             try:

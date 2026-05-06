@@ -383,7 +383,6 @@ def generic_trim_document(
             type_tag = doc.find("type")
             section_type = type_tag.get_text(" ",strip=True) if type_tag else ""
             if section_type.startswith(NON_NARRATIVE_TYPES):
-                print(f"----removing non narrative documents----\n{section_type[:50]}")
                 continue
         except:
             print("no section type. assigning empty")
