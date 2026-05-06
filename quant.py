@@ -11,7 +11,8 @@ from outils import (
     normalize_text,
     sections_summarizer,
     types_synthetiser,
-    save_file_test
+    save_file_test,
+    chunk_report
 )
 load_dotenv()
 import os
@@ -42,8 +43,6 @@ def quant(year,tickers:list)->str:
                 return existing_report
 
         report_blocks=[]
-        summaries={}
-        summary_reports=[]
         files = os.listdir(ticker_dir)
         # ====================================================== setting 1 file====================================
         for file in files:
@@ -57,8 +56,12 @@ def quant(year,tickers:list)->str:
                     file_name_split = file_name.split('_')
                     report_type = file_name_split[1].strip()
                     report_date = file_name_split[2].strip()
-                    report_blocks.append(generic_trim_document(report,ticker,report_type,report_date,company))
-        print ("\n\n---------summarize all sections l2-------------\n\n",datetime.now())
+                    pruned_doc = generic_trim_document(report,ticker,report_type,report_date,company)
+                    pruned_doc_chunks = chunk_report(pruned_doc)
+                    summary = sections_summarizer(pruned_doc_chunks)
+                    print("-"*88)
+                    print(summary)
+                    print("-"*88)
         final_report = ' '.join(quant_report(report_blocks).split())
         if final_report:
             try:

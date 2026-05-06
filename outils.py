@@ -48,7 +48,7 @@ llm=ChatOllama(model="gpt-oss:120b-cloud",base_url="https://ollama.com")
 #     red flag sec report helpers           #
 #===========================================#
 
-def normalize_text(text: str) -> str:
+def normalize_text(text: str,remove_tables=False) -> str:
     """
     Replace common smart punctuation characters with their standard equivalents.
     params:
@@ -78,10 +78,21 @@ def normalize_text(text: str) -> str:
     }
     for k, v in replacements.items():
         text = text.replace(k, v)
-    text = re.sub(r'\s+', ' ', text).strip()
-    text = re.sub(r"\b_{1,}\b","",text)
-    text = ' '.join(text.split())
-    return text
+    text = re.sub(r'[ \t\r\f\v]+',' ',text)
+    text = re.sub(r"\b_{2,}\b","_",text)
+    text = re.sub(r'[^a-zA-Z0-9 \n_\.,-]+',"",text)
+    text = re.sub(' *\n *','\n',text)
+    PAGE_IDX_PATTERN = re.compile(r'(?m)^\s*\d+\s*$\n?')
+    text = re.sub(PAGE_IDX_PATTERN,'',text)
+    TABLE_CONTENTS_PATTERN = re.compile(r'(?m)^\s*TABLE OF CONTENT(S.?)\s*$',re.I)
+    text = re.sub(TABLE_CONTENTS_PATTERN,'',text)
+    ONE_CHAR_PATTERN = re.compile(r'(?m)^\s*[a-z]{1,3}\s*$',re.I)
+    text = re.sub(ONE_CHAR_PATTERN,'',text)
+    if remove_tables:
+        TABLE_PATTERN= re.compile(r'(?m)^\s*TABLE_\d+\s*$')
+        text = re.sub(TABLE_PATTERN,'',text)
+    text = re.sub(r'\n{3,}','\n\n',text)
+    return text.strip()
 
 # recursive langchain chunker
 def recursively_chunk(text: str) -> list:
@@ -225,34 +236,55 @@ def normalize_heading(text)->str:
     text=re.sub(r"[^a-z0-9\s\-\.\(\)]","",text)
     return text
 
+def get_lines(tag):
+    text = tag.get_text("\n",strip=True)
+    texts = text.split("\n")
+    return texts
 # etl with soup on sec report
 
-def generic_trim_document(
-        text:str,
-        ticker:str,
-        report_type:str,
-        report_date:str,
-        company:str
-)->json:
+def detect_child_bold(tag)->bool:
+    for child in tag.find_all(['b','strong','span']):
+        if child.name in ["b","strong"]:
+            return True
+        style = child.get("style","").replace(" ","")
+        if "font-weight:bold" in style or any(f"font-weight:{w}" in style for w in ["600","700","800","900"]):
+            return True
+    return False
 
-    
-    if not text or not ticker or not report_type or not report_date or not company:
-        raise ValueError("empty value received. check text, ticker, report_type, report_date, company are passed.")
-
-    NON_NARRATIVE_TYPES = (
-    'GRAPHIC',
-    'XML',
-    'JSON',
-    'ZIP',
-    'EX-101',
-    'EX-104',
-    'EX-31',
-    'EX-32',
-    'PDF'
+def looks_like_sentence(line:str)->bool:
+    if not line:
+        return False
+    words= line.split(' ')
+    if not words:
+        return False
+    lower_words = sum(
+        1
+        for w in words 
+        if w and (
+            w.islower() or 
+            (len(w)>1 and w[0].isupper() and w[1].islower())
+        )
     )
-    NAMESPACE_PREFIX = ("ix:","xbrli:","dei:","us-gaap:","xbrldi:")
-    DELETABLE_TAGS = ["b","s","strike","del","noscript","svg","image","meta","link"]
-    SECTION_PATTERNS = {
+    lower_ratio = lower_words/len(words)
+    if lower_ratio> 0.7 and len(words)>6:
+        return True
+    if line.endswith((".",";",":")) and len(words)>5:
+        return True
+    return False
+
+def get_paragraphs(text:str)->list:
+    cleaned_up_paragraphs = []
+    if not text:
+        return []
+    
+    paragraphs= text.split('\n\n')
+    for p in paragraphs:
+        if not p:
+            continue
+        if len(p)>100 and looks_like_sentence(p):
+            cleaned_up_paragraphs.append(p)
+    return '\n'.join(cleaned_up_paragraphs)
+SECTION_PATTERNS = {
     "meeting": [
         r"^notice of annual meeting",
         r"^notice of special meeting",
@@ -311,17 +343,38 @@ def generic_trim_document(
         r"^board'?s role in risk oversight"
     ]
     }
+
+
+
+def generic_trim_document(
+        text:str,
+        ticker:str,
+        report_type:str,
+        report_date:str,
+        company:str
+)->json:
+
+    
+    if not text or not ticker or not report_type or not report_date or not company:
+        raise ValueError("empty value received. check text, ticker, report_type, report_date, company are passed.")
+
+    NON_NARRATIVE_TYPES = (
+    'GRAPHIC',
+    'XML',
+    'JSON',
+    'ZIP',
+    'EX-101',
+    'EX-104',
+    'EX-31',
+    'EX-32',
+    'PDF'
+    )
+    NAMESPACE_PREFIX = ("ix:","xbrli:","dei:","us-gaap:","xbrldi:")
+    DELETABLE_TAGS = ["b","s","strike","del","noscript","svg","image","meta","link"]
     TABLE_BLOCK_DICT = {}
     table_idx=0
-    sections={}
     soup = BeautifulSoup(text,"lxml")
     documents = soup.find_all("document")
-    cleaned_docs={
-            'ticker':ticker,
-            'report_type' : report_type,
-            'report_date' : report_date,
-            'company': company
-        }
     text_out=""
     for doc in documents:   
         
@@ -338,7 +391,6 @@ def generic_trim_document(
         if doc.pdf:
             continue
         # normalize style: none and style:none and other variants
-        PATTERN_ITEM = re.compile(r"(?is)(^item\s+\d+(?:[a-z]\.\d+)?\.?)(.*?)(?=item\s+\d+(?:\.\d+)?\.?|$)")
         for div in doc.find_all("div"):
             if div is not None and div.attrs is not None:
                 style = div.get("style","")
@@ -346,9 +398,6 @@ def generic_trim_document(
                 if "display:none" in style_normalized:
                     div.decompose()
                     continue
-                div_text = div.get_text("\n",strip=True)
-                if ":bold" in style_normalized and len(div_text)<100:
-                    div.replace_with(f"[TITLE_START]{div_text}[TITLE_END]")
             else:
                 continue
         for tag in doc.find_all(lambda t: t.name and t.name.startswith(NAMESPACE_PREFIX)):
@@ -367,7 +416,7 @@ def generic_trim_document(
             # check for foot notes
             separator_count = len(table_text.split('|'))-1
             if separator_count==1:
-                table.replace_with(f" [FOOT NOTE START] {table_text} [FOOT NOTE END] ")
+                table.replace_with(f"\n\n[FOOT NOTE START] {table_text} [FOOT NOTE END]\n\n")
             elif separator_count>1:
                 TABLE_BLOCK_DICT[f"TABLE_{table_idx}"]=table_text
                 table.replace_with(f" TABLE_{table_idx} ")
@@ -376,8 +425,16 @@ def generic_trim_document(
             else:
                 continue
         text_out = text_out+ doc.get_text("\n",strip=True)
-        
-    return text_out  
+
+    text_normalized = normalize_text(text_out,remove_tables=True)
+    cleaned_paragraphs = get_paragraphs(text_normalized)
+
+    return cleaned_paragraphs.strip()
+
+def section_processor(text:str)->json:
+    """
+    this function will receive a text and extract the sections to form a json object with specific data ready for analyisis
+    """
 
 
     
