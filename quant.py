@@ -8,10 +8,7 @@ from outils import (
     generic_trim_document,
     llm,
     quant_report,
-    normalize_text,
     sections_summarizer,
-    types_synthetiser,
-    save_file_test,
     chunk_report
 )
 load_dotenv()
