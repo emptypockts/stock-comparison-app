@@ -582,125 +582,29 @@ due to document length and data density. Organize facts into structured signals
 for investor review.
 
 SCOPE:
-This is a CONSOLIDATION tool, not forensic analysis.
-- Use ONLY disclosed information from the filing input
 - Do NOT introduce external knowledge, assumptions, or forecasts
 - Do NOT speculate or assign probability
 - Do NOT label items as “risk” explicitly
-- You MAY apply standard financial reporting conventions to avoid false errors
 
 ---------------------------------------------------------------------
 NORMALIZATION RULES (CRITICAL)
 ---------------------------------------------------------------------
 The following are NORMAL and must NOT be flagged as issues:
-- Rounding differences (<1%)
 - Values presented in thousands vs millions vs billions
 - Same metric reported with different precision (e.g., 2,145,000 vs 2,145,044)
 - Different reporting dates (quarter vs annual)
 - Aggregated vs detailed breakdowns
 - GAAP vs non-GAAP presentation differences
 
-Only flag a data issue if:
-- Difference >5% AND same metric, same period, unexplained
-- Units cannot be determined from context
-- Direct contradiction within the same reporting scope
 
 ---------------------------------------------------------------------
 MATERIALITY FILTER
 ---------------------------------------------------------------------
-Only include items that meet at least ONE condition:
-- Magnitude ≥5% of relevant base (revenue, assets, income), OR
-- Absolute value ≥$100M (large-cap context), OR
-- Multi-period pattern (trend, repetition, clustering)
-
 Exclude:
 - Boilerplate disclosures
 - Regulatory requirements (e.g., clawback policies)
 - Standard compensation structures
 - Immaterial fluctuations
-
----------------------------------------------------------------------
-CATEGORY VALIDATION RULE
----------------------------------------------------------------------
-
-Before including a bullet:
-- Verify the fact strictly matches the category definition
-- If it does not clearly fit, EXCLUDE it
-
-Examples:
-- Dividends ≠ recurring charges
-- Authorization ≠ share count change
-- Regulatory policy ≠ accounting policy change
-
-
----------------------------------------------------------------------
-ALLOWED RISK CATEGORIES (FACT-BASED ONLY)
----------------------------------------------------------------------
-
-1. LIQUIDITY
-- Debt due <12 months: $X
-- Liquidity available: $Y
-- If X > Y → Refinancing requirement: $(X - Y)
-
-2. DEBT COVENANT HEADROOM
-- Covenant threshold vs current level
-- Headroom calculation
-
-3. MATURITY LADDER
-- Debt clustered across specific years
-- Total refinancing volume in 3-year window
-
-4. CUSTOMER / SUPPLIER CONCENTRATION
-- Explicit % disclosure only
-- Must be quantified in filing
-
-5. SHARE COUNT CHANGE
-- Share count movement across periods
-- Source if disclosed (buybacks, SBC, issuance)
-
-6. OFF-BALANCE-SHEET OBLIGATIONS
-- Leases, SPEs, contingencies with disclosed amounts
-
-7. RESERVE / PROVISION MOVEMENT
-- Balance change across periods
-- Provision or release activity
-
-8. RECURRING CHARGES
-- Same charge type across multiple periods
-
-9. ACCOUNTING POLICY CHANGE
-- Change disclosed with effective date and impact
-
-10. DISCLOSURE CHANGE (STRICT)
-- Metric disclosed in prior period AND absent in current period
-- Must remove previously quantified visibility
-
----------------------------------------------------------------------
-EXCLUDED ITEMS (DO NOT INCLUDE)
----------------------------------------------------------------------
-- Executive compensation mechanics
-- Clawback policies (standard regulatory requirement)
-- Generic legal disclosures
-- Standard equity plan structures
-- Non-material accounting language
-
----------------------------------------------------------------------
-BULLET CONSTRUCTION RULE
----------------------------------------------------------------------
-Format:
-[CATEGORY]: [Disclosed Fact] → [Mechanical Pattern Only]
-
-Allowed pattern observations:
-- Increase / decrease
-- Multi-period trend
-- Concentration
-- Clustering
-- Stability
-
-NOT allowed:
-- Risk interpretation
-- Causality
-- Forward-looking language
 
 ---------------------------------------------------------------------
 OUTPUT FORMAT (JSON ARRAY ONLY)
@@ -742,8 +646,6 @@ Before output, ensure:
 ✓ Each bullet ties directly to disclosed L3 data
 ✓ No external assumptions introduced
 ✓ No forward-looking or speculative language
-✓ No false contradictions due to rounding or units
-✓ All items meet materiality filter
 ✓ JSON is valid (no wrapper object)
 
 TONE:

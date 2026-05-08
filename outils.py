@@ -23,7 +23,6 @@ from prompts import (
     )
 load_dotenv()
 
-
 url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 GEMINI_API=os.getenv('GEMINI_API')
 DIRECTORY=os.getenv('DIRECTORY')
@@ -38,7 +37,7 @@ querystring = {"key": GEMINI_API}
 # llm =ChatOpenAI(model="deepseek-reasoner",base_url="https://api.deepseek.com",api_key=DEEP_SEEK_API_KEY)
 # llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash",api_key=GEMINI_API,max_retries=1)
 # llm=ChatOllama(model="phi4-mini-reasoning:3.8b",base_url="http://localhost:11434")
-# llm=ChatOllama(model="gpt-oss:20b-cloud",base_url="https://ollama.com")
+llm_fast=ChatOllama(model="gpt-oss:20b-cloud",base_url="https://ollama.com")
 llm=ChatOllama(model="gpt-oss:120b-cloud",base_url="https://ollama.com")
 # llm=ChatOllama(model="deepseek-v4-pro:cloud",base_url="https://ollama.com")
 # llm=ChatOllama(model="llama2-uncensored:latest")
@@ -94,7 +93,6 @@ def normalize_text(text: str,remove_tables=False) -> str:
         text = re.sub(TABLE_PATTERN,'',text)
     text = re.sub(r'\n{3,}','\n\n',text)
     return text.strip()
-
 # recursive langchain chunker
 def recursively_chunk(text: str) -> list:
     """
@@ -116,10 +114,6 @@ def recursively_chunk(text: str) -> list:
     text = normalize_text(text)
     texts= text_splitter.split_text(text)
     return texts
-
-
-
-
 # find the first meaningful section for def14a reports
 def find_init_def14a(main_soup):
     
@@ -147,6 +141,7 @@ def restore_tables(chunk,tables):
             f"\n\n----[TABLE START]----\n{v}\n\n----[TABLE END]----",chunk
         )
     return chunk
+
 def extract_items(text):
     ITEM_PATTERN =re.compile(
         r'(?ims)'
@@ -206,8 +201,7 @@ def extract_def_14a_sections(text):
 
     
     return sections if sections else []
-    
-            
+         
 #===========================================#
 #           etl                             #
 #===========================================#
@@ -264,10 +258,7 @@ def process_sec_chunks(chunks:list,level:int=1)->list:
     if not responses:
         return []
     return process_sec_chunks(responses,level+1)
-
-
 # --------analyse mdna---------
-
 def process_mdna(text:str,company:str):
     """
     function to analyze the mdna section with ai
@@ -291,7 +282,6 @@ def process_mdna(text:str,company:str):
         
     return response.content
 
-
 def normalize_heading(text)->str:
     text = normalize_text(text).lower()
     text=re.sub(r"[^a-z0-9\s\-\.\(\)]","",text)
@@ -302,7 +292,6 @@ def get_lines(tag):
     texts = text.split("\n")
     return texts
 # etl with soup on sec report
-
 def detect_child_bold(tag)->bool:
     for child in tag.find_all(['b','strong','span']):
         if child.name in ["b","strong"]:
@@ -406,8 +395,6 @@ DEF_14A_PATTERNS = {
     ]
     }
 
-
-
 def generic_trim_document(
         text:str,
         ticker:str,
@@ -492,15 +479,9 @@ def generic_trim_document(
 
     return cleaned_paragraphs.strip()
 
-def section_processor(text:str)->json:
-    """
-    this function will receive a text and extract the sections to form a json object with specific data ready for analyisis
-    """
-
-
-    
 # summarize the sections chunks into one per section
 def sections_summarizer(chunks:list)->str:
+    from outils import llm_fast
     """
     this function will summarize the chunks of a report. this can be used for any tipe of report, 8k, 10k, 14def etc.
     params:
@@ -511,10 +492,11 @@ def sections_summarizer(chunks:list)->str:
     if not chunks:
         return chunks
     combined_message = "\n\n--- PARTIAL SUMMARY ---\n\n".join(chunks)
-    
+    if len(combined_message)<500:
+        return combined_message
     for attempt in range(2):
         try:
-            response = llm.invoke([
+            response = llm_fast.invoke([
                 SystemMessage(content=sections_summarizer_instructions),
                 HumanMessage(content=combined_message)
             ])
