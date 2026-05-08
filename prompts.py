@@ -583,7 +583,7 @@ for investor review.
 
 SCOPE:
 This is a CONSOLIDATION tool, not forensic analysis.
-- Use ONLY disclosed information from the filing (L3 input)
+- Use ONLY disclosed information from the filing input
 - Do NOT introduce external knowledge, assumptions, or forecasts
 - Do NOT speculate or assign probability
 - Do NOT label items as “risk” explicitly

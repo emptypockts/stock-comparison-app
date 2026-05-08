@@ -9,7 +9,8 @@ from outils import (
     llm,
     quant_report,
     sections_summarizer,
-    chunk_report
+    extract_items,
+    extract_def_14a_sections
 )
 load_dotenv()
 import os
@@ -23,7 +24,8 @@ def quant(year,tickers:list)->str:
     returns:
         str report
     """
-    
+    REPORTS_WITH_ITEMS = ['10-K','8-K','10-Q']
+    REPORTS_WITH_SECTIONS = ['DEF 14A']
     directory= os.path.join(DIRECTORY,year)
     tickers=[t.capitalize()for t in tickers]
     companies = fetch_name(tickers)
@@ -43,7 +45,7 @@ def quant(year,tickers:list)->str:
         files = os.listdir(ticker_dir)
         # ====================================================== setting 1 file====================================
         for file in files:
-            if file.endswith((".json",".quant",".rtn")):
+            if file.endswith((".json",".quant",".rtn",".DS_Store")):
                 pass
             else:
                 file_name=os.path.join(ticker_dir,file)
@@ -51,12 +53,30 @@ def quant(year,tickers:list)->str:
                     report=f.read()
                     print ("\n\n---------generic prune-------------\n\n",datetime.now())
                     file_name_split = file_name.split('_')
-                    report_type = file_name_split[1].strip()
-                    report_date = file_name_split[2].strip()
-                    pruned_doc = generic_trim_document(report,ticker,report_type,report_date,company)
-                    pruned_doc_chunks = chunk_report(pruned_doc)
-                    summary = sections_summarizer(pruned_doc_chunks)
-                    report_blocks.append(summary)
+                    report_type = file_name_split[2].strip()
+                    report_date = file_name_split[3].strip()
+                    pruned_doc = generic_trim_document(report,ticker,report_type,report_date,company).lower()
+                    if report_type in REPORTS_WITH_ITEMS:
+                        report_blocks.append(
+                            {
+                                "report_type":report_type,
+                                "date_of_filing":report_date,
+                                "ticker":ticker,
+                                "data":extract_items(pruned_doc)
+                            }
+                        )
+                    elif report_type in REPORTS_WITH_SECTIONS:
+                        report_blocks.append(
+                            {
+                                "report_type":report_type,
+                                "date_of_filing":report_date,
+                                "ticker":ticker,
+                                "data":extract_def_14a_sections(pruned_doc)
+                            }
+                        )
+                    else:
+                        raise(f"report type not recognized : {report_type}")
+        
         final_report = ' '.join(quant_report(report_blocks).split())
         if final_report:
             try:
@@ -70,5 +90,5 @@ def quant(year,tickers:list)->str:
 
 if __name__=="__main__":
     year= str(datetime.now().year)
-    print(quant(year,["Rost"]))
+    print(quant(year,["axp"]))
 

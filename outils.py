@@ -40,6 +40,7 @@ querystring = {"key": GEMINI_API}
 # llm=ChatOllama(model="phi4-mini-reasoning:3.8b",base_url="http://localhost:11434")
 # llm=ChatOllama(model="gpt-oss:20b-cloud",base_url="https://ollama.com")
 llm=ChatOllama(model="gpt-oss:120b-cloud",base_url="https://ollama.com")
+# llm=ChatOllama(model="deepseek-v4-pro:cloud",base_url="https://ollama.com")
 # llm=ChatOllama(model="llama2-uncensored:latest")
 
 
@@ -80,7 +81,7 @@ def normalize_text(text: str,remove_tables=False) -> str:
         text = text.replace(k, v)
     text = re.sub(r'[ \t\r\f\v]+',' ',text)
     text = re.sub(r"\b_{2,}\b","_",text)
-    text = re.sub(r'[^a-zA-Z0-9 \n_\.,-]+',"",text)
+    text = re.sub(r'[^a-zA-Z0-9 \n_\.,\'-]+',"",text)
     text = re.sub(' *\n *','\n',text)
     PAGE_IDX_PATTERN = re.compile(r'(?m)^\s*\d+\s*$\n?')
     text = re.sub(PAGE_IDX_PATTERN,'',text)
@@ -146,7 +147,67 @@ def restore_tables(chunk,tables):
             f"\n\n----[TABLE START]----\n{v}\n\n----[TABLE END]----",chunk
         )
     return chunk
+def extract_items(text):
+    ITEM_PATTERN =re.compile(
+        r'(?ims)'
+        r'^\s*(item\s+\d+[a-z]?\s*\.?\s*[-:–—]?\s*[^\n]{0,250})\s*\n'
+        r'(.*?)'
+        r'(?=^\s*item\s+\d+[a-z]?\s*\.?\s*[-:–—]?\s*[^\n]{0,250}\s*\n|\Z)'
+    )
+    matches = ITEM_PATTERN.findall(text)
+    item_object=[]
+    for head,body,in matches:
+        if (re.search('.*summary.*',head,re.I)):
+            continue
+        item_object.append(
+            {'title':head,'text':sections_summarizer([body])}
+        )
+    if item_object:
+        return item_object
+    else: 
+        return []
 
+def extract_def_14a_sections(text):
+    DEF_14A_PATTERNS = re.compile(
+        r'(?im)^\s*('
+        r'proposal\s+\d+[:.\-–—]?\s+.*|'
+        r'election\s+of\s+directors|'
+        r'corporate\s+governance|'
+        r'compensation\s+discussion\s+and\s+analysis|'
+        r'executive\s+compensation|'
+        r'summary\s+compensation\s+table|'
+        r'pay\s+versus\s+performance|'
+        r'ceo\s+pay\s+ratio|'
+        r'security\s+ownership|'
+        r'certain\s+relationships|'
+        r'audit\s+committee\s+report|'
+        r'ratification\s+of\s+independent|'
+        r'shareholder\s+proposals|'
+        r'other\s+matters'
+        r')\s*$'
+    )
+    matches = list(DEF_14A_PATTERNS.finditer(text))
+    sections=[]
+    for idx,m in enumerate(matches):
+        head = m.group(0)
+        body_start=m.end()
+
+        if idx+1 <len(matches):
+            body_end = matches[idx+1].start()
+        else:
+            body_end=len(text)
+        body = text[body_start:body_end].strip()
+
+        if body:
+            sections.append({
+                'title':head,
+                'text':sections_summarizer([body])
+            })
+
+    
+    return sections if sections else []
+    
+            
 #===========================================#
 #           etl                             #
 #===========================================#
@@ -284,7 +345,8 @@ def get_paragraphs(text:str)->list:
         if len(p)>100 and looks_like_sentence(p):
             cleaned_up_paragraphs.append(p)
     return '\n'.join(cleaned_up_paragraphs)
-SECTION_PATTERNS = {
+
+DEF_14A_PATTERNS = {
     "meeting": [
         r"^notice of annual meeting",
         r"^notice of special meeting",
@@ -448,8 +510,6 @@ def sections_summarizer(chunks:list)->str:
     """
     if not chunks:
         return chunks
-    if len(chunks)==1:
-        return chunks[0]
     combined_message = "\n\n--- PARTIAL SUMMARY ---\n\n".join(chunks)
     
     for attempt in range(2):
