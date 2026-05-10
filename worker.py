@@ -1,5 +1,4 @@
 from celery import Celery
-import socketio
 from pymongo.server_api import ServerApi
 from pymongo import MongoClient
 import certifi
@@ -9,12 +8,12 @@ from datetime import datetime,timezone
 from celery.exceptions import Ignore
 from PDFReport import PDFReport
 from s3_bucket_ops import s3_upload
-
+from flask_socketio import SocketIO
 
 load_dotenv()
 uri = os.getenv('MONGODB_URI')
 WS_SOCKET_URI=os.getenv('VITE_WS_SERVER')
-sio = socketio.Client()
+sio = SocketIO(message_queue=os.getenv('REDIS_SERVER'))
 celery = Celery(
     'ai_reports',
     broker=os.getenv('REDIS_SERVER'),
@@ -22,16 +21,19 @@ celery = Celery(
 )
 
 def notify_task_result(event_name,payload,name_space):
-    if not sio.connected:
-        sio.connect(WS_SOCKET_URI,namespaces=[name_space])
+    if not payload:
+        raise(f"message from task queue handler: report metadata is missing.")
+    room_name = f"user:{payload['user_id']}"
     try:
-        sio.emit(event_name,payload,namespace=name_space)
+        print(f"trying to emit {sio} with event_name: {event_name} and name_space: {name_space}")
+        sio.emit(event_name,payload,namespace=name_space,room=room_name)
         sio.sleep(0)
     except Exception as e:
         print(f"error trying to connect to the ws socket {sio} error {str(e)}")
 
 def connect_to_ws_server():
-    sio.connect(WS_SOCKET_URI)
+    print(f"trying to connect to socket uri: {WS_SOCKET_URI}")
+    sio.connect(WS_SOCKET_URI,namespaces=["\ai"])
 
 # ==============overall financials==============
 @celery.task(bind=True)
@@ -166,7 +168,6 @@ def generate_ai_quant(self,tickers,user_id,report_type):
     current_year=(datetime.now().year)
     task_id=self.request.id
     import sys
-    print(sys.path)
     from quant import quant
     notify_task_result('task_start',{
         'user_id':user_id,
@@ -180,7 +181,7 @@ def generate_ai_quant(self,tickers,user_id,report_type):
         if not user_id:
             raise Ignore()
         result=quant(str(current_year),tickers)
-        
+        print(f"variable type of report quant sent to mongodb: {type(result)}")
         now=datetime.now()
         if result:
             client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())

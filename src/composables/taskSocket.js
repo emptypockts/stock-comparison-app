@@ -1,6 +1,5 @@
 import { io } from "socket.io-client";
 import { ref } from "vue";
-import { generatePdfReport } from "@/utils/pdfOps";
 import { fetch_reports } from "@/utils/fetch_reports";
 import { useLoadingStore } from "@/stores/loadingStore";
 import { useNotificationStore } from "@/stores/notificationStore";

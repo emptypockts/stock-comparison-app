@@ -25,7 +25,7 @@ class PDFReport(FPDF):
            "task_id":task_id
         })
         if not report or 'assistant' not in report:
-           raise ValueError(f"my guy, check the task_id, i did not find any report with {task_id}")
+           raise ValueError(f"check the task_id, i did not find any report with {task_id}")
         self.ai_report=report['assistant']
         self.task_id=task_id
         print(FONT_PATH)
@@ -37,7 +37,7 @@ class PDFReport(FPDF):
         self.set_text_color(220, 220, 220)
         self.rect(0, 0, 210, 297, style='F')
         self.set_fill_color(0, 0, 0)
-        title="eacsa financial reports"
+        title="-EACSA Financial Reports-"
         width=self.get_string_width(title)+6
         self.set_x((210-width)/2)
         self.cell(width,20,title,align="C")
@@ -73,6 +73,7 @@ class PDFReport(FPDF):
 
     def generate(self):
       print('generating report now')
+      print(f"format of report is {type(self.ai_report)}")
       if isinstance(self.ai_report, str):
         try:
           print(self.ai_report)
@@ -84,7 +85,6 @@ class PDFReport(FPDF):
           except Exception as e:
             raise ValueError(f"error trying to parse json or python structure {e}")           
       else:
-         print('proceeding now')
          ai_json_report=self.ai_report
       self.add_page()
       self.set_auto_page_break(auto=True,margin=25)
@@ -105,7 +105,7 @@ class PDFReport(FPDF):
       
 
 if __name__=='__main__':
-  task_id = "4c4aa198-1ef4-4816-9784-deab49c88ffa"
+  task_id = "0d39005b-f665-4989-ac5c-c99f36beac19"
   
  
   pdf = PDFReport(task_id)

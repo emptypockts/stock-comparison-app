@@ -35,8 +35,9 @@ def quant(year,tickers:list)->str:
         needs_analysis, existing_report = analyze_ticker(directory,ticker,extension=extension)
         if not needs_analysis:
             print(f"Analysis for ticker '{ticker}' is up to date.")
+            print(f"returning report as a {type(existing_report)}")
             try:
-                return json.dumps(existing_report)
+                return existing_report
             except Exception as e:
                 print("error returning a json object", e)
                 return existing_report
@@ -55,7 +56,7 @@ def quant(year,tickers:list)->str:
                     file_name_split = file_name.split('_')
                     report_type = file_name_split[2].strip()
                     report_date = file_name_split[3].strip()
-                    pruned_doc = generic_trim_document(report,ticker,report_type,report_date,company).lower()
+                    pruned_doc = generic_trim_document(report,ticker,report_type,report_date,company)
                     if report_type in REPORTS_WITH_ITEMS:
                         report_blocks.append(
                             {
@@ -83,12 +84,12 @@ def quant(year,tickers:list)->str:
                 
                 save_analysis_report(ticker_dir, ticker, final_report,extension=extension)
                 print(f"Saved analysis report for ticker {ticker}\n")
-                return  final_report
+                return  json.loads(final_report)
             except Exception as e:
                 print("error returning a json structure: ",e)
                 return final_report
 
 if __name__=="__main__":
     year= str(datetime.now().year)
-    print(quant(year,["lyv"]))
+    print(quant(year,["boom"]))
 

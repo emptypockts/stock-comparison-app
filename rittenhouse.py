@@ -47,7 +47,7 @@ def synthetize_rittenhouse_reports(reports)->str:
         ]
     )
     if response.content:
-        validated_json=json.loads(response.content.replace("```json","").replace("```","").strip().lower())
+        validated_json=json.loads(response.content.replace("```json","").replace("```","").strip())
         return validated_json
     else:
         raise Exception(f"response has no content. see details: {response}")

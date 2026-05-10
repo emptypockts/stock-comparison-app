@@ -213,7 +213,7 @@ def ai_query(agent, data)->str:
         ]
     )
     if response.content:
-        return response.content.strip().lower()
+        return response.content.strip()
     else:
         raise Exception(f"response has no content. see details: {response}")
         return {}
@@ -240,7 +240,7 @@ def validate_json(agent,r6)->str:
         ]
     )
     if response.content:
-        validated_json=json.loads(response.content.replace("```json","").replace("```","").strip().lower())
+        validated_json=json.loads(response.content.replace("```json","").replace("```","").strip())
         return validated_json
     else:
         raise Exception(f"response has no content. see details: {response}")
@@ -296,7 +296,7 @@ def compile(tickers)->str:
         except Exception as e:
             print(str(e))
             return None
-        return r6.lower().strip()
+        return r6.strip()
         
         
     except Exception as e:

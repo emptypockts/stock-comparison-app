@@ -1,7 +1,6 @@
 from flask import Flask, jsonify,send_file,render_template,request,redirect,url_for
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-import redis
 import jwt.algorithms
 from outils import parse_tickers
 from .auth import require_cf_token
