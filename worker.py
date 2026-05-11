@@ -19,7 +19,15 @@ celery = Celery(
     broker=os.getenv('REDIS_SERVER'),
     backend=os.getenv('REDIS_SERVER')
 )
-
+SUBJECT = "EACSA Financial Report for ticker {tickers} ready"
+E_BODY = """
+Hello:
+Your ai analysis {report_type} for ticker {tickers} is ready for review. 
+Click on the link below to access it or login to the EACSA app https://eacsa.us and download it from your report list at the very bottom of the layout.
+link to pdf:
+{signed_url}
+Thank you for using EACSA US! 
+"""
 def notify_task_result(event_name,payload,name_space):
     if not payload:
         raise(f"message from task queue handler: report metadata is missing.")
@@ -34,6 +42,14 @@ def notify_task_result(event_name,payload,name_space):
 def connect_to_ws_server():
     print(f"trying to connect to socket uri: {WS_SOCKET_URI}")
     sio.connect(WS_SOCKET_URI,namespaces=["\ai"])
+
+def fetch_s3_url(bucket_name:str,file_name:str,client_method='get_object'):
+    if not bucket_name or not file_name:
+        raise (f"error, missing bucket_name or file_name")
+    from s3_bucket_ops import s3_presigned_url
+    params={"Bucket":bucket_name,"Key":f"{file_name}.pdf"}
+    signed_url=s3_presigned_url(client_method=client_method,method_params=params,expiration_time=30)
+    return signed_url
 
 # ==============overall financials==============
 @celery.task(bind=True)
@@ -71,6 +87,19 @@ def generate_ai_report(self,tickers,user_id,report_type):
             pdf_report = PDFReport(task_id)
             pdf_report.generate()
             s3_upload(bucket_name=report_type,file_name=f"{task_id}")
+            try:
+                signed_url = fetch_s3_url(bucket_name=report_type,file_name=task_id)
+                from emailFunctions import email_send
+                email_send(
+                    e_to=user_id,
+                    e_subject=SUBJECT.format(tickers=tickers),
+                    e_body=E_BODY.format(report_type=report_type,tickers=tickers,signed_url=signed_url),
+                    e_content_type="text"
+                )
+            except Exception as e:
+                print(f"error trying to fetch a signed url: str(e)")
+            
+
 
             
             print('notifying server of completion')
