@@ -6,9 +6,16 @@ import pandas as pd
 import requests
 from dotenv import load_dotenv
 import os
+from enum import Enum
 load_dotenv()
 KY = os.getenv('TWELVE_API_KY')
 URL_BASE = os.getenv('TWELVE_URI')
+
+class Status (str,Enum):
+    ongoing="ongoing"
+    failed="failed"
+    completed="completed"
+
 def fetch_tickers(collection:Collection)->list:
     path = r"/home/jjmr86/quarterly_stock_ops/companyfacts/"
     files = os.listdir(path)
@@ -479,8 +486,37 @@ def PullQtrStockRevenueTrends(collection:Collection,page=1,items_per_page=100):
     total_tickers_count = len(total_tickers)
 
     return grouped_stocks,total_tickers_count
-    
+
+def fetch_ai_queries(user_id,db_name,collection_name,max_queries,sort:Literal['asc','desc'],status:Status):
+    from pymongo import MongoClient
+    import json
+    import certifi
+    from pymongo.server_api import ServerApi
+    uri = os.getenv('MONGODB_URI')
+    client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+    db=client[db_name]
+    collection=db[collection_name]
+    filter= {"user_id":user_id,"status":status.value}
+    if sort=='desc':
+        sort=list({"timestamp":-1}.items())
+    else:
+        sort = list({"timestamp":1}.items())
+    docs = collection.find(
+        filter=filter,
+        sort=sort,
+        limit=max_queries
+    )
+    docs_list=[]
+    if docs:
+        for d in docs:
+            d['_id']=str(d['_id'])
+            d['timestamp']=str(d['timestamp'])
+            docs_list.append(d)
+
+    return json.dumps(docs_list)
+
 
 if __name__=="__main__":
-    cursor=fetch_name(['ros','meta'])
-    print(cursor)
+    user_id='n954466@outlook.com'
+    docs= fetch_ai_queries(user_id,'test','aiTaskQueries',10,'desc',Status.completed)
+    print(docs)

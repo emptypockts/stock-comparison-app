@@ -8,7 +8,6 @@ from outils import (
     generic_trim_document,
     llm,
     quant_report,
-    sections_summarizer,
     extract_items,
     extract_def_14a_sections
 )
@@ -46,7 +45,7 @@ def quant(year,tickers:list)->str:
         files = os.listdir(ticker_dir)
         # ====================================================== setting 1 file====================================
         for file in files:
-            if file.endswith((".json",".quant",".rtn",".DS_Store")):
+            if file.endswith((".json",".quant",".rtn",".DS_Store",".seven")):
                 pass
             else:
                 file_name=os.path.join(ticker_dir,file)

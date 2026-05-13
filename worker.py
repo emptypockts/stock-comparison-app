@@ -9,13 +9,7 @@ from celery.exceptions import Ignore
 from PDFReport import PDFReport
 from s3_bucket_ops import s3_upload
 from flask_socketio import SocketIO
-from enum import Enum
-
-class Status(str, Enum):
-    ongoing = "ongoing"
-    completed = "completed"
-    failed = "failed"
-
+from financialUtils import Status
 load_dotenv()
 uri = os.getenv('MONGODB_URI')
 WS_SOCKET_URI=os.getenv('VITE_WS_SERVER')

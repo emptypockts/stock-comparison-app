@@ -1,12 +1,12 @@
 import json
 import os
 from datetime import datetime, timedelta
-from outils import clean_edgar_text,analyze_ticker,save_analysis_report,process_sec_chunks_ritten,synthetize_summaries,llm
-from langchain_google_genai import ChatGoogleGenerativeAI
+from outils import clean_edgar_text,analyze_ticker,save_analysis_report,process_sec_chunks_ritten,synthetize_summaries,llm,generic_trim_document
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage,SystemMessage
-from langchain_ollama import ChatOllama
 from prompts import rittenhouse_synthesis_instructions,summarize_chunk_instructions_ritten
+from financialUtils import fetch_name
+
 load_dotenv()
 DIRECTORY=os.getenv('DIRECTORY')
 
@@ -57,7 +57,8 @@ def quant_rittenhouse(year,tickers:list)->str:
     responses={}
     directory= os.path.join(DIRECTORY,year)
     tickers=[t.capitalize()for t in tickers]
-    for ticker in tickers:
+    companies = fetch_name(tickers)
+    for ticker,company in zip(tickers,companies):
         ticker_dir=os.path.join(directory,ticker)
         extension=".rtn"
 
@@ -71,7 +72,10 @@ def quant_rittenhouse(year,tickers:list)->str:
             if file_name.endswith('.txt'):
                 with open(os.path.join(ticker_dir,file_name)) as f:
                     report=f.read()
-                    clean_report=clean_edgar_text(report)
+                    file_name_split = file_name.split('_')
+                    report_type = file_name_split[2].strip()
+                    report_date = file_name_split[3].strip()
+                    clean_report=generic_trim_document(report,ticker,report_type,report_date,company)
                     response = rittenhouse_analysis(clean_report)
                     if response:
                         responses[file_name.split('.')[0]]=response

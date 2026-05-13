@@ -1,4 +1,4 @@
-from bs4 import BeautifulSoup,NavigableString
+from bs4 import BeautifulSoup
 from datetime import datetime,timedelta
 import os
 import json
@@ -563,7 +563,8 @@ def is_new_analysis_needed(ticker_dir,extension:Literal[".json",".quant",".rtn"]
                     # Load the most recent analysis report
                     with open(os.path.join(ticker_dir, file_name), 'r', encoding='utf-8') as f:
                         most_recent_report = json.load(f)
-                        most_recent_report = json.loads(most_recent_report)
+                        if isinstance(most_recent_report,str):
+                            most_recent_report = json.loads(most_recent_report)
                         print(f"returning report as a: {type(most_recent_report)}")
                     return False, most_recent_report
     return True, None
