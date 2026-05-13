@@ -9,6 +9,12 @@ from celery.exceptions import Ignore
 from PDFReport import PDFReport
 from s3_bucket_ops import s3_upload
 from flask_socketio import SocketIO
+from enum import Enum
+
+class Status(str, Enum):
+    ongoing = "ongoing"
+    completed = "completed"
+    failed = "failed"
 
 load_dotenv()
 uri = os.getenv('MONGODB_URI')
@@ -25,6 +31,7 @@ Hello:
 Your ai analysis {report_type} for ticker {tickers} is ready for review. 
 Click on the link below to access it or login to the EACSA app https://eacsa.us and download it from your report list at the very bottom of the layout.
 link to pdf:
+‼️This link is valid only for the next 5 minutes. To access the report after 5 minutes, please login to the EACSA app and download it from your report list section.
 {signed_url}
 Thank you for using EACSA US! 
 """
@@ -48,12 +55,81 @@ def fetch_s3_url(bucket_name:str,file_name:str,client_method='get_object'):
         raise (f"error, missing bucket_name or file_name")
     from s3_bucket_ops import s3_presigned_url
     params={"Bucket":bucket_name,"Key":f"{file_name}.pdf"}
-    signed_url=s3_presigned_url(client_method=client_method,method_params=params,expiration_time=30)
+    signed_url=s3_presigned_url(client_method=client_method,method_params=params,expiration_time=300)
     return signed_url
+
+def ai_task_queries_collections_update(
+    user_id:str,
+    task_id:str,
+    tickers:list,
+    report_type:str,
+    collection:str,
+    db_name:str,
+    status:Status,
+    error=None
+    ):
+    client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+    db = client[db_name]
+    ai_task_queries_collections=db[collection]
+    ai_task_queries_collections.update_one(
+        {"task_id":task_id},
+        {
+            "$setOnInsert":{
+                "user_id":user_id,
+                "task_id":task_id,
+                "report_type":report_type,
+                "tickers":tickers,
+                "timestamp":datetime.now(timezone.utc),
+            },
+            "$set":{
+                "status":status.value
+            }
+            
+
+        },
+        upsert=True            
+    )
+    if error:
+        print(f"task_id: {task_id} stored in the db as: {status.value} with error as: {error}")
+    else:
+        print(f"task_id: {task_id} stored in the db as: {status.value}")
+    return None
+def ai_report_collections_update(
+    user_id:str,
+    task_id:str,
+    tickers:list,
+    report_type:str,
+    collection:str,
+    db_name:str,
+    result:list,
+):
+    client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+    db = client[db_name]
+    ai_report_collections = db[collection]
+    ai_report_collections.update_one(
+            {"task_id":task_id},
+        {
+            "$set":{
+                "assistant":result,
+                "report_type":report_type,
+                "tickers":tickers,
+                "timestamp": datetime.now(timezone.utc)
+            },
+            "$setOnInsert":{
+                "user_id":user_id,
+                "task_id":task_id
+            }
+        },
+        upsert=True
+
+    )
+    return None
 
 # ==============overall financials==============
 @celery.task(bind=True)
 def generate_ai_report(self,tickers,user_id,report_type):
+    if not user_id:
+        raise Ignore()
     task_id=self.request.id
     from aiReport import compile
     notify_task_result('task_start',{
@@ -63,45 +139,25 @@ def generate_ai_report(self,tickers,user_id,report_type):
         'report_type':report_type,
         "tickers":tickers,
         "timestamp":datetime.now().isoformat()+"Z"
-    },'/ai')    
-    
+    },'/ai')  
+    ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.ongoing)
     try:
-        if not user_id:
-            raise Ignore()
         result= compile(tickers)
-
         if result:
-            client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
-            db = client["test"]
-            ai_report_collections = db["aiTasks"]
-            ai_report_collections.insert_one({
-            "user_id":user_id,
-            "task_id":task_id,
-            "assistant":result,
-            "report_type":report_type,
-            "tickers":tickers,
-            "timestamp": datetime.now(timezone.utc)
-
-            })
-
+            ai_report_collections_update(user_id,task_id,tickers,report_type,'aiTasks','test',result)
             pdf_report = PDFReport(task_id)
             pdf_report.generate()
             s3_upload(bucket_name=report_type,file_name=f"{task_id}")
-            try:
-                signed_url = fetch_s3_url(bucket_name=report_type,file_name=task_id)
-                from emailFunctions import email_send
-                email_send(
-                    e_to=user_id,
-                    e_subject=SUBJECT.format(tickers=tickers),
-                    e_body=E_BODY.format(report_type=report_type,tickers=tickers,signed_url=signed_url),
-                    e_content_type="text"
-                )
-            except Exception as e:
-                print(f"error trying to fetch a signed url: str(e)")
-            
-
-
-            
+            signed_url = fetch_s3_url(bucket_name=report_type,file_name=task_id)
+            from emailFunctions import email_send
+            response =email_send(
+                e_to=user_id,
+                e_subject=SUBJECT.format(tickers=tickers),
+                e_body=E_BODY.format(report_type=report_type,tickers=tickers,signed_url=signed_url),
+                e_content_type="text"
+            )
+            print(f"email send status: {response}")
+        
             print('notifying server of completion')
             notify_task_result('task_done',{
                 'user_id':user_id,
@@ -112,10 +168,10 @@ def generate_ai_report(self,tickers,user_id,report_type):
                 "timestamp":datetime.now().isoformat()+"Z"
 
             },'/ai')
+            ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.completed)
             return result
 
     except Exception as e:
-        print(f"error with task execution for tickers {tickers}, task id {task_id}")
         notify_task_result("task_failed", {
             "user_id": user_id,
             "task_id": task_id,
@@ -124,13 +180,15 @@ def generate_ai_report(self,tickers,user_id,report_type):
             "timestamp": datetime.now().isoformat() + "Z",
             "error": str(e)
         },'/ai')
-        
+        ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.failed,str(e))
         raise self.retry(exc=e,countdown=5,max_retries=1)
     
     # ============7powers===============
 
 @celery.task(bind=True)
 def generate_ai_7powers(self,tickers,user_id,report_type):
+    if not user_id:
+        raise Ignore()
     from sevenPowers import seven_powers
     task_id=self.request.id
     notify_task_result('task_start',{
@@ -141,29 +199,23 @@ def generate_ai_7powers(self,tickers,user_id,report_type):
         "tickers":tickers,
         "timestamp":datetime.now().isoformat()+"Z"
     },'/ai')
+    ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.ongoing)
     try:
-        if not user_id:
-            raise Ignore()
-
         result= seven_powers(tickers)
-        
-        now=datetime.now()
         if result:
-            client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
-            db = client["test"]
-            ai_report_collections = db["aiTasks"]
-            ai_report_collections.insert_one({
-                "user_id":user_id,
-                "task_id":task_id,
-                "assistant":result,
-                "report_type":report_type,
-                "tickers":tickers,
-                "timestamp":datetime.now(timezone.utc)
-            })
+            ai_report_collections_update(user_id,task_id,tickers,report_type,'aiTasks','test',result)
             pdf_report = PDFReport(task_id)
             pdf_report.generate()
             s3_upload(bucket_name=report_type,file_name=f"{task_id}")
-            
+            signed_url = fetch_s3_url(bucket_name=report_type,file_name=task_id)
+            from emailFunctions import email_send
+            response =email_send(
+                e_to=user_id,
+                e_subject=SUBJECT.format(tickers=tickers),
+                e_body=E_BODY.format(report_type=report_type,tickers=tickers,signed_url=signed_url),
+                e_content_type="text"
+            )
+            print(f"email send status: {response}")
             print("notifying server of completion")
             notify_task_result('task_done',{
             'user_id':user_id,
@@ -173,12 +225,9 @@ def generate_ai_7powers(self,tickers,user_id,report_type):
             "tickers":tickers,
             "timestamp":datetime.now().isoformat()+"Z"
             },'/ai')
-            
+            ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.completed)
             return result
-
-            
     except Exception as e:
-        print(f"error with task execution for tickers {tickers}, task id {task_id}")
         notify_task_result("task_failed", {
             "user_id": user_id,
             "task_id": task_id,
@@ -187,14 +236,15 @@ def generate_ai_7powers(self,tickers,user_id,report_type):
             "timestamp": datetime.now().isoformat() + "Z",
             "error": str(e)
         },'/ai')
-        
+        ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.failed,str(e))
         raise self.retry(exc=e,countdown=5,max_retries=1)
     
     # ========quant============
        
 @celery.task(bind=True)
 def generate_ai_quant(self,tickers,user_id,report_type):
-    current_year=(datetime.now().year)
+    if not user_id:
+        raise Ignore()
     task_id=self.request.id
     import sys
     from quant import quant
@@ -206,28 +256,25 @@ def generate_ai_quant(self,tickers,user_id,report_type):
         "tickers":tickers,
         "timestamp":datetime.now().isoformat()+"Z"
     },'/ai')
+    ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.ongoing)
     try:
-        if not user_id:
-            raise Ignore()
+        current_year=(datetime.now().year)
+        
         result=quant(str(current_year),tickers)
-        print(f"variable type of report quant sent to mongodb: {type(result)}")
-        now=datetime.now()
         if result:
-            client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
-            db = client["test"]
-            ai_report_collections = db["aiTasks"]
-            ai_report_collections.insert_one({
-                "user_id":user_id,
-                "task_id":task_id,
-                "assistant":result,
-                "report_type":report_type,
-                "tickers":tickers,
-                "timestamp":datetime.now(timezone.utc)
-            })
+            ai_report_collections_update(user_id,task_id,tickers,report_type,'aiTasks','test',result)
             pdf_report = PDFReport(task_id)
             pdf_report.generate()
             s3_upload(bucket_name=report_type,file_name=f"{task_id}")
-        
+            signed_url = fetch_s3_url(bucket_name=report_type,file_name=task_id)
+            from emailFunctions import email_send
+            response =email_send(
+                e_to=user_id,
+                e_subject=SUBJECT.format(tickers=tickers),
+                e_body=E_BODY.format(report_type=report_type,tickers=tickers,signed_url=signed_url),
+                e_content_type="text"
+            )
+            print(f"email send status: {response}")
             print("notifying server of completion")
             notify_task_result('task_done',{
             'user_id':user_id,
@@ -237,12 +284,10 @@ def generate_ai_quant(self,tickers,user_id,report_type):
             "tickers":tickers,
             "timestamp":datetime.now().isoformat()+"Z"
             },'/ai')
-            
+            ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.completed)
             return result
 
-    except Exception as e:
-         
-        print(f"error with task execution for tickers {tickers}, task id {task_id}")
+    except Exception as e:         
         notify_task_result("task_failed", {
             "user_id": user_id,
             "task_id": task_id,
@@ -251,7 +296,7 @@ def generate_ai_quant(self,tickers,user_id,report_type):
             "timestamp": datetime.now().isoformat() + "Z",
             "error": str(e)
         },'/ai')
-        
+        ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.failed,str(e))
         raise self.retry(exc=e,countdown=5,max_retries=1)
     
 
@@ -259,7 +304,8 @@ def generate_ai_quant(self,tickers,user_id,report_type):
 
 @celery.task(bind=True)
 def generate_ai_quant_rittenhouse(self,tickers,user_id,report_type):
-    current_year=(datetime.now().year)
+    if not user_id:
+        raise Ignore()
     task_id=self.request.id
     from rittenhouse import quant_rittenhouse
     notify_task_result('task_start',{
@@ -269,30 +315,27 @@ def generate_ai_quant_rittenhouse(self,tickers,user_id,report_type):
         'report_type':report_type,
         "tickers":tickers,
         "timestamp":datetime.now().isoformat()+"Z"
-    },'/ai') 
+    },'/ai')
+    ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.ongoing)
     try:
-        if not user_id:
-            raise Ignore()
-
-        result=quant_rittenhouse(str(current_year),tickers)
+        current_year=(datetime.now().year)
         
-        now=datetime.now()
+        result=quant_rittenhouse(str(current_year),tickers)
         if result:
-            client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
-            db = client["test"]
-            ai_report_collections = db["aiTasks"]
-            ai_report_collections.insert_one({
-                "user_id":user_id,
-                "task_id":task_id,
-                "assistant":result,
-                "report_type":report_type,
-                "tickers":tickers,
-                "timestamp":datetime.now(timezone.utc)
-            })
+            ai_report_collections_update(user_id,task_id,tickers,report_type,'aiTasks','test',result)
             pdf_report = PDFReport(task_id)
             pdf_report.generate()
             s3_upload(bucket_name=report_type,file_name=f"{task_id}")
-        
+            
+            signed_url = fetch_s3_url(bucket_name=report_type,file_name=task_id)
+            from emailFunctions import email_send
+            response =email_send(
+                e_to=user_id,
+                e_subject=SUBJECT.format(tickers=tickers),
+                e_body=E_BODY.format(report_type=report_type,tickers=tickers,signed_url=signed_url),
+                e_content_type="text"
+            )
+            print(f"email send status: {response}")
             print("notifying server of completion")
             notify_task_result('task_done',{
             'user_id':user_id,
@@ -302,12 +345,10 @@ def generate_ai_quant_rittenhouse(self,tickers,user_id,report_type):
             "tickers":tickers,
             "timestamp":datetime.now().isoformat()+"Z"
             },'/ai')
-            
+            ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.completed)
             return result
 
     except Exception as e:
-         
-        print(f"error with task execution for tickers {tickers}, task id {task_id}")
         notify_task_result("task_failed", {
             "user_id": user_id,
             "task_id": task_id,
@@ -316,7 +357,7 @@ def generate_ai_quant_rittenhouse(self,tickers,user_id,report_type):
             "timestamp": datetime.now().isoformat() + "Z",
             "error": str(e)
         },'/ai')
-        
+        ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.failed,str(e))
         raise self.retry(exc=e,countdown=5,max_retries=1)
 
 @celery.task(bind=True)

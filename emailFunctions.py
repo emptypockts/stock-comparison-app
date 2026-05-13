@@ -52,5 +52,5 @@ def email_send(e_to,e_subject,e_body,e_content_type):
     else:
         return graph_response.text
 
-
-email_send("jjmr86@live.com.mx","hi there","this is a body text","Text")
+if __name__=="__main":
+    email_send("jjmr86@live.com.mx","hi there","this is a body text","Text")
