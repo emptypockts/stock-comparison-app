@@ -1,15 +1,13 @@
-from flask import Flask, jsonify,send_file,render_template,request,redirect,url_for
+from flask import Flask, jsonify,request
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import jwt.algorithms
 from outils import parse_tickers
 from .auth import require_cf_token
 from datetime import datetime
-from aiReport import ai_query, compile
 from flask_cors import CORS
 from flask_session import Session
 import pandas as pd
-from rittenhouse import quant_rittenhouse
 import fetch5yData
 import stockPlotData
 import companyData
@@ -25,7 +23,7 @@ from authLogin import loginStep
 from authRegister import registerStep
 import EconomyStats
 from fetchStockfromdB import stockFetch
-from financialUtils import pull_QStockData,PullQtrStockRevenueTrends
+from financialUtils import pull_QStockData,PullQtrStockRevenueTrends,fetch_ai_queries,Status
 from pymongo import MongoClient
 import certifi
 from pymongo.server_api import ServerApi
@@ -607,6 +605,33 @@ def quantize():
             }),202
         except Exception as e:
                 return jsonify({'error':"internal server error"}),500
+        
+@app.route('/api/v1/ai-queries',methods=['GET'])
+@require_cf_token
+def ai_queries():
+    report_type = request.args.get('report_type','')
+    # identity= request.cf_identity
+    # user_id = identity['user_id']
+    user_id='n954466@outlook.com'
+    if not report_type or not user_id:
+        return jsonify({
+            "error":"missing payload"
+        }),400
+    else:
+        try:
+            docs= fetch_ai_queries(user_id,'test','aiTaskQueries',10,'desc',Status.ongoing,report_type=report_type)
+            return jsonify(
+                docs
+            ),200
+        except Exception as e:
+            return jsonify(
+                {
+                    "error":str(e)
+                }
+            ),500
+        
+    
+
 
 # test 
 @app.route('/api/private')

@@ -1,9 +1,7 @@
 <template>
-    <div v-if="tickers.length>0">
-        
+    <div v-if="tickers.length>0">        
         <div class="terminal">
         <span>eacsa> </span>seven powers report with ai:
-            
                              <button 
                 :disabled="isLoadingLocal||!isSocketReady" 
                 @click="get_seven_p_analysis" 
@@ -29,14 +27,13 @@ import { useTickerStore } from '@/stores/tickerStore';
 import { useLoadingStore } from '@/stores/loadingStore';
 import { showTempMessage } from '@/utils/showMessages';
 import { useSocket } from '@/composables/taskSocket';
-
+const isLoadingLocal=ref(false);
 const rawMessage = ref('');
 const tickerHistory = ref(new Set())
 const tickerStore = useTickerStore();
 const loading = useLoadingStore();
 const allowedTickers = ref([]);
 const notification = ref(null);
-const isLoadingLocal=ref(false);
 const isConnected = useSocket();
 const isSocketReady=ref(false);
 let localTaskID=null;

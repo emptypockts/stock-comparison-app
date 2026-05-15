@@ -293,10 +293,11 @@ def compile(tickers)->str:
         try:
             full_report_agent =get_full_report_agent(tickers) 
             r6 =get_full_report(full_report_agent,r1,r2,r3,r4,r5)
+            return r6.strip()
         except Exception as e:
             print(str(e))
             return None
-        return r6.strip()
+        
         
         
     except Exception as e:

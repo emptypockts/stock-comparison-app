@@ -10,6 +10,7 @@ from PDFReport import PDFReport
 from s3_bucket_ops import s3_upload
 from flask_socketio import SocketIO
 from financialUtils import Status
+
 load_dotenv()
 uri = os.getenv('MONGODB_URI')
 WS_SOCKET_URI=os.getenv('VITE_WS_SERVER')
@@ -29,24 +30,22 @@ link to pdf:
 {signed_url}
 Thank you for using EACSA US! 
 """
+name_space = "/ai"
 def notify_task_result(event_name,payload,name_space):
     if not payload:
-        raise(f"message from task queue handler: report metadata is missing.")
+        raise ValueError(f"message from task queue handler: report metadata is missing.")
     room_name = f"user:{payload['user_id']}"
     try:
-        print(f"trying to emit {sio} with event_name: {event_name} and name_space: {name_space}")
+        print(f"trying to emit an event with event_name: {event_name} and name_space: {name_space} for room_name: {room_name}")
         sio.emit(event_name,payload,namespace=name_space,room=room_name)
         sio.sleep(0)
     except Exception as e:
         print(f"error trying to connect to the ws socket {sio} error {str(e)}")
 
-def connect_to_ws_server():
-    print(f"trying to connect to socket uri: {WS_SOCKET_URI}")
-    sio.connect(WS_SOCKET_URI,namespaces=["\ai"])
 
 def fetch_s3_url(bucket_name:str,file_name:str,client_method='get_object'):
     if not bucket_name or not file_name:
-        raise (f"error, missing bucket_name or file_name")
+        raise ValueError(f"error, missing bucket_name or file_name")
     from s3_bucket_ops import s3_presigned_url
     params={"Bucket":bucket_name,"Key":f"{file_name}.pdf"}
     signed_url=s3_presigned_url(client_method=client_method,method_params=params,expiration_time=300)
@@ -131,9 +130,8 @@ def generate_ai_report(self,tickers,user_id,report_type):
         'task_id':task_id,
         'tickers':tickers,
         'report_type':report_type,
-        "tickers":tickers,
         "timestamp":datetime.now().isoformat()+"Z"
-    },'/ai')  
+    },name_space)  
     ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.ongoing)
     try:
         result= compile(tickers)
@@ -153,16 +151,8 @@ def generate_ai_report(self,tickers,user_id,report_type):
             print(f"email send status: {response}")
         
             print('notifying server of completion')
-            notify_task_result('task_done',{
-                'user_id':user_id,
-                'task_id':task_id,
-                'tickers':tickers,
-                'report_type':report_type,
-                "tickers":tickers,
-                "timestamp":datetime.now().isoformat()+"Z"
-
-            },'/ai')
             ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.completed)
+            notify_task_result('task_done',{'user_id':user_id,'task_id':task_id,'tickers':tickers,'report_type':report_type,"tickers":tickers,"timestamp":datetime.now().isoformat()+"Z"},name_space)
             return result
 
     except Exception as e:
@@ -173,7 +163,7 @@ def generate_ai_report(self,tickers,user_id,report_type):
             "report_type": report_type,
             "timestamp": datetime.now().isoformat() + "Z",
             "error": str(e)
-        },'/ai')
+        },name_space)
         ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.failed,str(e))
         raise self.retry(exc=e,countdown=5,max_retries=1)
     
@@ -192,7 +182,7 @@ def generate_ai_7powers(self,tickers,user_id,report_type):
         'report_type':report_type,
         "tickers":tickers,
         "timestamp":datetime.now().isoformat()+"Z"
-    },'/ai')
+    },name_space)
     ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.ongoing)
     try:
         result= seven_powers(tickers)
@@ -211,25 +201,10 @@ def generate_ai_7powers(self,tickers,user_id,report_type):
             )
             print(f"email send status: {response}")
             print("notifying server of completion")
-            notify_task_result('task_done',{
-            'user_id':user_id,
-            'task_id':task_id,
-            'tickers':tickers,
-            'report_type':report_type,
-            "tickers":tickers,
-            "timestamp":datetime.now().isoformat()+"Z"
-            },'/ai')
             ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.completed)
+            notify_task_result('task_done',{'user_id':user_id,'task_id':task_id,'tickers':tickers,'report_type':report_type,"tickers":tickers,"timestamp":datetime.now().isoformat()+"Z"},name_space)
             return result
     except Exception as e:
-        notify_task_result("task_failed", {
-            "user_id": user_id,
-            "task_id": task_id,
-            "tickers": tickers,
-            "report_type": report_type,
-            "timestamp": datetime.now().isoformat() + "Z",
-            "error": str(e)
-        },'/ai')
         ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.failed,str(e))
         raise self.retry(exc=e,countdown=5,max_retries=1)
     
@@ -249,7 +224,7 @@ def generate_ai_quant(self,tickers,user_id,report_type):
         'report_type':report_type,
         "tickers":tickers,
         "timestamp":datetime.now().isoformat()+"Z"
-    },'/ai')
+    },name_space)
     ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.ongoing)
     try:
         current_year=(datetime.now().year)
@@ -270,15 +245,8 @@ def generate_ai_quant(self,tickers,user_id,report_type):
             )
             print(f"email send status: {response}")
             print("notifying server of completion")
-            notify_task_result('task_done',{
-            'user_id':user_id,
-            'task_id':task_id,
-            'tickers':tickers,
-            'report_type':report_type,
-            "tickers":tickers,
-            "timestamp":datetime.now().isoformat()+"Z"
-            },'/ai')
             ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.completed)
+            notify_task_result('task_done',{'user_id':user_id,'task_id':task_id,'tickers':tickers,'report_type':report_type,"tickers":tickers,"timestamp":datetime.now().isoformat()+"Z"},name_space)
             return result
 
     except Exception as e:         
@@ -289,7 +257,7 @@ def generate_ai_quant(self,tickers,user_id,report_type):
             "report_type": report_type,
             "timestamp": datetime.now().isoformat() + "Z",
             "error": str(e)
-        },'/ai')
+        },name_space)
         ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.failed,str(e))
         raise self.retry(exc=e,countdown=5,max_retries=1)
     
@@ -309,7 +277,7 @@ def generate_ai_quant_rittenhouse(self,tickers,user_id,report_type):
         'report_type':report_type,
         "tickers":tickers,
         "timestamp":datetime.now().isoformat()+"Z"
-    },'/ai')
+    },name_space)
     ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.ongoing)
     try:
         current_year=(datetime.now().year)
@@ -331,15 +299,8 @@ def generate_ai_quant_rittenhouse(self,tickers,user_id,report_type):
             )
             print(f"email send status: {response}")
             print("notifying server of completion")
-            notify_task_result('task_done',{
-            'user_id':user_id,
-            'task_id':task_id,
-            'tickers':tickers,
-            'report_type':report_type,
-            "tickers":tickers,
-            "timestamp":datetime.now().isoformat()+"Z"
-            },'/ai')
             ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.completed)
+            notify_task_result('task_done',{'user_id':user_id,'task_id':task_id,'tickers':tickers,'report_type':report_type,"tickers":tickers,"timestamp":datetime.now().isoformat()+"Z"},name_space)
             return result
 
     except Exception as e:
@@ -350,7 +311,7 @@ def generate_ai_quant_rittenhouse(self,tickers,user_id,report_type):
             "report_type": report_type,
             "timestamp": datetime.now().isoformat() + "Z",
             "error": str(e)
-        },'/ai')
+        },name_space)
         ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.failed,str(e))
         raise self.retry(exc=e,countdown=5,max_retries=1)
 
@@ -368,4 +329,4 @@ def test_task(self):
     'report_type':report_type,
     "tickers":tickers,
     "timestamp":datetime.now().isoformat()+"Z"
-    },'/ai')
+    },name_space)

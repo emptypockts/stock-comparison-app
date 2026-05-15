@@ -61,7 +61,6 @@ const messages = ref([
 
 watch(loading,()=>{
     if(localTaskID &&!loading.pendingTasks[localTaskID]){
-        
         isLoadingLocal.value=false
         localTaskID=null;
         if(loading.lastStatus=="done")

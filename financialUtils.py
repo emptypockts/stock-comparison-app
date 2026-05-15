@@ -487,7 +487,7 @@ def PullQtrStockRevenueTrends(collection:Collection,page=1,items_per_page=100):
 
     return grouped_stocks,total_tickers_count
 
-def fetch_ai_queries(user_id,db_name,collection_name,max_queries,sort:Literal['asc','desc'],status:Status):
+def fetch_ai_queries(user_id,db_name,collection_name,max_queries,sort:Literal['asc','desc'],status:Status,report_type=None):
     from pymongo import MongoClient
     import json
     import certifi
@@ -496,7 +496,13 @@ def fetch_ai_queries(user_id,db_name,collection_name,max_queries,sort:Literal['a
     client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
     db=client[db_name]
     collection=db[collection_name]
-    filter= {"user_id":user_id,"status":status.value}
+
+    filter= {
+        "user_id":user_id,
+        "status":status.value,
+    }
+    if report_type is not None:
+        filter["report_type"]=report_type
     if sort=='desc':
         sort=list({"timestamp":-1}.items())
     else:
@@ -518,5 +524,5 @@ def fetch_ai_queries(user_id,db_name,collection_name,max_queries,sort:Literal['a
 
 if __name__=="__main__":
     user_id='n954466@outlook.com'
-    docs= fetch_ai_queries(user_id,'test','aiTaskQueries',10,'desc',Status.completed)
+    docs= fetch_ai_queries(user_id,'test','aiTaskQueries',10,'desc',Status.ongoing)
     print(docs)

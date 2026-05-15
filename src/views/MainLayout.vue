@@ -200,7 +200,7 @@ watch(loading,()=>{
         localTaskID=null;
         if(loading.lastStatus=="done")
         {
-            showTempMessage(notification,"report completed. go to the s3 report section","notification",5000);
+            showTempMessage(notification,"report completed. Report sent to your email linked to this account. Also you can find the report on the s3 report section","notification",5000);
         }
         else if(loading.lastStatus=="error")
         {

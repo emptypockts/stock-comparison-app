@@ -43,19 +43,19 @@ import { useTickerStore } from '@/stores/tickerStore';
 import { useLoadingStore } from '@/stores/loadingStore';
 import { showTempMessage } from '@/utils/showMessages';
 import { useSocket } from '@/composables/taskSocket';
-const isLoadingLocal = ref(false);
+const isLoadingLocal=ref(false);
 let localTaskID=null;
-const rawMessage = ref('');
-const tickerHistory = ref(new Set())
-const tickerStore = useTickerStore();
-const loading = useLoadingStore();
-const isConnected = useSocket();
-const allowedTickers = ref([]);
+const rawMessage=ref('');
+const tickerHistory=ref(new Set())
+const tickerStore=useTickerStore();
+const loading=useLoadingStore();
+const isConnected=useSocket();
+const allowedTickers=ref([]);
 const final_report=ref('');
-const notification = ref(null);
+const notification=ref(null);
 const downloadingSecFiles=ref(false);
 const isSocketReady=ref(false);
-const messages = ref([
+const messages=ref([
     { text: 'I will conduct the a trust and sentiment analysis ofthe latest submitted reports. If you want analysis for another, ticker just change the ticker in the main page and pres analyze to start. ', isUser: false }
 ]);
 
@@ -117,6 +117,7 @@ async function quant_rittenhouse() {
                     });
                     localTaskID=response.data.task_id;
                     loading.addTask[localTaskID]
+                    tickers.value.forEach(t => tickerHistory.value.add(t.toLowerCase()));
                 }
                 catch (error) {
                     console.error('Error sending query', error);
@@ -125,11 +126,6 @@ async function quant_rittenhouse() {
 
                     
                     showTempMessage(notification,"Error sending query","error")
-                }
-                finally {
-                    
-                    tickers.value.forEach(t => tickerHistory.value.add(t.toLowerCase()));
-
                 }
             }
             else {
