@@ -5,8 +5,8 @@ __pycache__
 .env.production
 .vercel
 .notes
-sec_filings/
-ai_reports/
+/sec_filings
+/ai_reports
 tmp/
 /venv/
 flask_session/
