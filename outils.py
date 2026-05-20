@@ -419,7 +419,7 @@ def generic_trim_document(
     'PDF'
     )
     NAMESPACE_PREFIX = ("ix:","xbrli:","dei:","us-gaap:","xbrldi:")
-    DELETABLE_TAGS = ["b","s","strike","del","noscript","svg","image","meta","link"]
+    DELETABLE_TAGS = ["s","strike","del","noscript","svg","image","meta","link"]
     TABLE_BLOCK_DICT = {}
     table_idx=0
     soup = BeautifulSoup(text,"lxml")

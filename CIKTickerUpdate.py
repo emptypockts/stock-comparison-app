@@ -12,12 +12,26 @@ uri = os.getenv('MONGODB_URI')
 
 
 def createCikTickerCollection(file,collection):
-    with open(file) as f:
-        document = f.read()
-    jsonObj = json.loads(document)
-    documents=[jsonObj[str(index)] for index,item in enumerate(jsonObj)]     
+    import json
+
+    json_obj = json.loads(file)
+    data = json_obj['data']
+    ciks =[]
+    for d in data:
+        ciks.append(
+            {
+                'cik_str':d[0],
+                'title':d[1],
+                'ticker':d[2],
+                'exchange':d[3]
+
+            }
+        )
+
+    with open('/Users/jjmr86/coding/cik_adjusted.json','w') as w:
+        json.dump(ciks, w, ensure_ascii=False, indent=4)   
     #inject the object in the database
-    collection.insert_many(documents)
+    collection.insert_many(ciks)
     print("jsonData inserted successfully")
 
 
@@ -29,8 +43,8 @@ if __name__ == "__main__":
     client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
     db = client["test"]
     collection=db['tickerCIK']
-    # file= "C:\\Users\\ejujo\\Downloads\\tickers.json"
-    # updateCIKTicker(file,collection)
+    file= "/Users/jjmr86/coding/cik.json"
+    createCikTickerCollection(file,collection)
 
     print(fetch_cik('rost',collection))
     file=['CIK000019617.json','CIK0000002098.json']

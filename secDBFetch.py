@@ -98,7 +98,7 @@ def get_sec_filings(directory:str,ticker, form_types)->dict:
 
 # Example Usage:
 if __name__ == "__main__":
-    ticker = 'lunr'  # Example ticker
+    ticker = 'sols'  # Example ticker
     form_types = ['10-K', '10-Q', '8-K', 'DEF 14A','20-F','6-K']  # Forms to fetch
     # form_types = ['10-K', '10-Q']  # Forms to fetch
     year =datetime.now().year
