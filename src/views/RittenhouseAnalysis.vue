@@ -3,7 +3,7 @@
         <div class="terminal">
             <span>eacsa> </span>trust and sentiment analysis with ai:
                                      <button 
-                :disabled="isLoadingLocal||downloadingSecFiles||!isSocketReady" 
+                :disabled="isLoadingLocal||downloadingSecFiles" 
                 @click="quant_rittenhouse" 
                 class="buttons">
             {{isLoadingLocal ? 'generating report': 'GO'}}
@@ -42,19 +42,22 @@ import axios from 'axios';
 import { useTickerStore } from '@/stores/tickerStore';
 import { useLoadingStore } from '@/stores/loadingStore';
 import { showTempMessage } from '@/utils/showMessages';
-import { useSocket } from '@/composables/taskSocket';
+// this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
+// import { useSocket } from '@/composables/taskSocket';
 const isLoadingLocal=ref(false);
 let localTaskID=null;
 const rawMessage=ref('');
 const tickerHistory=ref(new Set())
 const tickerStore=useTickerStore();
 const loading=useLoadingStore();
-const isConnected=useSocket();
+// this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
+// const isConnected=useSocket();
 const allowedTickers=ref([]);
 const final_report=ref('');
 const notification=ref(null);
 const downloadingSecFiles=ref(false);
-const isSocketReady=ref(false);
+// this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
+// const isSocketReady=ref(false);
 const messages=ref([
     { text: 'I will conduct the a trust and sentiment analysis ofthe latest submitted reports. If you want analysis for another, ticker just change the ticker in the main page and pres analyze to start. ', isUser: false }
 ]);
@@ -81,11 +84,11 @@ watch (loading,()=>{
     downloadingSecFiles.value=loading.isLoading
     }
 })
+// this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
+// watch(isConnected.isConnected,()=>{
+//     isSocketReady.value=isConnected.socket.connected
 
-watch(isConnected.isConnected,()=>{
-    isSocketReady.value=isConnected.socket.connected
-
-})
+// })
 
 const tickers= computed(()=> tickerStore.currentTickers);
 async function quant_rittenhouse() {

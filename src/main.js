@@ -3,7 +3,10 @@ import { createPinia } from 'pinia';
 import App from './layouts/App.vue';
 import router from '@/router/router';
 import '/assets/css/styles/global.css'
-import { useSocket } from './composables/taskSocket';
+
+// this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
+// import { useSocket } from './composables/taskSocket';
+
 import { WagmiPlugin } from '@wagmi/vue';
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 import { config } from './config';
@@ -14,4 +17,6 @@ createApp(App)
 .use(WagmiPlugin, { config })
 .use(VueQueryPlugin, { queryClient })
 .mount('#app');
-useSocket();
+
+// this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
+// useSocket();

@@ -3,7 +3,7 @@
         <div class="terminal">
         <span>eacsa> </span>seven powers report with ai:
                              <button 
-                :disabled="isLoadingLocal||!isSocketReady" 
+                :disabled="isLoadingLocal" 
                 @click="get_seven_p_analysis" 
                 class="buttons">
             {{isLoadingLocal ? 'generating report': 'GO'}}
@@ -26,7 +26,8 @@ import axios from 'axios';
 import { useTickerStore } from '@/stores/tickerStore';
 import { useLoadingStore } from '@/stores/loadingStore';
 import { showTempMessage } from '@/utils/showMessages';
-import { useSocket } from '@/composables/taskSocket';
+// this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
+// import { useSocket } from '@/composables/taskSocket';
 const isLoadingLocal=ref(false);
 const rawMessage = ref('');
 const tickerHistory = ref(new Set())
@@ -34,8 +35,10 @@ const tickerStore = useTickerStore();
 const loading = useLoadingStore();
 const allowedTickers = ref([]);
 const notification = ref(null);
-const isConnected = useSocket();
-const isSocketReady=ref(false);
+// this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
+// const isConnected = useSocket();
+// this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
+// const isSocketReady=ref(false);
 let localTaskID=null;
 const messages = ref([
     { text: 'I will conduct the 7power analysis for this ticker. If you want analysis for another, ticker just change the first ticker field in the main page. Hit send to start. ', isUser: false }
@@ -57,10 +60,10 @@ watch(loading,()=>{
         }
     }
 })
-watch(isConnected.isConnected,()=>{
-    isSocketReady.value=isConnected.socket.connected
-
-})
+// this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
+// watch(isConnected.isConnected,()=>{
+//     isSocketReady.value=isConnected.socket.connected
+// })
 const tickers =computed(()=> tickerStore.currentTickers)
 async function get_seven_p_analysis() {
     

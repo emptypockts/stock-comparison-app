@@ -153,7 +153,7 @@ def fetch_4qtr_data(ticker)->dict:
 # Example function call
 if __name__ == "__main__":
     
-    tickers = ['COF']  # Replace with your desired ticker
+    tickers = ['KO']  # Replace with your desired ticker
     all_data = []
     
 

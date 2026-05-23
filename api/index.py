@@ -481,35 +481,6 @@ def get_a_token():
         return jsonify({"success": False, "message": "Token has expired"}), 401
     except jwt.InvalidTokenError:
         return jsonify({"success": False, "message": "Invalid token"}), 401
- #check celery task status   
-
-# check task status
-@app.route('/api/v1/gemini/status/<task_id>',methods=['GET'])
-@require_cf_token
-@limiter.limit("5 per minute") 
-def gemini_task_status(task_id):
-    try:
-        task=celery.AsyncResult(task_id)
-        if task.state=='PENDING':
-            return jsonify({'status':'pending'}),202
-        elif task.state=='SUCCESS':
-            return jsonify({
-                'status':'completed',
-                'assistant':task.result
-                }),200
-        elif task.state=='FAILURE':
-            return jsonify({
-                'status':'failed',
-                'error':str(task.result)
-            }),500
-        else:
-            return jsonify({
-                'status':task.state
-            }),202
-    except Exception as e:
-        return jsonify({
-            'error':"internal server error"
-        }),500
 
 # fetch available reports from the db per user
 @app.route('/api/v1/user_reports',methods=['GET'])
@@ -605,21 +576,21 @@ def quantize():
             }),202
         except Exception as e:
                 return jsonify({'error':"internal server error"}),500
-        
-@app.route('/api/v1/ai-queries',methods=['GET'])
+
+# check ai task status
+@app.route('/api/v1/<task_id>',methods=['GET'])
 @require_cf_token
-def ai_queries():
-    report_type = request.args.get('report_type','')
+def ai_queries(task_id):
     # identity= request.cf_identity
     # user_id = identity['user_id']
     user_id='n954466@outlook.com'
-    if not report_type or not user_id:
+    if not task_id or not user_id:
         return jsonify({
             "error":"missing payload"
         }),400
     else:
         try:
-            docs= fetch_ai_queries(user_id,'test','aiTaskQueries',10,'desc',Status.ongoing,report_type=report_type)
+            docs= fetch_ai_queries(user_id,'test','aiTaskQueries',1,'desc',task_id=task_id)
             return jsonify(
                 docs
             ),200

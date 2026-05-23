@@ -23,10 +23,10 @@ def get_StockInfo(ticker):
         dotenv.load_dotenv()
         API = os.getenv('POLYGON_API')
         if not API:
-            raise EnvironmentError("POLYGON_API key not found in environment variables.")
+            raise EnvironmentError("Massive API (former polygon) key not found in environment variables.")
         
         stockData = {}
-        url = f"https://api.polygon.io/v3/reference/tickers/{ticker.upper()}?apiKey={API}"
+        url = f"https://api.massive.com/v3/reference/tickers/{ticker.upper()}?apiKey={API}"
         response = requests.get(url)
         response.raise_for_status()  # Raise an HTTPError for bad responses (4xx or 5xx)
         market_cap= alpha_get_market_cap(ticker)
@@ -64,7 +64,7 @@ def get_qtr_earnings(ticker):
         API = os.getenv('POLYGON_API')
         if not API:
             raise EnvironmentError("POLYGON_API key not found in environment variables.")
-        
+        # this api will go away as it is no longer free. 
         stock_obj = []
         url = f"https://api.polygon.io/vX/reference/financials?ticker={ticker.upper()}&&timeframe=quarterly&limit=10&sort=filing_date&apiKey={API}"
         response = requests.get(url)

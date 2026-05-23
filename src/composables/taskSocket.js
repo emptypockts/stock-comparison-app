@@ -3,6 +3,9 @@ import { ref } from "vue";
 import { fetch_reports } from "@/utils/fetch_reports";
 import { useLoadingStore } from "@/stores/loadingStore";
 import { useNotificationStore } from "@/stores/notificationStore";
+
+// this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
+
 const user_id = localStorage.getItem('user_id')
 const socket = io(`${import.meta.env.VITE_WS_SERVER}/ai`, {
     transports: ['websocket'], 
