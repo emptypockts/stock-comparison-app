@@ -2,9 +2,9 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 export const useNotificationStore=defineStore("notifications",()=>{
     const list =ref([]);
-    function add(alert){
+    function add(task_id){
         // {task_id,tickers,report_type}
-        list.value.push(alert) 
+        list.value.push(task_id) 
     }
     function markRead(id){
         const item=list.value.find(n=>n.task_id==id)

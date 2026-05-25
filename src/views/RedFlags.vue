@@ -1,33 +1,15 @@
 <template>
+    
     <div v-if="tickers.length>0">
         <div class="terminal">
             <span>eacsa> </span>red flag report with ai:
                                      <button 
-                :disabled="isLoadingLocal||downloadingSecFiles" 
+                :disabled="(isLoadingLocal||!haveCredits)"
                 @click="red_flag_analysis" 
                 class="buttons">
-            {{isLoadingLocal ? 'generating report': 'GO'}}
+                {{ isLoadingLocal||!haveCredits ? 'DISABLED' : 'GO' }}
             </button>
-        </div>
-        <div>
             <Navigation />
-        </div>
-        <div class="console-report" v-if="final_report.length">
-            
-            <template v-for="(item,index) in final_report" :key="index">
-                <div v-if="item.type==='title'" class="console-title">
-                    {{ item.content }}
-                </div>
-                <div v-else-if="item.type==='paragraph'" class="console-paragraph">
-                    {{ item.content }}
-                </div>
-                <ul v-else-if="item.type==='bullets'" class="console-bullets">
-                    <li v-for="(b,i) in item.content" :key="i">
-                        {{ b }}
-                    </li>
-                </ul>
-
-            </template>
         </div>
       <div v-if="notification" :class="['msg', notification.type]">
         {{ notification.text}}
@@ -42,9 +24,17 @@ import axios from 'axios';
 import { useTickerStore } from '@/stores/tickerStore';
 import { useLoadingStore } from '@/stores/loadingStore';
 import { showTempMessage } from '@/utils/showMessages';
+import { validateCredits } from '@/utils/credits';
+import { pollTaskStatus } from '@/utils/pollTask';
+import { fetch_reports, ai_reports } from '@/utils/fetch_reports';
+import { useNotificationStore } from '@/stores/notificationStore';
+const notifStore = useNotificationStore();
+
 // this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
 // import { useSocket } from '@/composables/taskSocket';
 const isLoadingLocal = ref(false);
+const haveCredits = ref(true);
+const usedCredits = ref(0);
 let localTaskID=null;
 const rawMessage = ref('');
 const tickerHistory = ref(new Set())
@@ -53,9 +43,8 @@ const loading = useLoadingStore();
 // this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
 // const isConnected = useSocket();
 const allowedTickers = ref([]);
-const final_report=ref('');
+
 const notification = ref(null);
-const downloadingSecFiles=ref(false);
 // this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
 // const isSocketReady=ref(false);
 const messages = ref([
@@ -79,11 +68,11 @@ watch(loading,()=>{
         }
     }
 })
-watch (loading,()=>{
-    if(tickers.value.length>0){
-    downloadingSecFiles.value=loading.isLoading
-    }
+watch(notifStore.list, ()=>{
+    usedCredits.value=[...new Set(notifStore.list.flatMap(t => t.tickers))].length
+    haveCredits.value =  validateCredits(usedCredits.value)
 })
+
 // this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
 // watch(isConnected.isConnected,()=>{
 //     isSocketReady.value=isConnected.socket.connected
@@ -106,13 +95,12 @@ async function red_flag_analysis() {
     }
     else {
         if (tickers.value.length > 0) {
-
             allowedTickers.value = tickers.value.filter(e => !tickerHistory.value.has(e.toLowerCase()))
 
             if (allowedTickers.value.length > 0) {
                 try {
                     // starting ai report. updating loading store
-
+                    loading.startLoading() 
                     isLoadingLocal.value=true;
                     const response=await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/quant`, {
                         tickers: allowedTickers.value,
@@ -122,12 +110,54 @@ async function red_flag_analysis() {
                     localTaskID=response.data.task_id;
                     loading.addTask[localTaskID]
                     tickers.value.forEach(t => tickerHistory.value.add(t.toLowerCase()));
+                    pollTaskStatus({
+                        task_id: localTaskID,
+                        user_id,
+                        msInterval: 5000,
+                        maxAttempts: 120,
+                        onOngoing: data => {
+                        console.log("taks is still running: ", data[0].status)
+                    },
+                        onCompleted: async data => {
+                            console.log("task completed", data)
+                            try {
+                                ai_reports.value = await fetch_reports();
+                            } catch (err) {
+                                console.error("error fetching reports after task completion", err)
+                                showTempMessage(notification,"error fetching reports after task completion","error")
+                            }
+                            
+                            finally{
+                            isLoadingLocal.value = false
+                            notifStore.add({
+                            task_id: localTaskID,
+                            tickers: allowedTickers.value,
+                            report_type: response.data.report_type
+                            
+                        })
+                        loading.stopLoading()
+                        loading.completeTask(localTaskID)
+                            }
+                        },
+                        onFailed: data => {
+                            console.error("task failed: ", data)
+                            showTempMessage(notification, "ai report generation failed. ", "error",10000);
+                            isLoadingLocal.value = false
+                        },
+                        onTimeout: data=>{
+                            console.error("polling timeout: ",data)
+                            showTempMessage(notification,"report taking longer than expected. please check again later and refresh your browser","error")
+                            isLoadingLocal.value=false
+                        }
+                    })
                 }
                 catch (error) {
                     console.error('Error sending query', error);
                     isLoadingLocal.value=false;
                     showTempMessage(notification,"Error sending query","error")
+                    tickerHistory.value.pop()
                 }
+  
             }
             else {
                 messages.value.push({

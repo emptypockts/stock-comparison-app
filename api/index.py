@@ -320,6 +320,7 @@ def gemini_post():
             return jsonify({'error':"internal server error"}),500
 
 # generate and upload report
+# this api is not in use 05-24-26
 @app.route('/api/v1/gemini/report',methods=['POST'])
 @require_cf_token
 @limiter.limit("5 per minute") 

@@ -1,15 +1,15 @@
 <template>
+        
     <div v-if="tickers.length>0">        
         <div class="terminal">
         <span>eacsa> </span>seven powers report with ai:
                              <button 
-                :disabled="isLoadingLocal" 
+                :disabled="(isLoadingLocal||!haveCredits)"
                 @click="get_seven_p_analysis" 
                 class="buttons">
-            {{isLoadingLocal ? 'generating report': 'GO'}}
-            </button>
-        </div>
-        <div>
+              {{ isLoadingLocal||!haveCredits ? 'DISABLED' : 'GO' }}
+            </button>            
+        
             <Navigation />
         </div>
       <div v-if="notification" :class="['msg', notification.type]">
@@ -26,9 +26,17 @@ import axios from 'axios';
 import { useTickerStore } from '@/stores/tickerStore';
 import { useLoadingStore } from '@/stores/loadingStore';
 import { showTempMessage } from '@/utils/showMessages';
+import { pollTaskStatus } from '@/utils/pollTask';
+import { fetch_reports, ai_reports } from '@/utils/fetch_reports';
+import { validateCredits } from '@/utils/credits';
+import { useNotificationStore } from '@/stores/notificationStore';
+const notifStore = useNotificationStore();
+
 // this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
 // import { useSocket } from '@/composables/taskSocket';
 const isLoadingLocal=ref(false);
+const haveCredits = ref(true);
+const usedCredits= ref(0);
 const rawMessage = ref('');
 const tickerHistory = ref(new Set())
 const tickerStore = useTickerStore();
@@ -60,6 +68,10 @@ watch(loading,()=>{
         }
     }
 })
+watch(notifStore.list, ()=>{
+    usedCredits.value=[...new Set(notifStore.list.flatMap(t => t.tickers))].length
+    haveCredits.value =  validateCredits(usedCredits.value)
+})
 // this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
 // watch(isConnected.isConnected,()=>{
 //     isSocketReady.value=isConnected.socket.connected
@@ -86,7 +98,7 @@ async function get_seven_p_analysis() {
             if (allowedTickers.value.length > 0) {
                 try {
                     // starting ai report. updating loading store
-
+                    loading.startLoading()
                     isLoadingLocal.value=true;
                     const  response= await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/v1/seven_p`, {
                         tickers: allowedTickers.value,
@@ -95,17 +107,54 @@ async function get_seven_p_analysis() {
                     });
                     localTaskID=response.data.task_id
                     loading.addTask(localTaskID)
+                    tickers.value.forEach(t => tickerHistory.value.add(t.toLowerCase()));
+                    pollTaskStatus({
+                    task_id: localTaskID,
+                    user_id,
+                    msInterval: 5000,
+                    maxAttempts: 120,
+                    onOngoing: data => {
+                        console.log("taks is still running: ", data[0].status)
+                    },
+                    onCompleted: async data => {
+                        console.log("task completed", data)
+                        try {
+                            ai_reports.value = await fetch_reports();
+                        } catch (err) {
+                            console.error("error fetching reports after task completion", err)
+                            showTempMessage(notification,"error fetching reports after task completion","error")
+                        }
+                        
+                        finally{
+                        
+                        isLoadingLocal.value = false
+                        notifStore.add({
+                        task_id: localTaskID,
+                        tickers: allowedTickers.value,
+                        report_type: response.data.report_type
+                        
+                    })
+                        loading.stopLoading()
+                        loading.completeTask(localTaskID)
+                        }
+                    },
+                    onFailed: data => {
+                        console.error("task failed: ", data)
+                        showTempMessage(notification, "ai report generation failed. ", "error",10000);
+                        isLoadingLocal.value = false
+                    },
+                    onTimeout: data=>{
+                        console.error("polling timeout: ",data)
+                        showTempMessage(notification,"report taking longer than expected. please check again later and refresh your browser","error")
+                        isLoadingLocal.value=false
+                    }
+                })
                 }
                 catch (error) {
                     console.error('Error sending query', error);
                     isLoadingLocal.value=false;
                     
                     showTempMessage(notification,"error sending query","error")
-                }
-                finally {
-                    loading.stopLoading()
-                    tickers.value.forEach(t => tickerHistory.value.add(t.toLowerCase()));
-
                 }
             }
             else {

@@ -505,6 +505,9 @@ def fetch_ai_queries(user_id,db_name,collection_name,max_queries,sort:Literal['a
     if report_type is not None:
         filter["report_type"]=report_type
     if task_id is not None:
+        if isinstance(task_id,str):
+            print(f"converting task_id to a list")
+            task_id = [task_id]
         filter["task_id"]={"$in":task_id}
     if sort=='desc':
         sort=list({"timestamp":-1}.items())

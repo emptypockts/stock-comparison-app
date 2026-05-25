@@ -1,17 +1,15 @@
 <template>
-        <div>{{ notifStore }}</div>
-
+    {{ validateCredits(usedCredits) }}
     <div id="aiStatusBox" @click="toggleToolTip"
-    
-        style="position:fixed;top:10px;right:40px; display: flex;align-items: center;gap: 10px;">
+        style="position:fixed;top:10px;right:30px; display: flex;align-items: center;gap: 10px;">
         <p :style="{
             color: haveCredits ? 'greenyellow' : 'red',
             border: haveCredits ? '1px double greenyellow' : '1px double red',
             fontSize: '14px',
             padding: '10px'
         }">
-            credits: {{ 3- tickerHistory.size }} of 3
-            
+            credits: {{ 3 - usedCredits}} of 3
+
         </p>
         <span v-if="notifStore.unreadCount() > 0"
             style="position: absolute;top: 8px;right: -8px;background: red;color: white;border-radius: 50%;padding: 3px 7px;font-size: 7px;border: 2px solid white;">
@@ -56,8 +54,10 @@
     <div v-if="tickers.length > 0">
         <div class="terminal">
             <span>eacsa> </span>financial report with ai:
-            <button :disabled="(isLoadingLocal || !isSocketReady)" @click="get_report" class="buttons">
-                {{ isLoadingLocal||!haveCredits ? 'DISABLED' : 'GO' }}
+
+            <button :disabled="(isLoadingLocal || !haveCredits)" @click="get_report" class="buttons">
+                {{ isLoadingLocal || !haveCredits ? 'DISABLED' : 'GO' }}
+
             </button>
         </div>
     </div>
@@ -129,7 +129,7 @@
 
 </template>
 <script setup>
-import { ref, onMounted, watch, onUnmounted } from 'vue';
+import { ref, onMounted, watch, onUnmounted, computed } from 'vue';
 import { pollTaskStatus } from '@/utils/pollTask'
 import IntrinsicValue from '@/views/IntrinsicValue.vue';
 import CompanyData from '@/views/CompanyData.vue';
@@ -143,6 +143,7 @@ import CookieBanner from '@/components/CookieBanner.vue';
 import LoginAlert from '@/components/LoginAlert.vue';
 import { showTempMessage } from '@/utils/showMessages';
 import { formatDateAgo } from '@/utils/formateTime';
+import { validateCredits } from '@/utils/credits';
 // this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
 // import { useSocket } from '@/composables/taskSocket';
 
@@ -157,6 +158,7 @@ const notifStore = useNotificationStore();
 const allowedTickers = ref([]);
 const tickerHistory = ref(new Set());
 const haveCredits = ref(true);
+const usedCredits = ref(0)
 // this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
 // const isConnected = useSocket();
 
@@ -167,13 +169,14 @@ const loading = useLoadingStore()
 const isLoadingLocal = ref(false);
 // this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
 // const isSocketReady=ref(false);
-const isSocketReady = ref(true);
-const queryStatus = ref();
+
 let localTaskID = null;
 const updateTickers = (newTickers) => {
     tickerStore.updateTickers(newTickers)
     tickers.value = tickerStore.currentTickers
 }
+tickers.value = computed(() => tickerStore.currentTickers);
+
 const collapsed = ref(true)
 
 const toggleCollapse = () => {
@@ -208,9 +211,13 @@ watch(loading, () => {
             const last = tickers.value.at(-1)
             tickerHistory.value.delete(last)
             tickerHistory.value = new Set(tickerHistory.value)
-            
+
         }
     }
+})
+watch(notifStore.list, ()=>{
+    usedCredits.value=[...new Set(notifStore.list.flatMap(t => t.tickers))].length
+    haveCredits.value =  validateCredits(usedCredits.value)
 })
 // this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
 // watch(isConnected.isConnected,()=>{
@@ -238,6 +245,7 @@ const get_report = async () => {
     else {
         allowedTickers.value = tickers.filter(e => !tickerHistory.value.has(e.toLowerCase()))
         if (allowedTickers.value.length) {
+            loading.startLoading()
             isLoadingLocal.value = true
 
             try {
@@ -249,7 +257,6 @@ const get_report = async () => {
                 localTaskID = response.data.task_id
                 loading.addTask(localTaskID)
                 tickers.forEach(t => tickerHistory.value.add(t.toLowerCase()))
-                if (tickerHistory.value.size>2)haveCredits.value=false
 
                 pollTaskStatus({
                     task_id: localTaskID,
@@ -263,41 +270,48 @@ const get_report = async () => {
                         console.log("task completed", data)
                         try {
                             ai_reports.value = await fetch_reports();
+
                         } catch (err) {
                             console.error("error fetching reports after task completion", err)
-                            showTempMessage(notification,"error fetching reports after task completion","error")
+                            showTempMessage(notification, "error fetching reports after task completion", "error")
                         }
-                        
-                        finally{
+
+                        finally {
+
                             isLoadingLocal.value = false
-                        notifStore.add({
-                        task_id: localTaskID,
-                        tickers: allowedTickers.value,
-                        report_type: response.data.report_type
-                    })
+
+                            notifStore.add({
+                                task_id: localTaskID,
+                                tickers: allowedTickers.value,
+                                report_type: response.data.report_type
+                            })
+                            loading.stopLoading()
+                            loading.completeTask(localTaskID)
+                            
+
                         }
                     },
                     onFailed: data => {
                         console.error("task failed: ", data)
-                        showTempMessage(notification, "ai report generation failed. ", "error",10000);
+                        showTempMessage(notification, "ai report generation failed. ", "error", 10000);
                         isLoadingLocal.value = false
                     },
-                    onTimeout: data=>{
-                        console.error("polling timeout: ",data)
-                        showTempMessage(notification,"report taking longer than expected. please check again later and refresh your browser","error")
-                        isLoadingLocal.value=false
+                    onTimeout: data => {
+                        console.error("polling timeout: ", data)
+                        showTempMessage(notification, "report taking longer than expected. please check again later and refresh your browser", "error")
+                        isLoadingLocal.value = false
                     }
                 })
             }
             catch (err) {
                 console.error('error calling ai gemini api:', err)
-                isLoadingLocal.value=false
+                isLoadingLocal.value = false
             }
         }
         else {
 
             showTempMessage(notification, "ticker previously analysed. refresh your browser if you need to analyse it again", "error");
-            isLoadingLocal.value=false
+            isLoadingLocal.value = false
         }
     }
 }

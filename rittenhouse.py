@@ -93,7 +93,7 @@ def quant_rittenhouse(year,tickers:list)->str:
 # Example function call
 if __name__ == "__main__":
       # Root directory where ticker folders are stored
-    ticker = ['calm']  # Example ticker
+    ticker = ['mu']  # Example ticker
     current_year=datetime.now().year
     directory = f"{DIRECTORY}/{current_year}"
     last_year=current_year-1

@@ -1,23 +1,17 @@
 from dotenv import load_dotenv
 import os
-import requests
 from companyData import compile_stockData
 from fetch5yData import fetch_5y_data
 from stockPlotData import fetch_financials
 from stockPlotDataQtr import fetch_4qtr_data
 from stockIntrinsicVal import getAllIntrinsicValues
 from financialUtils import fetch_name
-from langchain_ollama import ChatOllama
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
-import pandas as pd
+from langchain_core.messages import HumanMessage, SystemMessage
 import json
+from outils import save_analysis_report,analyze_ticker,llm
+from datetime import datetime
 load_dotenv()
-GEMINI_API=os.getenv('GEMINI_API')
 DIRECTORY=os.getenv('DIRECTORY')
-llm=ChatOllama(model="gpt-oss:120b",base_url="https://ollama.com")
-# llm=ChatOllama(model="llama2-uncensored:latest")
-# llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash",api_key=GEMINI_API,max_retries=1)
 
 def get_company_data_agent(tickers)->str:
     return f"""
@@ -247,62 +241,75 @@ def validate_json(agent,r6)->str:
         return {}
     
 def compile(tickers)->str:
-    try:
-        #ai agent that analyses company basic data such as revenue and stock price
-        company_data_agent = get_company_data_agent(tickers)
-        ai1 = compile_stockData(tickers)
-        
-        #ai agent that score companies based on the Benjamin G. valued investor analysis
-        ai2={
-            "ticker":[ticker for ticker in tickers],
-            "data":[fetch_5y_data(e).to_json() for e in tickers]
-        }
-        
-        company_score_agent = get_company_score_agent(tickers)
-        
-        #ai agent that analyses financials
-        company_financials_agent=get_company_financials_agent(tickers)
-        ai3 ={
-            "ticker":[ticker for ticker in tickers],
-            "data":[json.dumps(fetch_financials(e)) for e in tickers]
-        }
+    year = datetime.today().year
+    directory= os.path.join(DIRECTORY,str(year))
+    tickers=[t.capitalize()for t in tickers]
+    companies = fetch_name(tickers)
+    for ticker,company in zip(tickers,companies):
+        ticker_dir=os.path.join(directory,ticker)
+        extension=".all"
+        needs_analysis, existing_report = analyze_ticker(directory,ticker,extension=extension)
 
-        #ai agent that analyses financials per quarter
-        company_financials_qtr_agent = get_company_financials_qtr_agent(tickers)
-        ai4 = {
-            "ticker":[ticker for ticker in tickers],
-            "data":[json.dumps(fetch_4qtr_data(e)) for e in tickers]
-        }
-
-        #ai agent that analyses intrinsic value
-        company_intrinsic_value_agent = get_company_intrinsic_value_agent(tickers)
-        ai5 = {
-            "ticker":[ticker for ticker in tickers],
-            "data":[json.dumps(getAllIntrinsicValues(e))for e in tickers]
-        }
-
-
-        # trigger ai agents
-        r1 = ai_query(company_data_agent, ai1)
-        r2 = ai_query(company_score_agent,ai2)
-        r3 = ai_query(company_financials_agent,ai3)
-        r4 = ai_query(company_financials_qtr_agent,ai4)
-        r5 = ai_query(company_intrinsic_value_agent,ai5)
-
-        #final report
+    if needs_analysis:
         try:
+            #ai agent that analyses company basic data such as revenue and stock price
+            company_data_agent = get_company_data_agent(tickers)
+            ai1 = compile_stockData(tickers)
+            
+            #ai agent that score companies based on the Benjamin G. valued investor analysis
+            ai2={
+                "ticker":[ticker for ticker in tickers],
+                "data":[fetch_5y_data(e).to_json() for e in tickers]
+            }
+            
+            company_score_agent = get_company_score_agent(tickers)
+            
+            #ai agent that analyses financials
+            company_financials_agent=get_company_financials_agent(tickers)
+            ai3 ={
+                "ticker":[ticker for ticker in tickers],
+                "data":[json.dumps(fetch_financials(e)) for e in tickers]
+            }
+
+            #ai agent that analyses financials per quarter
+            company_financials_qtr_agent = get_company_financials_qtr_agent(tickers)
+            ai4 = {
+                "ticker":[ticker for ticker in tickers],
+                "data":[json.dumps(fetch_4qtr_data(e)) for e in tickers]
+            }
+
+            #ai agent that analyses intrinsic value
+            company_intrinsic_value_agent = get_company_intrinsic_value_agent(tickers)
+            ai5 = {
+                "ticker":[ticker for ticker in tickers],
+                "data":[json.dumps(getAllIntrinsicValues(e))for e in tickers]
+            }
+
+
+            # trigger ai agents
+            r1 = ai_query(company_data_agent, ai1)
+            r2 = ai_query(company_score_agent,ai2)
+            r3 = ai_query(company_financials_agent,ai3)
+            r4 = ai_query(company_financials_qtr_agent,ai4)
+            r5 = ai_query(company_intrinsic_value_agent,ai5)
+
+            #final report
+        
             full_report_agent =get_full_report_agent(tickers) 
             r6 =get_full_report(full_report_agent,r1,r2,r3,r4,r5)
-            return r6.strip()
+            if r6:
+                
+                final_report = validate_json(get_json_validator(),r6)
+                save_analysis_report(ticker_dir, ticker,final_report,extension=extension)
+                return r6.strip()
+            else:
+                return None     
         except Exception as e:
-            print(str(e))
+            print("error is: ",str(e))
             return None
-        
-        
-        
-    except Exception as e:
-        print("error is: ",str(e))
-        return None
+    else:
+        print(f"Analysis for ticker '{ticker}' is up to date.")
+        return existing_report
 if __name__ == "__main__":
     tickers = ["mu"]
 

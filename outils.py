@@ -569,7 +569,7 @@ def is_new_analysis_needed(ticker_dir,extension:Literal[".json",".quant",".rtn"]
                     return False, most_recent_report
     return True, None
 
-def analyze_ticker(directory, ticker,extension:Literal[".json",".quant",".rtn"]):
+def analyze_ticker(directory, ticker,extension:Literal[".json",".quant",".rtn",".all"]):
     reports = []
     ticker_dir = os.path.join(directory, ticker.capitalize())
     
