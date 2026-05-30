@@ -476,8 +476,10 @@ def generic_trim_document(
 
     text_normalized = normalize_text(text_out,remove_tables=True)
     cleaned_paragraphs = get_paragraphs(text_normalized)
-
-    return cleaned_paragraphs.strip()
+    if cleaned_paragraphs:
+        return cleaned_paragraphs.strip()
+    else:
+        return "no text"
 
 # summarize the sections chunks into one per section
 def sections_summarizer(chunks:list)->str:

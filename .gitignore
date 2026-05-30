@@ -16,3 +16,5 @@ level_*.txt
 *.service
 .DS_Store
 *.txt
+token.json
+credentials.json

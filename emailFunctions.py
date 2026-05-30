@@ -1,56 +1,30 @@
-import requests
 import os
-import dotenv
-import json
-dotenv.load_dotenv()
+import resend
+from dotenv import load_dotenv
+from google_auth_oauthlib.flow import Flow
 
-def email_send(e_to,e_subject,e_body,e_content_type):
-    tenant_id = os.getenv('TENANT_ID')
-    client_secret = os.getenv('SECRET_VALUE')
-    client_id = os.getenv('APP_ID')
-    my_email = os.getenv('EMAIL')
-
-    token_url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
-
-    token_data={
-        "client_id":client_id,
-        "client_secret":client_secret,
-        "scope":"https://graph.microsoft.com/.default",
-        "grant_type":"client_credentials"
+load_dotenv()
+def email_send(e_to:str,e_subject:str,e_body:str,e_content_type=None):
+    try:
+        resend.api_key = os.getenv("RESEND_API")
+        params: resend.Emails.SendParams = {
+        "from": "eacsa <noreply@eacsa.us>",
+        "to": e_to,
+        "subject":e_subject,
+        "html": e_body
     }
-    token_response = requests.post(token_url,data=token_data,headers={"Accept":"Application/json"});
-    access_token = json.loads(token_response.text).get('access_token')
-    if not access_token:
-        return None
-    graph_url= f"https://graph.microsoft.com/v1.0/users/{my_email}/sendMail"
-    message={
-        "message":{
-            "subject":e_subject,
-            "body":{
-                "contentType":e_content_type,
-                "content":e_body
 
-            },
-            "toRecipients":[
-                {
-                    "emailAddress":
-                    {
-                    "address":e_to
-                    }
-                }
-            ]
-        },
-        "saveToSentItems":"true"
-    }
-    headers={
-        "Authorization":f"Bearer {access_token}",
-        "Content-Type":"Application/json"
-    }
-    graph_response = requests.post(graph_url,headers=headers,json=message)
-    if graph_response.status_code==202:
-        return "Success"
-    else:
-        return graph_response.text
+        email = resend.Emails.send(params)
+        return "success"
+    except Exception as e:
+        return f"error {e}"
+    
+    
 
-if __name__=="__main":
-    email_send("jjmr86@live.com.mx","hi there","this is a body text","Text")
+    
+
+if __name__=="__main__":
+    e_to="jjmr86@live.com.mx"
+    e_subject="his there"
+    e_body="<strong>hi there</strong>"
+    email_send(e_to,e_subject,e_body)
