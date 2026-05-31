@@ -583,7 +583,7 @@ def quantize():
 @require_cf_token
 def ai_queries(task_id):
     identity= request.cf_identity
-    user_id = identity['user_id']
+    user_id = identity.get('email') or identity.get('user')
     if not task_id or not user_id:
         return jsonify({
             "error":"missing payload"
