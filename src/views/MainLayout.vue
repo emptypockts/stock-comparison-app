@@ -264,7 +264,6 @@ const get_report = async () => {
                     msInterval: 5000,
                     maxAttempts: 120,
                     onOngoing: data => {
-                        console.log("taks is still running: ", data[0].status)
                     },
                     onCompleted: async data => {
                         console.log("task completed", data)
