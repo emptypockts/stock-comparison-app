@@ -1,7 +1,6 @@
 import os
 import resend
 from dotenv import load_dotenv
-from google_auth_oauthlib.flow import Flow
 
 load_dotenv()
 def email_send(e_to:str,e_subject:str,e_body:str,e_content_type=None):
