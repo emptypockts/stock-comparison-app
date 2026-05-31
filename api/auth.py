@@ -14,6 +14,10 @@ def require_cf_token(fn):
     @functools.wraps(fn)
     def wrapper(*args,**kwargs):
         if ENV=='dev':
+            request.cf_identity={
+                'email':'n954466@outlook.com',
+                'user':'n954466@outlook.com'
+            } 
             return fn(*args,**kwargs)
         else:
             token = request.headers.get("Cf-Access-Jwt-Assertion") or request.cookies.get("CF_Authorization")
