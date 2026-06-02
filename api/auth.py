@@ -20,6 +20,7 @@ def require_cf_token(fn):
             } 
             return fn(*args,**kwargs)
         else:
+            print("running prod mode")
             token = request.headers.get("Cf-Access-Jwt-Assertion") or request.cookies.get("CF_Authorization")
             if not token:
                 return jsonify({

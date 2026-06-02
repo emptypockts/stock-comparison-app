@@ -467,15 +467,11 @@ def get_a_token():
         public_key,
         algorithms=["RS256"],
         audience=CF_AUDIENCE_ID)
+        print(decoded)
         return jsonify({
             "success":True,
             "email":decoded.get("email",''),
             "sub":decoded.get("sub",''),
-            "name":decoded.get("name",''),
-            "aud":decoded.get("aud",''),
-            "iss":decoded.get("iss",''),
-            "preferred_username":decoded.get('custom','').get('preferred_username',''),
-            "upn":decoded.get('custom',{}).get('upn',''),
             "exp":datetime.datetime.fromtimestamp(decoded.get('exp'))
         }),200
     except jwt.ExpiredSignatureError:
