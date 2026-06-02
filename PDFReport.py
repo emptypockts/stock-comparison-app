@@ -26,7 +26,11 @@ class PDFReport(FPDF):
         })
         if not report or 'assistant' not in report:
            raise ValueError(f"check the task_id, i did not find any report with {task_id}")
-        self.ai_report=report['assistant']
+        if 'corrected'in report['assistant']:
+           self.ai_report = report['assistant']['corrected']
+        else:
+            self.ai_report=report['assistant']
+        
         self.task_id=task_id
         print(FONT_PATH)
         self.add_font('DejaVu','',FONT_PATH)
@@ -105,7 +109,7 @@ class PDFReport(FPDF):
       
 
 if __name__=='__main__':
-  task_id = "0d39005b-f665-4989-ac5c-c99f36beac19"
+  task_id = "dcfb82b9-9819-4a8a-aeea-1076b68e54e6"
   
  
   pdf = PDFReport(task_id)

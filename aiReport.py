@@ -311,6 +311,6 @@ def compile(tickers)->str:
         print(f"Analysis for ticker '{ticker}' is up to date.")
         return existing_report
 if __name__ == "__main__":
-    tickers = ["mu"]
+    tickers = ["googl"]
 
     print(compile(tickers))

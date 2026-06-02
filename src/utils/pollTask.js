@@ -2,7 +2,7 @@ import axios from "axios";
 export async function pollTaskStatus({
     task_id,
     msInterval = 5000,
-    maxAttempts = 120,
+    maxAttempts = 50,
     onOngoing,
     onFailed,
     onCompleted,

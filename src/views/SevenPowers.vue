@@ -68,10 +68,12 @@ watch(loading,()=>{
         }
     }
 })
-watch(notifStore.list, ()=>{
-    usedCredits.value=[...new Set(notifStore.list.flatMap(t => t.tickers))].length
-    haveCredits.value =  validateCredits(usedCredits.value)
-})
+watch(notifStore.list, async(list)=>{
+    haveCredits.value =  await validateCredits()
+},
+{deep:true,
+immediate:true
+},)
 // this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
 // watch(isConnected.isConnected,()=>{
 //     isSocketReady.value=isConnected.socket.connected

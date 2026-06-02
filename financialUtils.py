@@ -487,7 +487,7 @@ def PullQtrStockRevenueTrends(collection:Collection,page=1,items_per_page=100):
 
     return grouped_stocks,total_tickers_count
 
-def fetch_ai_queries(user_id,db_name,collection_name,max_queries,sort:Literal['asc','desc'],status=None,report_type=None,task_id=None):
+def fetch_ai_queries(user_id,db_name,collection_name,max_queries,sort:Literal['asc','desc'],status=None,report_type=None,task_id=None,credit_check=False):
     from pymongo import MongoClient
     import json
     import certifi
@@ -496,7 +496,6 @@ def fetch_ai_queries(user_id,db_name,collection_name,max_queries,sort:Literal['a
     client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
     db=client[db_name]
     collection=db[collection_name]
-
     filter= {
         "user_id":user_id,
     }
@@ -509,6 +508,8 @@ def fetch_ai_queries(user_id,db_name,collection_name,max_queries,sort:Literal['a
             print(f"converting task_id to a list")
             task_id = [task_id]
         filter["task_id"]={"$in":task_id}
+    if credit_check:
+        filter["timestamp"]={"$gte":datetime.now()-timedelta(hours=24)}
     if sort=='desc':
         sort=list({"timestamp":-1}.items())
     else:
@@ -528,10 +529,11 @@ def fetch_ai_queries(user_id,db_name,collection_name,max_queries,sort:Literal['a
     return docs_list
 
 
+
 if __name__=="__main__":
-    user_id='n954466@outlook.com'
+    user_id='jjmr86@live.com.mx'
     task_id = ['f8659915-34c2-492d-be2c-d1d1a56becd4']
     max_queries = len(task_id)
     
-    docs= fetch_ai_queries(user_id,'test','aiTaskQueries',max_queries=max_queries,sort='desc',task_id=task_id)
-    print(docs)
+    docs= fetch_ai_queries(user_id,'test','aiTaskQueries',max_queries=100,sort='desc',status=Status.completed,credit_check=True)
+    print(len(docs))

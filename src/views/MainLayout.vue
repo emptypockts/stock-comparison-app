@@ -1,5 +1,4 @@
 <template>
-    {{ validateCredits(usedCredits) }}
     <div id="aiStatusBox" @click="toggleToolTip"
         style="position:fixed;top:10px;right:30px; display: flex;align-items: center;gap: 10px;">
         <p :style="{
@@ -8,7 +7,7 @@
             fontSize: '14px',
             padding: '10px'
         }">
-            credits: {{ 3 - usedCredits}} of 3
+            credits: {{ creditLimit - usedCredits}} of {{ creditLimit }}
 
         </p>
         <span v-if="notifStore.unreadCount() > 0"
@@ -143,7 +142,7 @@ import CookieBanner from '@/components/CookieBanner.vue';
 import LoginAlert from '@/components/LoginAlert.vue';
 import { showTempMessage } from '@/utils/showMessages';
 import { formatDateAgo } from '@/utils/formateTime';
-import { validateCredits } from '@/utils/credits';
+import { validateCredits,usedCredits,creditLimit } from '@/utils/credits';
 // this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
 // import { useSocket } from '@/composables/taskSocket';
 
@@ -158,7 +157,6 @@ const notifStore = useNotificationStore();
 const allowedTickers = ref([]);
 const tickerHistory = ref(new Set());
 const haveCredits = ref(true);
-const usedCredits = ref(0)
 // this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
 // const isConnected = useSocket();
 
@@ -195,6 +193,7 @@ function hideToolTip() {
 
 onMounted(async () => {
     ai_reports.value = await fetch_reports();
+     
     // this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
     // isSocketReady.value=isConnected.socket.connected
 })
@@ -215,10 +214,12 @@ watch(loading, () => {
         }
     }
 })
-watch(notifStore.list, ()=>{
-    usedCredits.value=[...new Set(notifStore.list.flatMap(t => t.tickers))].length
-    haveCredits.value =  validateCredits(usedCredits.value)
-})
+watch(notifStore.list, async(list)=>{
+    haveCredits.value =  await validateCredits()
+},
+{deep:true,
+immediate:true
+},)
 // this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
 // watch(isConnected.isConnected,()=>{
 //     isSocketReady.value=isConnected.socket.connected

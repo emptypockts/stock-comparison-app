@@ -68,10 +68,12 @@ watch(loading, () => {
 //     isSocketReady.value=isConnected.socket.connected
 
 // })
-watch(notifStore.list, ()=>{
-    usedCredits.value=[...new Set(notifStore.list.flatMap(t => t.tickers))].length
-    haveCredits.value =  validateCredits(usedCredits.value)
-})
+watch(notifStore.list, async(list)=>{
+    haveCredits.value =  await validateCredits()
+},
+{deep:true,
+immediate:true
+},)
 const tickers = computed(() => tickerStore.currentTickers);
 async function quant_rittenhouse() {
 

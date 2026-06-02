@@ -15,8 +15,8 @@ def require_cf_token(fn):
     def wrapper(*args,**kwargs):
         if ENV=='dev':
             request.cf_identity={
-                'email':'n954466@outlook.com',
-                'user':'n954466@outlook.com'
+                'email':'jjmr86@live.com.mx',
+                'user':'jjmr86@live.com.mx'
             } 
             return fn(*args,**kwargs)
         else:

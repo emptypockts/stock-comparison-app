@@ -600,8 +600,29 @@ def ai_queries(task_id):
                     "error":str(e)
                 }
             ),500
+
+@app.route('/api/v1/credits',methods=['GET'])
+@require_cf_token
+def credits_fetch():
+    identity= request.cf_identity
+    user_id = identity.get('email') or identity.get('user')
+    if not user_id:
+        return jsonify({
+            "error":"missing payload"
+        }),400
+    else:
+        try:
+            docs= fetch_ai_queries(user_id,'test','aiTaskQueries',max_queries=10,sort='desc',status=Status.completed,credit_check=True)
+            credits = len(docs)
+            return jsonify({
+                "credits":credits,
+                "details":docs
+            }),200
+        except Exception as e:
+            return jsonify({
+                "error":str(e)
+            })
         
-    
 
 
 # test 
