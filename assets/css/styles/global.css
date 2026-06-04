@@ -163,17 +163,14 @@ tbody tr:hover {
   
 }
 .pagination-controls {
-  position: fixed; 
   display: flex;
+  justify-content: left;
+  align-items: left;
   gap: 10px;
-  bottom: 10px;    
-  left: 70%;       
-  transform: translateX(-50%); 
+  margin-top: 15px;
+  padding: 10px;
   background-color: transparent;
-  
-  padding: 10px; 
-  z-index: 1000; 
-  border-radius: 8px; 
+  border-radius: 8px;
 }
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {

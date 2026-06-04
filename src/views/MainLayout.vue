@@ -7,7 +7,7 @@
             fontSize: '14px',
             padding: '10px'
         }">
-            credits: {{ creditLimit - usedCredits}} of {{ creditLimit }}
+            limit: {{ creditLimit - usedCredits}} of {{ creditLimit }}
 
         </p>
         <span v-if="notifStore.unreadCount() > 0"
