@@ -69,7 +69,7 @@ def quant_rittenhouse(year,tickers:list)->str:
             return existing_report  # Return the most recent analysis if no new analysis is needed
         
         for file_name in os.listdir(ticker_dir):
-            if file_name.endswith(".json",".quant",".rtn",".DS_Store",".seven",".all"):
+            if file_name.endswith((".json",".quant",".rtn",".DS_Store",".seven",".all")):
                 pass
             else:
                 with open(os.path.join(ticker_dir,file_name)) as f:
