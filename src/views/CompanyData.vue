@@ -58,7 +58,6 @@ import { useLoadingStore } from '@/stores/loadingStore';
 import { verifyCfToken, verifyToken } from '@/utils/auth';
 import { useTickerStore } from '@/stores/tickerStore';
 import { showTempMessage } from '@/utils/showMessages';
-import { fetch_reports, ai_reports } from '@/utils/fetch_reports';
 const emit = defineEmits(['tickers-updated']);
 const notification = ref(null);
 const ticker1 = ref('');
@@ -85,22 +84,17 @@ const fetchCompanyData = debounce(async () => {
         return acc;
       }, {}),
     });
+    console.log("response", response.data)
     companyData.value = response.data;
     if (!companyData.value || Object.keys(companyData.value).length === 0) {
-      showTempMessage(notification, 'No data found for the entered tickers.',"error");
+      showTempMessage(notification, 'No data found for the entered tickers.',"error",5000);
 
     } else {
-
-      const missingTickers = tickers.filter(
-        ticker => !Object.keys(companyData.value).includes(ticker)
-      );
-      if (missingTickers.length > 0) {
-        showTempMessage(notification, `Data for the following tickers is missing: ${missingTickers.join(', ')}.
-            this app is doing data collection for american companies only.`,"error");
-      }
-    }
     tickerStore.updateTickers(tickers)
     emit('tickers-updated', tickers);
+
+    }
+
 
   } catch (error) {
     console.error("error trying to fetch company data", error)
