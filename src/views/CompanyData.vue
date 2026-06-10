@@ -52,7 +52,6 @@
 <script setup>
 import { ref } from 'vue';
 import axios from 'axios';
-import { useRouter } from 'vue-router'; // Import useRouter for navigation
 import debounce from 'lodash.debounce';
 import { useLoadingStore } from '@/stores/loadingStore';
 import { verifyCfToken, verifyToken } from '@/utils/auth';

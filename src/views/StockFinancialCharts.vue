@@ -67,7 +67,7 @@
 
         <!-- FCF and Net Income Growth Ratio -->
         <div class="chart-box">
-          <h2>{{ isYearlyView ? "FCF Net Income Growth % (Last 5 Years)" : "FCF Net Income Growth % (Last 4 Quarters)"}}
+          <h2>{{ isYearlyView ? "FCF Net Income Growth % (Last 5 Years)" : "FCF Net Income Growth % (Last 4 Quarters)" }}
           </h2>
           <apexcharts v-if="pickFcfNetIncomeGrowthSeries.length" type="line" :options="percentageChartOptions"
             :series="pickFcfNetIncomeGrowthSeries"></apexcharts>
@@ -88,7 +88,7 @@
         <!-- Return on Average Assets -->
         <div class="chart-box">
           <h2>{{ isYearlyView ? "Return on Average Assets (Last 5 Years)" : "Return on Average Assets (Last 4 Quarters)"
-            }}
+          }}
           </h2>
           <apexcharts v-if="pickReturnOnAssetsSeries.length" type="line" :options="percentageChartOptions"
             :series="pickReturnOnAssetsSeries"></apexcharts>
@@ -97,7 +97,7 @@
 
         <!-- Cash Dividends Paid Total -->
         <div class="chart-box">
-          <h2>{{ isYearlyView ? "Cash Dividends Paid Total (Last 5 Years)" : "Cash Dividends Paid Total (Last 4Quarters)" }}
+          <h2>{{ isYearlyView ? "Cash Dividends Paid Total (Last 5 Years)" : "Cash Dividends Paid Total (Last4Quarters)" }}
           </h2>
           <apexcharts v-if="pickDividendsPaidSeries.length" type="line" :options="chartOptions"
             :series="pickDividendsPaidSeries"></apexcharts>
@@ -122,7 +122,7 @@ export default {
   },
   props: {
     tickers: {
-      type: Array
+      type: Object
     },
   },
   data() {

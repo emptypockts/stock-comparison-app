@@ -272,7 +272,7 @@ def verify_token():
 @app.route('/api/v1/seven_p', methods=['POST'])
 @require_cf_token
 @limiter.limit("5 per minute") 
-def messageBot():
+def seven_power_analysis():
     data = request.json
     tickers = data.get('tickers')
     user_id=data.get('user_id')

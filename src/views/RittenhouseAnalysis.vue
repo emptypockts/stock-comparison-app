@@ -32,28 +32,25 @@ const notifStore = useNotificationStore();
 // import { useSocket } from '@/composables/taskSocket';
 const isLoadingLocal = ref(false);
 const haveCredits = ref(true);
-const usedCredits = ref(0)
 let localTaskID = null;
-const rawMessage = ref('');
 const tickerHistory = ref(new Set())
 const tickerStore = useTickerStore();
 const loading = useLoadingStore();
+
 // this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
 // const isConnected=useSocket();
 const allowedTickers = ref([]);
 const notification = ref(null);
 // this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
 // const isSocketReady=ref(false);
-const messages = ref([
-    { text: 'I will conduct the a trust and sentiment analysis ofthe latest submitted reports. If you want analysis for another, ticker just change the ticker in the main page and pres analyze to start. ', isUser: false }
-]);
+
 
 watch(loading, () => {
     if (localTaskID && !loading.pendingTasks[localTaskID]) {
         isLoadingLocal.value = false
         localTaskID = null;
         if (loading.lastStatus == "done") {
-            showTempMessage(notification, "report completed. go to the s3 report section", "notification", 5000);
+            showTempMessage(notification, "report completed. Report sent to your email linked to this account. Also you can find the report on the s3 report section", "notification", 5000);
         }
         else if (loading.lastStatus == "error") {
             showTempMessage(notification, "error trying to generate the pdf. refresh the browser and try again", "error", 5000);
@@ -68,12 +65,13 @@ watch(loading, () => {
 //     isSocketReady.value=isConnected.socket.connected
 
 // })
-watch(notifStore.list, async(list)=>{
-    haveCredits.value =  await validateCredits()
+watch(notifStore.list, async (list) => {
+    haveCredits.value = await validateCredits()
 },
-{deep:true,
-immediate:true
-},)
+    {
+        deep: true,
+        immediate: true
+    },)
 const tickers = computed(() => tickerStore.currentTickers);
 async function quant_rittenhouse() {
 
@@ -123,18 +121,14 @@ async function quant_rittenhouse() {
                             }
 
                             finally {
-                                
+
                                 isLoadingLocal.value = false
                                 notifStore.add({
                                     task_id: localTaskID,
                                     tickers: allowedTickers.value,
                                     report_type: response.data.report_type
                                 })
-                            console.log("riiten house tickers allowed are",allowedTickers.value)
-                            console.log("ritten house calling to complete task")
-                                loading.stopLoading()
-                                loading.completeTask(localTaskID)
-                            }
+                                loading.completeTask(localTaskID)                            }
                         },
                         onFailed: data => {
                             console.error("task failed: ", data)
@@ -159,36 +153,19 @@ async function quant_rittenhouse() {
                 }
             }
             else {
-                messages.value.push({
-                    text: "ticker analysis is empty or these tickers were already analysed in this session. analyse the ticker and then generate the  report again or go to the main page and return to this page to get a new report",
-                    isUser: false,
-                    type: "error"
-                })
+
                 showTempMessage(notification, "ticker analysis is empty or these tickers were already analysed in this session. analyse the ticker and then generate report again or go to the main page and return to this page to get a new report", "error", 10000)
             }
         }
         else {
-            if (!rawMessage.value) {
-                messages.value.push({
-                    text: "analysis already done for this ticker, refresh the page and return to this section to get a new analysis",
-                    isUser: false,
-                    type: "error"
-                })
 
-                showTempMessage(notification, "analysis already done for this ticker, refresh the page and return to this section to get a new analysis", "error", 10000)
-            }
-            else {
-                messages.value.push({
-                    text: "analysis already done for this ticker, refresh the page and return to this section to get a new analysis",
-                    isUser: false,
-                    type: "error"
-                })
 
-                showTempMessage(notification, "analysis already done for this ticker, refresh the page and return to this section to get a new analysis", "error", 10000)
-            }
+
+            showTempMessage(notification, "ticker analysis is empty or these tickers were already analysed in this session. analyse the ticker and then generate the red flag report again or go to the main page and return to this page to get a new report", "error", 10000)
         }
     }
 }
+
 
 
 

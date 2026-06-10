@@ -39,7 +39,7 @@
     <div v-if="errorMessage" class="error-message">
       <p>{{ errorMessage }}</p>
     </div>
-<div v-if="intrinsicData.length" class="table-container">
+    <div v-if="intrinsicData.length" class="table-container">
       <button @click="toggleCollapse" class="buttons">
         ⟬⟬ expand/collapse ⟭⟭
       </button>
@@ -156,73 +156,78 @@
         </table>
       </div>
     </div>
-        <div>
+    <div>
       <legend style="font-weight: bold; font-size: 1rem; padding: 0 6px;">
-    📌 How to Interpret Valuation Models
-  </legend>
+        📌 How to Interpret Valuation Models
+      </legend>
       <button @click="toggleCollapse2" class="buttons">
         ⟬⟬ expand/collapse ⟭⟭
       </button>
-      
+
       <div v-if="!collapsed2">
 
         <fieldset style="margin-bottom: 14px;width: 82%; padding: 12px; border: 1px solid #666; border-radius: 6px;">
 
-  <small style="line-height: 1.4; display: block; color: #ddd; font-size: 0.85rem;">
-    Not all valuation models apply equally to every business. Use the method(s) most aligned with the company’s
-    business model, financial structure, and maturity stage.
-    <br><br>
+          <small style="line-height: 1.4; display: block; color: #ddd; font-size: 0.85rem;">
+            Not all valuation models apply equally to every business. Use the method(s) most aligned with the company’s
+            business model, financial structure, and maturity stage.
+            <br><br>
 
-    <strong>DCF (Discounted Cash Flow):</strong> Best when the company generates stable, predictable positive free cash flow. if fcf is negative, it will scale down the calculation significantly 📉  
-    <br>
+            <strong>DCF (Discounted Cash Flow):</strong> Best when the company generates stable, predictable positive
+            free cash flow. if fcf is negative, it will scale down the calculation significantly 📉
+            <br>
 
-    <strong>Graham Value:</strong> Useful for traditional value or asset-heavy businesses where earnings and book value matter.  
-    <br>
+            <strong>Graham Value:</strong> Useful for traditional value or asset-heavy businesses where earnings and
+            book value matter.
+            <br>
 
-    <strong>DDM (Dividend Discount Model):</strong> Only relevant if the company consistently pays and grows dividends.  
-    <br>
+            <strong>DDM (Dividend Discount Model):</strong> Only relevant if the company consistently pays and grows
+            dividends.
+            <br>
 
-    <strong>RIM (Residual Income Model):</strong> Best for banks, financials, or firms where earnings reflect value more than free cash flow.  
-    <br>
+            <strong>RIM (Residual Income Model):</strong> Best for banks, financials, or firms where earnings reflect
+            value more than free cash flow.
+            <br>
 
-    <strong>APV (Adjusted Present Value):</strong> Useful if the firm's leverage is changing or debt strategy impacts valuation.  
-    <br>
+            <strong>APV (Adjusted Present Value):</strong> Useful if the firm's leverage is changing or debt strategy
+            impacts valuation.
+            <br>
 
-    <strong>EPV (Earnings Power Value):</strong> Appropriate for cyclical or stable firms when growth is uncertain — assumes no growth.  
-    <br>
+            <strong>EPV (Earnings Power Value):</strong> Appropriate for cyclical or stable firms when growth is
+            uncertain — assumes no growth.
+            <br>
 
-    <strong>Asset-Based Value:</strong> Applies to distressed companies, holding companies, or asset-heavy operators. Serves as a valuation floor.
+            <strong>Asset-Based Value:</strong> Applies to distressed companies, holding companies, or asset-heavy
+            operators. Serves as a valuation floor.
 
-    <br><br>
-    <em>Tip: A stock becomes compelling when multiple relevant models agree that price is below intrinsic value.</em>
-  </small>
-</fieldset>
+            <br><br>
+            <em>Tip: A stock becomes compelling when multiple relevant models agree that price is below intrinsic
+              value.</em>
+          </small>
+        </fieldset>
 
-</div>
-</div>
+      </div>
+    </div>
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, reactive, onMounted, watch } from 'vue';
 import axios from 'axios';
 import { useLoadingStore } from '@/stores/loadingStore';
-export default {
-  props: {
+const props=defineProps({
     tickers: {
       type: Array,
-    },
-  },
-  setup(props) {
+      default:()=>[]
+    }
+  });
+    const loading = useLoadingStore();
     const intrinsicData = ref([]);
     const collapsed = ref(true);
     const collapsed2 = ref(true);
-    const loading = useLoadingStore();
+    const errorMessage = ref('');
     const intrinsicParams = reactive({});
-    const errorMessage = ref(''); // Variable to store error messages
-    const firstLogin = ref(true);
-    // Initialize intrinsicParams based on the provided tickers
-    const initializeParams = (tickers) => {
+    function initializeParams (tickers=[]){
       tickers.forEach((ticker) => {
         if (!intrinsicParams[ticker]) {
           intrinsicParams[ticker] = {
@@ -236,118 +241,92 @@ export default {
     };
 
 
-    watch(
-      () => props.tickers,
-      (newTickers) => {
-        if (newTickers.length) {
-          initializeParams(newTickers);
-          fetchIntrinsicValues(newTickers);
-        }
-      },
-      { immediate: true }
-    );
+  function toggleCollapse (){
+          collapsed.value = !collapsed.value;
+        };
+        function toggleCollapse2(){
+          collapsed2.value = !collapsed2.value;
+        };
 
-    const toggleCollapse = () => {
-      collapsed.value = !collapsed.value;
-    };
-        const toggleCollapse2 = () => {
-      collapsed2.value = !collapsed2.value;
-    };
+        async function fetchIntrinsicValues (tickers=[]){
+          if (!tickers || tickers.length === 0) {
+              errorMessage.value = 'No tickers provided. Please enter valid tickers.';
+            return;
+          }
 
-    const fetchIntrinsicValues = async (tickers) => {
-      // Check if tickers array is empty
-      if (!tickers || tickers.length === 0) {
-        if (!firstLogin.value) {
-          errorMessage.value = 'No tickers provided. Please enter valid tickers.';
+          loading.startLoading();
+          errorMessage.value = ''; // Reset error message
+
+          try {
+            const params = new URLSearchParams();
+            tickers.forEach((ticker, index) => {
+              const tickerParams = intrinsicParams[ticker];
+              params.append(`ticker${index + 1}`, ticker);
+              params.append(`growthRate${index + 1}`, tickerParams.growthRate);
+              params.append(`discountRate${index + 1}`, tickerParams.discountRate);
+              params.append(`terminalGrowthRate${index + 1}`, tickerParams.terminalGrowthRate);
+              params.append(`projectionYears${index + 1}`, tickerParams.projectionYears);
+            });
+
+            const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/intrinsic_value`, {
+              params: params,
+            });
+
+            intrinsicData.value = response.data;
+
+          } catch (error) {
+            console.error('Error fetching intrinsic value data:', error);
+            errorMessage.value = `Failed to fetch intrinsic value data: ${error.response ? error.response.data : error.message}`;
+          } finally {
+            loading.stopLoading();
+          }
+        };
+
+        function calculateIntrinsicValue  () {
+          fetchIntrinsicValues(props.tickers);
+        };
+                function safetyStyle (value) {
+          if (value === null || value === undefined) return { color: '#aaa' };
+
+          return {
+            color: value ? 'limegreen' : 'crimson',
+            fontWeight: 'bold'
+          };
+        };
+      
+
+ 
+
+
+        function safetyIcon  (value)  {
+          if (value === null || value === undefined) return "⚪";
+          return value ? "🟢" : "🔴";
+        };
+
+
+        function tooltipText  (value, methodName) {
+          if (value === null || value === undefined)
+            return `${methodName}: No valuation data available`;
+
+          return value
+            ? `${methodName}: ✔ Stock is BELOW the 30% safety margin.\nThis suggests the price may be undervalued.`
+            : `${methodName}: ✖ Stock is ABOVE the 30% safety margin.\nThis suggests it may be overvalued or fairly priced.`;
         }
+    watch(()=> props.tickers,
+    async(newTickers)=>{
+      if(!newTickers||newTickers.length===0){
         return;
       }
+      console.log("props.tickers:", props.tickers);
+      console.log("newTickers",newTickers)
+      initializeParams(newTickers)
+      await fetchIntrinsicValues(newTickers)
+    },
+    {
+      immediate:true,
+      deep:true
+    }
 
-      loading.startLoading();
-      errorMessage.value = ''; // Reset error message
-
-      try {
-        const params = new URLSearchParams();
-        tickers.forEach((ticker, index) => {
-          const tickerParams = intrinsicParams[ticker];
-          params.append(`ticker${index + 1}`, ticker);
-          params.append(`growthRate${index + 1}`, tickerParams.growthRate);
-          params.append(`discountRate${index + 1}`, tickerParams.discountRate);
-          params.append(`terminalGrowthRate${index + 1}`, tickerParams.terminalGrowthRate);
-          params.append(`projectionYears${index + 1}`, tickerParams.projectionYears);
-        });
-
-        const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/api/intrinsic_value`, {
-          params: params,
-        });
-
-        intrinsicData.value = response.data;
-
-      } catch (error) {
-        console.error('Error fetching intrinsic value data:', error);
-        errorMessage.value = `Failed to fetch intrinsic value data: ${error.response ? error.response.data : error.message}`;
-      } finally {
-        loading.stopLoading();
-      }
-    };
-
-    const calculateIntrinsicValue = () => {
-      fetchIntrinsicValues(props.tickers);
-    };
-
-    onMounted(() => {
-      fetchIntrinsicValues(props.tickers);
-      firstLogin.value = false; // Mark as no longer the first login after mounted
-    });
-        const safetyStyle = (value) => {
-      if (value === null || value === undefined) return { color: '#aaa' };
-
-      return {
-        color: value ? 'limegreen' : 'crimson',
-        fontWeight: 'bold'
-      };
-    };
-
-    const safetyIcon = (value) => {
-      if (value === null || value === undefined) return "⚪";
-      return value ? "🟢" : "🔴";
-    };
-
-    const valuationStyle = (current, intrinsic) => {
-      if (!intrinsic || !current) return {};
-
-      let numericIntrinsic = Number(String(intrinsic).replace(/[$,]/g, ""));
-      let numericCurrent = Number(String(current).replace(/[$,]/g, ""));
-
-      return {
-        color: numericCurrent < numericIntrinsic ? 'limegreen' : 'crimson',
-        fontWeight: '600'
-      };
-    };
-    const tooltipText = (value, methodName) => {
-      if (value === null || value === undefined)
-        return `${methodName}: No valuation data available`;
-
-      return value
-        ? `${methodName}: ✔ Stock is BELOW the 30% safety margin.\nThis suggests the price may be undervalued.`
-        : `${methodName}: ✖ Stock is ABOVE the 30% safety margin.\nThis suggests it may be overvalued or fairly priced.`;
-    };
-    return {
-      intrinsicData,
-      collapsed,
-      loading,
-      intrinsicParams,
-      errorMessage, 
-      toggleCollapse,
-      toggleCollapse2,
-      collapsed2,
-      calculateIntrinsicValue,
-      safetyIcon,
-      safetyStyle,
-      tooltipText,
-    };
-  },
-  
-};
+      )
 </script>
 <style scoped></style>

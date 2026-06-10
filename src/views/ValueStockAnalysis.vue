@@ -92,12 +92,11 @@
 import { ref, watch, onMounted } from 'vue';
 import axios from 'axios';
 import { useLoadingStore } from '@/stores/loadingStore';
-import CompanyData from './CompanyData.vue';
 export default {
   emits: ['tickers-updated'], // Declare the custom events
   props: {
     tickers: {
-      type: Array,
+      type: Object,
     },
   },
   setup(props, { emit }) {
@@ -142,6 +141,7 @@ export default {
     watch(
       () => props.tickers,
       (newTickers) => {
+        console.log("new tickers",newTickers.length)
         if (newTickers.length) {
           fetch5YearData(newTickers);
         }

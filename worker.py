@@ -165,8 +165,6 @@ def generate_ai_7powers(self,tickers,user_id,report_type):
         raise Ignore()
     from sevenPowers import seven_powers
     task_id=self.request.id
-    # this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
-    # notify_task_result('task_start',{'user_id':user_id,'task_id':task_id,'tickers':tickers,'report_type':report_type,"timestamp":datetime.now().isoformat()+"Z"},name_space)  
     ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.ongoing)
     try:
         result= seven_powers(tickers)
@@ -195,7 +193,7 @@ def generate_ai_7powers(self,tickers,user_id,report_type):
         # notify_task_result("task_failed", {"user_id": user_id,"task_id": task_id,"tickers": tickers,"report_type": report_type,"timestamp": datetime.now().isoformat() + "Z","error": str(e)},name_space)
         raise self.retry(exc=e,countdown=5,max_retries=1)
     
-    # ========quant============
+    # ========red-flags quant============
        
 @celery.task(bind=True)
 def generate_ai_quant(self,tickers,user_id,report_type):
@@ -204,8 +202,6 @@ def generate_ai_quant(self,tickers,user_id,report_type):
     task_id=self.request.id
     import sys
     from quant import quant
-    # this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
-    # notify_task_result('task_start',{'user_id':user_id,'task_id':task_id,'tickers':tickers,'report_type':report_type,"tickers":tickers,"timestamp":datetime.now().isoformat()+"Z"},name_space)
     ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.ongoing)
     try:
         current_year=(datetime.now().year)

@@ -1,14 +1,19 @@
 <template>
     <div id="aiStatusBox" @click="toggleToolTip"
-        style="position:fixed;top:10px;right:30px; display: flex;align-items: center;gap: 10px;">
+        style="position:fixed;top:10px;right:30px; display: flex;align-items: center;gap: 10px; width: auto;">
         <p :style="{
             color: haveCredits ? 'greenyellow' : 'red',
             border: haveCredits ? '1px double greenyellow' : '1px double red',
             fontSize: '14px',
-            padding: '10px'
+            padding: '10px',
+            justifyContent: 'center',
+            alignContent: 'center',
+            justifyItems: 'center'
         }">
-            limit: {{ creditLimit - usedCredits}} of {{ creditLimit }}
+            ai credits:
+            <br>
 
+            {{ creditLimit - usedCredits }} of {{ creditLimit }}
         </p>
         <span v-if="notifStore.unreadCount() > 0"
             style="position: absolute;top: 8px;right: -8px;background: red;color: white;border-radius: 50%;padding: 3px 7px;font-size: 7px;border: 2px solid white;">
@@ -71,16 +76,16 @@
     </div>
     <div>
         <RedFlags :tickers="tickers" />
+    </div>
+    <div>
         <div class="terminal">
             <span>eacsa> </span>query S3 archives:
         </div>
         <button @click="toggleCollapse" class="buttons">
             ⟬⟬ expand/collapse ⟭⟭
         </button>
-
         <div v-if="!collapsed" class="table-container">
             <div v-if="ai_reports">
-
                 <div class="terminal">
                     <p>
                         all previous ai reports indexed: overall, seven powers, red flags. timestamped. your research
@@ -142,7 +147,7 @@ import CookieBanner from '@/components/CookieBanner.vue';
 import LoginAlert from '@/components/LoginAlert.vue';
 import { showTempMessage } from '@/utils/showMessages';
 import { formatDateAgo } from '@/utils/formateTime';
-import { validateCredits,usedCredits,creditLimit } from '@/utils/credits';
+import { validateCredits, usedCredits, creditLimit } from '@/utils/credits';
 // this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
 // import { useSocket } from '@/composables/taskSocket';
 
@@ -157,24 +162,16 @@ const notifStore = useNotificationStore();
 const allowedTickers = ref([]);
 const tickerHistory = ref(new Set());
 const haveCredits = ref(true);
-// this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
-// const isConnected = useSocket();
 
-const tickers = ref([]);
 const notification = ref(null);
 const tickerStore = useTickerStore();
 const loading = useLoadingStore()
 const isLoadingLocal = ref(false);
-// this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
-// const isSocketReady=ref(false);
-
 let localTaskID = null;
+const tickers = computed (()=>tickerStore.currentTickers)
 const updateTickers = (newTickers) => {
     tickerStore.updateTickers(newTickers)
-    tickers.value = tickerStore.currentTickers
 }
-tickers.value = computed(() => tickerStore.currentTickers);
-
 const collapsed = ref(true)
 
 const toggleCollapse = () => {
@@ -193,9 +190,8 @@ function hideToolTip() {
 
 onMounted(async () => {
     ai_reports.value = await fetch_reports();
-     
-    // this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
-    // isSocketReady.value=isConnected.socket.connected
+
+
 })
 
 watch(loading, () => {
@@ -214,17 +210,14 @@ watch(loading, () => {
         }
     }
 })
-watch(notifStore.list, async(list)=>{
-    haveCredits.value =  await validateCredits()
+watch(notifStore.list, async (list) => {
+    haveCredits.value = await validateCredits()
 },
-{deep:true,
-immediate:true
-},)
-// this function will be ignored until there is a real usecase. websocket service will be migrated to a poll service.
-// watch(isConnected.isConnected,()=>{
-//     isSocketReady.value=isConnected.socket.connected
+    {
+        deep: true,
+        immediate: true
+    },)
 
-// })
 
 function handleClickOutside(event) {
     const el = document.querySelector('#aiStatusBox')
@@ -236,15 +229,15 @@ function handleClickOutside(event) {
 onMounted(() => document.addEventListener('click', handleClickOutside));
 onUnmounted(() => { document.removeEventListener('click', handleClickOutside) })
 const get_report = async () => {
-    const tickers = tickerStore.currentTickers;
+    const currentTickers = tickerStore.currentTickers;
     const user_id = localStorage.getItem('user_id')
-    if (tickers.length == 0 || !user_id) {
+    if (currentTickers.length == 0 || !user_id) {
         console.error('missing tickers');
 
         showTempMessage(notification, "ticker or user_id is missing", "error");
     }
     else {
-        allowedTickers.value = tickers.filter(e => !tickerHistory.value.has(e.toLowerCase()))
+        allowedTickers.value = currentTickers.filter(e => !tickerHistory.value.has(e.toLowerCase()))
         if (allowedTickers.value.length) {
             loading.startLoading()
             isLoadingLocal.value = true
@@ -257,7 +250,7 @@ const get_report = async () => {
                 })
                 localTaskID = response.data.task_id
                 loading.addTask(localTaskID)
-                tickers.forEach(t => tickerHistory.value.add(t.toLowerCase()))
+                currentTickers.forEach(t => tickerHistory.value.add(t.toLowerCase()))
 
                 pollTaskStatus({
                     task_id: localTaskID,
@@ -285,9 +278,8 @@ const get_report = async () => {
                                 tickers: allowedTickers.value,
                                 report_type: response.data.report_type
                             })
-                            loading.stopLoading()
                             loading.completeTask(localTaskID)
-                            
+
 
                         }
                     },
@@ -310,7 +302,7 @@ const get_report = async () => {
         }
         else {
 
-            showTempMessage(notification, "ticker previously analysed. refresh your browser if you need to analyse it again", "error");
+            showTempMessage(notification, "ticker analysis is empty or these tickers were already analysed in this session. analyse the ticker and then generate the red flag report again or go to the main page and return to this page to get a new report", "error", 10000)
             isLoadingLocal.value = false
         }
     }
