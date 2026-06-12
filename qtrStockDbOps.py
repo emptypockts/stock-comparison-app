@@ -103,6 +103,18 @@ def fetch_Stock_Info():
                                                         'fp':metric.get('fp',None),
                                                         'frame':metric.get('frame',None)
                                                         })
+
+                                            if metric['form']=='10-K' and (endDate.year>2023) and metric_name =='Revenues':
+                                                qtr_obj.append({
+                                                'ticker':ticker,
+                                                'entity':item['entityName'],
+                                                'metric':metric_name,
+                                                'value':metric['val'],
+                                                'date':metric['end'],
+                                                'form':metric['form'],
+                                                'fp':metric.get('fp',None),
+                                                'frame':metric.get('frame',None)
+                                                })
                                         
             # Convert the deduplicated frames into a list
     return qtr_obj
