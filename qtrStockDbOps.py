@@ -94,28 +94,35 @@ def fetch_Stock_Info():
                                             endDate=datetime.strptime(metric['end'],'%Y-%m-%d')
                                             if metric['form'] == '10-Q' and (endDate.year>2023)  :
                                                 qtr_obj.append({
-                                                        'ticker':ticker,
-                                                        'entity':item['entityName'],
-                                                        'metric':metric_name,
-                                                        'value':metric['val'],
-                                                        'date':metric['end'],
-                                                        'form':metric['form'],
-                                                        'fp':metric.get('fp',None),
-                                                        'frame':metric.get('frame',None)
+                                                    'ticker':ticker,
+                                                    'entity':item['entityName'],
+                                                    'metric':metric_name,
+                                                    'value':metric['val'],
+                                                    'date':metric['end'],
+                                                    'form':metric['form'],
+                                                    'fp':metric.get('fp',None),
+                                                    'frame':metric.get('frame',None),
+                                                    'date_start':metric['start'],
+                                                    'accn':metric['accn'],
+                                                    'fy':metric['fy'],
+                                                    'filed':metric['filed']
                                                         })
 
                                             if metric['form']=='10-K' and (endDate.year>2023) and metric_name =='Revenues':
                                                 qtr_obj.append({
-                                                'ticker':ticker,
-                                                'entity':item['entityName'],
-                                                'metric':metric_name,
-                                                'value':metric['val'],
-                                                'date':metric['end'],
-                                                'form':metric['form'],
-                                                'fp':metric.get('fp',None),
-                                                'frame':metric.get('frame',None)
+                                                    'ticker':ticker,
+                                                    'entity':item['entityName'],
+                                                    'metric':metric_name,
+                                                    'value':metric['val'],
+                                                    'date':metric['end'],
+                                                    'form':metric['form'],
+                                                    'fp':metric.get('fp',None),
+                                                    'frame':metric.get('frame',None),
+                                                    'date_start':metric['start'],
+                                                    'accn':metric['accn'],
+                                                    'fy':metric['fy'],
+                                                    'filed':metric['filed']
                                                 })
-                                        
             # Convert the deduplicated frames into a list
     return qtr_obj
 def fetch_dei_info():
