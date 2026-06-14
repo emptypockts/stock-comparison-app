@@ -355,11 +355,14 @@ def fetch_metric(
         calendar_yr:str=None,
         unique_metric:bool=True
         )->object:
-
     query = {
-            "ticker":ticker.upper(),
+            "ticker":{"$in":[ticker.upper()]},
             "metric":{"$in":metric}
-        }    
+        }
+    if ticker=='ALL_STOCK':
+        query={
+            "metric":{"$in":metric}
+        }
     if mode =='last' and unique_metric:
         last_doc = collection.find_one(query,sort=[("date",-1)])
         return last_doc if last_doc else {}
@@ -486,7 +489,6 @@ def PullQtrStockRevenueTrends(collection:Collection,page=1,items_per_page=100):
     total_tickers_count = len(total_tickers)
 
     return grouped_stocks,total_tickers_count
-
 def fetch_ai_queries(user_id,db_name,collection_name,max_queries,sort:Literal['asc','desc'],status=None,report_type=None,task_id=None,credit_check=False):
     from pymongo import MongoClient
     import json
@@ -527,8 +529,6 @@ def fetch_ai_queries(user_id,db_name,collection_name,max_queries,sort:Literal['a
             docs_list.append(d)
 
     return docs_list
-
-
 
 if __name__=="__main__":
     user_id='jjmr86@live.com.mx'
