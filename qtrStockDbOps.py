@@ -102,7 +102,7 @@ def fetch_Stock_Info():
                                                     'form':metric['form'],
                                                     'fp':metric.get('fp',None),
                                                     'frame':metric.get('frame',None),
-                                                    'date_start':metric['start'],
+                                                    'date_start':metric.get('start',None),
                                                     'accn':metric['accn'],
                                                     'fy':metric['fy'],
                                                     'filed':metric['filed']
@@ -118,7 +118,7 @@ def fetch_Stock_Info():
                                                     'form':metric['form'],
                                                     'fp':metric.get('fp',None),
                                                     'frame':metric.get('frame',None),
-                                                    'date_start':metric['start'],
+                                                    'date_start':metric.get('start',None),
                                                     'accn':metric['accn'],
                                                     'fy':metric['fy'],
                                                     'filed':metric['filed']
