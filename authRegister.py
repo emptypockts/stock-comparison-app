@@ -11,7 +11,9 @@ def registerStep(username, password, name, email):
     current_time = datetime.now(timezone.utc).isoformat(timespec='milliseconds')
     load_dotenv()
     uri = os.getenv('MONGODB_URI')
-    client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+    # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+    client = MongoClient(uri)
+
 
     db = client["test"]
     users_collection = db["User"]
@@ -53,7 +55,9 @@ def registerStep(username, password, name, email):
 if __name__ == "__main__":
     load_dotenv()
     uri = os.getenv('MONGODB_URI')
-    client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+    # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+    client = MongoClient(uri)
+
     
     try:
         client.admin.command('ping')

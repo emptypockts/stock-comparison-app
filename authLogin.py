@@ -10,7 +10,9 @@ import certifi
 def loginStep(username):
     load_dotenv()
     uri = os.getenv('MONGODB_URI')
-    client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+    # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+    client = MongoClient(uri)
+
 
     # Access the 'users' collection in the database
     db = client["test"]
@@ -30,8 +32,10 @@ if __name__ == "__main__":
     CERT_KYS = requests.get(CF_CERT_URL).json()
     CF_AUDIENCE_ID = os.getenv('CF_AUD_ID')
 
-    # uri = os.getenv('MONGODB_URI')
-    # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+    uri = os.getenv('MONGODB_URI')
+    # # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+    client = MongoClient(uri)
+
     
     # try:
     #     client.admin.command('ping')

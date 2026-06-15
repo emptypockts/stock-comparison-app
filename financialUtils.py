@@ -439,7 +439,9 @@ def fetch_name(tickers:list)->str:
     import certifi
     from pymongo.server_api import ServerApi
     uri = os.getenv('MONGODB_URI')
-    client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+    # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+    client = MongoClient(uri)
+
     db=client['test']
     ticker_collection=db['tickerCIK']
     tickers=[e.upper() for e in tickers]
@@ -495,7 +497,9 @@ def fetch_ai_queries(user_id,db_name,collection_name,max_queries,sort:Literal['a
     import certifi
     from pymongo.server_api import ServerApi
     uri = os.getenv('MONGODB_URI')
-    client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+    # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+    client = MongoClient(uri)
+
     db=client[db_name]
     collection=db[collection_name]
     filter= {

@@ -10,7 +10,9 @@ from dotenv import load_dotenv
 from datetime import datetime
 load_dotenv()
 uri = os.getenv('MONGODB_URI')
-client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+# client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+client = MongoClient(uri)
+
 db=client['test']
 cik_collection=db['tickerCIK']
 DIRECTORY = os.getenv('DIRECTORY')

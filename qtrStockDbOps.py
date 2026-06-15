@@ -332,7 +332,9 @@ def CountAggRecordPipeline(collection:Collection):
 
 if __name__=="__main__":
     uri = os.getenv('MONGODB_URI')
-    client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+    # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+    client = MongoClient(uri)
+
     db = client["test"]
     # tickers = ['CVS','ROST']
     collectionSize=CountAggRecordPipeline(db['QtrStockData'])

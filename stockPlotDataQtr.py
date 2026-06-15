@@ -8,7 +8,9 @@ from datetime import datetime,timedelta
 import requests
 load_dotenv()
 uri = os.getenv('MONGODB_URI')
-client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+# client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+client = MongoClient(uri)
+
 API = os.getenv('ALPHA_VANTAGE_API_KEY')
 db = client["test"]
 

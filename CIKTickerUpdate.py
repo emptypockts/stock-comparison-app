@@ -40,7 +40,9 @@ def createCikTickerCollection(file,collection):
 
     
 if __name__ == "__main__":
-    client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+    # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+    client = MongoClient(uri)
+
     db = client["test"]
     collection=db['tickerCIK']
     file= "/Users/jjmr86/coding/cik.json"

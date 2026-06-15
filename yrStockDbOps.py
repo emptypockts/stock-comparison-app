@@ -17,7 +17,9 @@ from typing import Literal
 import json
 load_dotenv()
 uri = os.getenv('MONGODB_URI')
-client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+# client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+client = MongoClient(uri)
+
 KY = os.getenv('TWELVE_API_KY')
 URL_BASE = os.getenv('TWELVE_URI')
 def fetch_tickers(collection:Collection)->list:

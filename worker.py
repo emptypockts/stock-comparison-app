@@ -61,7 +61,9 @@ def ai_task_queries_collections_update(
     status:Status,
     error=None
     ):
-    client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+    # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+    client = MongoClient(uri)
+
     db = client[db_name]
     ai_task_queries_collections=db[collection]
     ai_task_queries_collections.update_one(
@@ -96,7 +98,9 @@ def ai_report_collections_update(
     db_name:str,
     result:list,
 ):
-    client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+    # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+    client = MongoClient(uri)
+
     db = client[db_name]
     ai_report_collections = db[collection]
     ai_report_collections.update_one(

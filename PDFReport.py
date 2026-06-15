@@ -11,7 +11,9 @@ import certifi
 from dotenv import load_dotenv
 load_dotenv()
 uri = os.getenv('MONGODB_URI')
-client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+# client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+client = MongoClient(uri)
+
 db = client["test"]
 ai_report_collections = db["aiTasks"]
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))

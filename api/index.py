@@ -39,7 +39,9 @@ CF_CERT_URL = f"https://{os.getenv('CF_URL_CDN_CGI_CERTS')}/cdn-cgi/access/certs
 CERT_KYS = requests.get(CF_CERT_URL).json()
 CF_AUDIENCE_ID = os.getenv('CF_AUD_ID')
 uri = os.getenv('MONGODB_URI')
-client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+# client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+client = MongoClient(uri)
+
 db=client['test']
 ai_tasks_collection=db['aiTasks']
 app = Flask(__name__)
