@@ -354,7 +354,7 @@ if __name__=="__main__":
     #go to this link to download the company facts https://www.sec.gov/Archives/edgar/daily-index/xbrl/companyfacts.zip
    
     # # Flow to update stock info from json files  (GAAP)
-    if os.getenv('ENV')=='devs':
+    if os.getenv('ENV')=='dev':
         from bson import json_util
         with open ('/Users/jjmr86/Downloads/test.QtrStockData.json','r') as f:
             stock_object = json_util.loads(f.read())
