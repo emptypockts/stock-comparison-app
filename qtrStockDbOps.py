@@ -1,6 +1,5 @@
 from dotenv import load_dotenv
 import os
-from pymongo.server_api import ServerApi
 from pymongo import MongoClient, errors,UpdateOne
 from pymongo.collection import Collection
 import json
@@ -9,12 +8,11 @@ from financialUtils import get_metric_keys,fetch_ticker,push_StockData,swap_temp
 from math import atan, degrees
 import numpy as np
 from datetime import datetime
-import certifi
-
+load_dotenv
 
 
 # join qtr rev trend table with stock score 
-def aggregateScoreToQtrRevTrend(collection:Collection):
+def aggregateScoreToQtrRevTrend(collection:Collection,batch_size=1000):
     
     stocks = collection.aggregate([
     {
@@ -57,20 +55,29 @@ def aggregateScoreToQtrRevTrend(collection:Collection):
             upsert=False
         )
         )
+    jsonObject_len = len(jsonObject)
     if jsonObject:
-        collection.bulk_write(jsonObject)
+        for idx in range(0,jsonObject_len,batch_size):
+            print(f"pushing batch: {idx//batch_size} of: {jsonObject_len//batch_size}.")
+            collection.bulk_write(jsonObject[idx:idx+batch_size])
         print('push completed successfully')
 def fetch_Stock_Info():
     current_date = datetime.today()
     collection=db['tickerCIK']
-    path = r"/home/jjmr86/quarterly_stock_ops/companyfacts/"
+    env = os.getenv('ENV')
+    if os.getenv('ENV')=='dev':
+        path=r'/Users/jjmr86/Downloads/companyfacts/'
+        nasdaq =pd.read_csv(r"/Users/jjmr86/Downloads/nasdaq.csv")
+    else:
+        path = r"/home/jjmr86/quarterly_stock_ops/companyfacts/"
+        nasdaq =pd.read_csv(r"/home/jjmr86/quarterly_stock_ops/nasdaq.csv")
+    
     files = os.listdir(path)
     qtr_obj = []
-    nasdaq =pd.read_csv(r"/home/jjmr86/quarterly_stock_ops/nasdaq.csv")
     metric_keys =get_metric_keys()
     for file in files:
         # use to debug
-#    for file in files[:10:]:
+    # for file in files[-5::]:
         cik_integer = [int(file[:-5].lstrip("CIK").lstrip("0"))]
         tickers=fetch_ticker(cik_integer,collection)
         if tickers:
@@ -237,7 +244,7 @@ def pushMergedRevenueGrowthQtrStockData(MergedJsonResponseRevenueGrowthQtrStockD
     try:
         
         result = collection.insert_many(MergedJsonResponseRevenueGrowthQtrStockData)
-        print(f"jsonData inserted successfully, inserted_ids: {result.inserted_ids}")
+        print(f"jsonData inserted successfully, inserted_ids (first 10): {result.inserted_ids[0:10]}")
     except errors.BulkWriteError as bwe:
         print(f"Bulk write error: {bwe.details}")
     except errors.ConnectionFailure as cf:
@@ -255,7 +262,13 @@ def PullProcessMergeRevenueGrowthQtrStockData(collection,skip,limit_size):
         return None
     DfResponseRevenueGrowthQtrStockData['filed']=pd.to_datetime(DfResponseRevenueGrowthQtrStockData['date'])    
     DfResponseRevenueGrowthQtrStockData= DfResponseRevenueGrowthQtrStockData.sort_values(by=['ticker','date']).groupby('ticker').tail(4).reset_index(level=0,drop=True)
-    DfResponseRevenueGrowthQtrStockData['trend']=round(DfResponseRevenueGrowthQtrStockData.groupby(["ticker"],sort=False).apply(lambda group: RevenueGrowthQtrStockData(group)).reset_index(level=0, drop=True),1)
+    DfResponseRevenueGrowthQtrStockData['trend']=(
+        DfResponseRevenueGrowthQtrStockData
+        .groupby(["ticker"],sort=False)
+        .apply(lambda group: RevenueGrowthQtrStockData(group),include_groups=False)
+        .reset_index(level=0, drop=True)
+        .round(1)
+    )
     DfResponseRevenueGrowthQtrStockData['value']=round((DfResponseRevenueGrowthQtrStockData['maxRev'].apply(lambda x:x['output']/1e9)),2)
     MergedDfResponseRevenueGrowthQtrStockData = DfResponseRevenueGrowthQtrStockData.groupby('ticker').agg({ 'value': lambda x: ','.join(map(str, x)), 'trend': 'first' }).reset_index()
     MergedJsonResponseRevenueGrowthQtrStockData=MergedDfResponseRevenueGrowthQtrStockData.to_dict(orient='records')
@@ -331,6 +344,7 @@ def CountAggRecordPipeline(collection:Collection):
 
 
 if __name__=="__main__":
+    from bson import json_util
     uri = os.getenv('MONGODB_URI')
     # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
     client = MongoClient(uri)
@@ -343,15 +357,19 @@ if __name__=="__main__":
     #go to this link to download the company facts https://www.sec.gov/Archives/edgar/daily-index/xbrl/companyfacts.zip
    
     # # Flow to update stock info from json files  (GAAP)
-    object = fetch_Stock_Info()
-    push_StockData(db,object,collection='QtrStockData')    
+    if os.getenv('ENV')=='dev':
+        with open ('/Users/jjmr86/Downloads/test.QtrStockData.json','r') as f:
+            object = json_util.loads(f.read())
+    else:
+        object = fetch_Stock_Info()
+    push_StockData(db,object,collection='QtrStockData',batch_size=5000)    
 
 
     # # function to update main revenue trends per quarter in the db   
-    for skip in range((collectionSize//limit_size)+1):
-        response =PullProcessMergeRevenueGrowthQtrStockData(db['QtrStockData'],skip,limit_size)
+    
+    response =PullProcessMergeRevenueGrowthQtrStockData(db['QtrStockData'],skip,limit_size)
         
-        pushMergedRevenueGrowthQtrStockData(response,db['temp_QtrStockRevTrend'])
+    pushMergedRevenueGrowthQtrStockData(response,db['temp_QtrStockRevTrend'])
     swap_temp_prod(db,collection='QtrStockRevTrend')
     
     # join the qtr stock rev trend with the stock value score

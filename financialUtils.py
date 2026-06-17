@@ -156,11 +156,12 @@ def write_object(collection:Collection,object,mode:Literal['one','many']='one'):
             collection.insert_many(object)
     except Exception as e:
         print('error updating collection: ',str(e))
-def push_StockData(db, objects, collection:str,ordered_mode:bool=True,index_list:list=[]):
+def push_StockData(db, objects, collection:str,ordered_mode:bool=True,index_list:list=[],batch_size = 500):
+    
     today = datetime.now().strftime("%m_%d_%y_%H_%M_%S")
     prod_collection = collection
     temp_collection = f"temp_{collection}"
-    bakcup_collection= f"{prod_collection}_{today}"
+    backup_collection= f"{prod_collection}_{today}"
     if temp_collection in db.list_collection_names():
         db.drop_collection(temp_collection)
     try:
@@ -169,9 +170,15 @@ def push_StockData(db, objects, collection:str,ordered_mode:bool=True,index_list
         if index_list:
             for i in index_list:
                 stock_collection.create_index(i["fields"],unique=i.get('unique',True))
-        result = stock_collection.insert_many(objects,ordered=ordered_mode)
+        if not objects:
+            raise ValueError ("objects missing or length is 0")
+        object_size = len(objects)
+        for idx in range(0,object_size,batch_size):
+            print(f"pushing batch: {idx//batch_size} of: {object_size//batch_size}.")
+            stock_collection.insert_many(objects[idx:idx+batch_size],ordered=ordered_mode)
+        print(f"push of {backup_collection} into {prod_collection} has been completed.")
         assert stock_collection.count_documents({})>0
-        db[prod_collection].rename(bakcup_collection)
+        db[prod_collection].rename(backup_collection)
         db[temp_collection].rename(prod_collection)
     except errors.BulkWriteError as bwe:
         print(f"Bulk write error: {bwe.details}")
@@ -185,9 +192,9 @@ def swap_temp_prod(db,collection):
     today = datetime.now().strftime("%m_%d_%y_%H_%M_%S")
     prod_collection = collection
     temp_collection = f"temp_{collection}"
-    bakcup_collection= f"{prod_collection}_{today}"
+    backup_collection= f"{prod_collection}_{today}"
     try:
-        db[prod_collection].rename(bakcup_collection)
+        db[prod_collection].rename(backup_collection)
         db[temp_collection].rename(prod_collection)
         db.drop_collection(temp_collection)
         print('temp to prod swap done successfully')
