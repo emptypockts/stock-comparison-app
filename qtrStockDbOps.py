@@ -4,13 +4,10 @@ from pymongo import MongoClient, errors,UpdateOne
 from pymongo.collection import Collection
 import json
 import pandas as pd
-from financialUtils import get_metric_keys,fetch_ticker,push_StockData,swap_temp_prod
-from math import atan, degrees
+from financialUtils import get_metric_keys,fetch_ticker,push_StockData,swap_temp_prod,prepare_collection_backup
 import numpy as np
 from datetime import datetime
 load_dotenv
-
-
 # join qtr rev trend table with stock score 
 def aggregateScoreToQtrRevTrend(collection:Collection,batch_size=1000):
     
@@ -73,65 +70,65 @@ def fetch_Stock_Info():
         nasdaq =pd.read_csv(r"/home/jjmr86/quarterly_stock_ops/nasdaq.csv")
     
     files = os.listdir(path)
-    qtr_obj = []
     metric_keys =get_metric_keys()
+    nasdaq_tickers = set(nasdaq["ticker"].astype(str))
     for file in files:
         # use to debug
     # for file in files[-5::]:
         cik_integer = [int(file[:-5].lstrip("CIK").lstrip("0"))]
         tickers=fetch_ticker(cik_integer,collection)
-        if tickers:
-            for ticker in tickers:
-                if ticker in nasdaq['ticker'].values:
-                    with open(path + file) as f:
-                        item = json.loads(f.read())
-                # Iterate through items in the dataset
-                        if item and 'entityName' in item and 'facts' in item and 'us-gaap' in item['facts'] and 'cik' in item:
-                            for metric_name, key_value in metric_keys.items():
-                                # Check if the metric exists in the current item
-                                if metric_name in item['facts']['us-gaap']:
-                                    if 'USD' in item['facts']['us-gaap'][metric_name]['units'] or 'USD/shares' in item['facts']['us-gaap'][metric_name]['units']:
-                                        if metric_name=='EarningsPerShareBasic' or metric_name=='EarningsPerShareDiluted':
-                                            metrics = item['facts']['us-gaap'][metric_name]['units']['USD/shares']
-                                        else:
-                                            metrics = item['facts']['us-gaap'][metric_name]['units']['USD']
-                                        for metric in metrics:
-                                   
-                                            # Process only 10-Q forms with a frame
-                                            endDate=datetime.strptime(metric['end'],'%Y-%m-%d')
-                                            if metric['form'] == '10-Q' and (endDate.year>2023)  :
-                                                qtr_obj.append({
-                                                    'ticker':ticker,
-                                                    'entity':item['entityName'],
-                                                    'metric':metric_name,
-                                                    'value':metric['val'],
-                                                    'date':metric['end'],
-                                                    'form':metric['form'],
-                                                    'fp':metric.get('fp',None),
-                                                    'frame':metric.get('frame',None),
-                                                    'date_start':metric.get('start',None),
-                                                    'accn':metric['accn'],
-                                                    'fy':metric['fy'],
-                                                    'filed':metric['filed']
-                                                        })
-                                            if metric['form']=='10-K' and (endDate.year>2023) and metric_name =='Revenues':
-                                                qtr_obj.append({
-                                                    'ticker':ticker,
-                                                    'entity':item['entityName'],
-                                                    'metric':metric_name,
-                                                    'value':metric['val'],
-                                                    'date':metric['end'],
-                                                    'form':metric['form'],
-                                                    'fp':metric.get('fp',None),
-                                                    'frame':metric.get('frame',None),
-                                                    'date_start':metric.get('start',None),
-                                                    'accn':metric['accn'],
-                                                    'fy':metric['fy'],
-                                                    'filed':metric['filed']
-                                                })
-            # Convert the deduplicated frames into a list
-                    print(f"appending items for ticker: {ticker} at: {current_date}.")
-    return qtr_obj
+        valid_tickers = [t for t in tickers if t in nasdaq_tickers]
+        if valid_tickers:
+            for ticker in valid_tickers:
+                with open(path + file) as f:
+                    item = json.load(f)
+            # Iterate through items in the dataset
+                    if item and 'entityName' in item and 'facts' in item and 'us-gaap' in item['facts'] and 'cik' in item:
+                        for metric_name, key_value in metric_keys.items():
+                            # Check if the metric exists in the current item
+                            if metric_name in item['facts']['us-gaap']:
+                                if 'USD' in item['facts']['us-gaap'][metric_name]['units'] or 'USD/shares' in item['facts']['us-gaap'][metric_name]['units']:
+                                    if metric_name=='EarningsPerShareBasic' or metric_name=='EarningsPerShareDiluted':
+                                        metrics = item['facts']['us-gaap'][metric_name]['units']['USD/shares']
+                                    else:
+                                        metrics = item['facts']['us-gaap'][metric_name]['units']['USD']
+                                    for metric in metrics:
+                                
+                                        # Process only 10-Q forms with a frame
+                                        end = metric.get('end')
+                                        if not end:
+                                            continue
+                                        endDate=int(end[:4])
+                                        if metric['form'] == '10-Q' and (endDate.year>2023)  :
+                                            yield{                                           
+                                                'ticker':ticker,
+                                                'entity':item['entityName'],
+                                                'metric':metric_name,
+                                                'value':metric['val'],
+                                                'date':metric['end'],
+                                                'form':metric['form'],
+                                                'fp':metric.get('fp',None),
+                                                'frame':metric.get('frame',None),
+                                                'date_start':metric.get('start',None),
+                                                'accn':metric['accn'],
+                                                'fy':metric['fy'],
+                                                'filed':metric['filed']
+                                                    }
+                                        if metric['form']=='10-K' and (endDate.year>2023) and metric_name =='Revenues':
+                                            yield{
+                                                'ticker':ticker,
+                                                'entity':item['entityName'],
+                                                'metric':metric_name,
+                                                'value':metric['val'],
+                                                'date':metric['end'],
+                                                'form':metric['form'],
+                                                'fp':metric.get('fp',None),
+                                                'frame':metric.get('frame',None),
+                                                'date_start':metric.get('start',None),
+                                                'accn':metric['accn'],
+                                                'fy':metric['fy'],
+                                                'filed':metric['filed']
+                                            }
 def fetch_dei_info():
     path = f"/home/jjmr86/quarterly_stock_ops/companyfacts/"
     files = os.listdir(path)
@@ -344,7 +341,7 @@ def CountAggRecordPipeline(collection:Collection):
 
 
 if __name__=="__main__":
-    from bson import json_util
+    
     uri = os.getenv('MONGODB_URI')
     # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
     client = MongoClient(uri)
@@ -352,22 +349,24 @@ if __name__=="__main__":
     db = client["test"]
     # tickers = ['CVS','ROST']
     collectionSize=CountAggRecordPipeline(db['QtrStockData'])
-    limit_size=10000
+    batch_size=5000
     skip=0
     #go to this link to download the company facts https://www.sec.gov/Archives/edgar/daily-index/xbrl/companyfacts.zip
    
     # # Flow to update stock info from json files  (GAAP)
     if os.getenv('ENV')=='dev':
+        from bson import json_util
         with open ('/Users/jjmr86/Downloads/test.QtrStockData.json','r') as f:
-            object = json_util.loads(f.read())
+            stock_object = json_util.loads(f.read())
     else:
-        object = fetch_Stock_Info()
-    push_StockData(db,object,collection='QtrStockData',batch_size=5000)    
+        prepare_collection_backup(db,collection='QtrStockData')
+        stock_object = fetch_Stock_Info()
+        push_StockData(db,stock_object,collection='QtrStockData',batch_size=batch_size)    
 
 
     # # function to update main revenue trends per quarter in the db   
     
-    response =PullProcessMergeRevenueGrowthQtrStockData(db['QtrStockData'],skip,limit_size)
+    response =PullProcessMergeRevenueGrowthQtrStockData(db['QtrStockData'],skip,batch_size)
         
     pushMergedRevenueGrowthQtrStockData(response,db['temp_QtrStockRevTrend'])
     swap_temp_prod(db,collection='QtrStockRevTrend')

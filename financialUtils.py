@@ -156,30 +156,49 @@ def write_object(collection:Collection,object,mode:Literal['one','many']='one'):
             collection.insert_many(object)
     except Exception as e:
         print('error updating collection: ',str(e))
-def push_StockData(db, objects, collection:str,ordered_mode:bool=True,index_list:list=[],batch_size = 500):
-    
+
+def prepare_collection_backup(db,collection_name:str):
+    """
+    Rename existing collection to a timestamped backup.
+    If the collection does not exist, do nothing.
+    """
     today = datetime.now().strftime("%m_%d_%y_%H_%M_%S")
-    prod_collection = collection
-    temp_collection = f"temp_{collection}"
-    backup_collection= f"{prod_collection}_{today}"
-    if temp_collection in db.list_collection_names():
-        db.drop_collection(temp_collection)
+    existing_collections = db.list_collection_names()
+    if collection_name not in existing_collections:
+        print(f"collection {collection_name} does not exist")
+        return None
+    backup_collection= f"{collection_name}_{today}"
+    db[collection_name].rename(backup_collection)
+    print(f"{collection_name} backup with name {backup_collection} has been completed.")
+
+def push_StockData(db, objects, collection:str,ordered_mode:bool=True,index_list:list=[],batch_size = 500):
+    batch = []
+    batch_acc=0
     try:
-        stock_collection = db[temp_collection]
+        stock_collection = db[collection]
         # Inject the objects into the database
         if index_list:
             for i in index_list:
                 stock_collection.create_index(i["fields"],unique=i.get('unique',True))
-        if not objects:
-            raise ValueError ("objects missing or length is 0")
-        object_size = len(objects)
-        for idx in range(0,object_size,batch_size):
-            print(f"pushing batch: {idx//batch_size} of: {object_size//batch_size}.")
-            stock_collection.insert_many(objects[idx:idx+batch_size],ordered=ordered_mode)
-        print(f"push of {backup_collection} into {prod_collection} has been completed.")
-        assert stock_collection.count_documents({})>0
-        db[prod_collection].rename(backup_collection)
-        db[temp_collection].rename(prod_collection)
+        for o in objects:
+            batch.append(o)
+            if len(batch)>=batch_size:
+                    print(f"pushing batch. total records acc: {batch_acc}")
+                    result = stock_collection.insert_many(batch,ordered=ordered_mode)
+                    batch_acc+=len(result.inserted_ids)
+                    batch.clear()
+        if batch:
+            print(f"pushing final batch. total records acc: {batch_acc}")
+            result = stock_collection.insert_many(batch,ordered=ordered_mode)
+            batch_acc += len(result.inserted_ids)
+            batch.clear()
+
+        if batch_acc==0:
+                raise ValueError ("no records inserted")
+
+        print(f"push to {collection} completed with {batch_acc} records inserted.")    
+        assert stock_collection.count_documents({}) > 0
+
     except errors.BulkWriteError as bwe:
         print(f"Bulk write error: {bwe.details}")
     except errors.ConnectionFailure as cf:
