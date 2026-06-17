@@ -61,7 +61,7 @@ def aggregateScoreToQtrRevTrend(collection:Collection):
         collection.bulk_write(jsonObject)
         print('push completed successfully')
 def fetch_Stock_Info():
-
+    current_date = datetime.today()
     collection=db['tickerCIK']
     path = r"/home/jjmr86/quarterly_stock_ops/companyfacts/"
     files = os.listdir(path)
@@ -70,7 +70,7 @@ def fetch_Stock_Info():
     metric_keys =get_metric_keys()
     for file in files:
         # use to debug
-    # for file in files[:3:]: 
+#    for file in files[:10:]:
         cik_integer = [int(file[:-5].lstrip("CIK").lstrip("0"))]
         tickers=fetch_ticker(cik_integer,collection)
         if tickers:
@@ -78,7 +78,6 @@ def fetch_Stock_Info():
                 if ticker in nasdaq['ticker'].values:
                     with open(path + file) as f:
                         item = json.loads(f.read())
-
                 # Iterate through items in the dataset
                         if item and 'entityName' in item and 'facts' in item and 'us-gaap' in item['facts'] and 'cik' in item:
                             for metric_name, key_value in metric_keys.items():
@@ -90,6 +89,7 @@ def fetch_Stock_Info():
                                         else:
                                             metrics = item['facts']['us-gaap'][metric_name]['units']['USD']
                                         for metric in metrics:
+                                   
                                             # Process only 10-Q forms with a frame
                                             endDate=datetime.strptime(metric['end'],'%Y-%m-%d')
                                             if metric['form'] == '10-Q' and (endDate.year>2023)  :
@@ -107,7 +107,6 @@ def fetch_Stock_Info():
                                                     'fy':metric['fy'],
                                                     'filed':metric['filed']
                                                         })
-
                                             if metric['form']=='10-K' and (endDate.year>2023) and metric_name =='Revenues':
                                                 qtr_obj.append({
                                                     'ticker':ticker,
@@ -124,6 +123,7 @@ def fetch_Stock_Info():
                                                     'filed':metric['filed']
                                                 })
             # Convert the deduplicated frames into a list
+                    print(f"appending items for ticker: {ticker} at: {current_date}.")
     return qtr_obj
 def fetch_dei_info():
     path = f"/home/jjmr86/quarterly_stock_ops/companyfacts/"
@@ -345,7 +345,6 @@ if __name__=="__main__":
     # # Flow to update stock info from json files  (GAAP)
     object = fetch_Stock_Info()
     push_StockData(db,object,collection='QtrStockData')    
-    
 
 
     # # function to update main revenue trends per quarter in the db   
