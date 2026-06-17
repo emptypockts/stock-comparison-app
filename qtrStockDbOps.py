@@ -99,7 +99,7 @@ def fetch_Stock_Info():
                                         if not end:
                                             continue
                                         endDate=int(end[:4])
-                                        if metric['form'] == '10-Q' and (endDate.year>2023)  :
+                                        if metric['form'] == '10-Q' and (endDate>2023)  :
                                             yield{                                           
                                                 'ticker':ticker,
                                                 'entity':item['entityName'],
@@ -114,7 +114,7 @@ def fetch_Stock_Info():
                                                 'fy':metric['fy'],
                                                 'filed':metric['filed']
                                                     }
-                                        if metric['form']=='10-K' and (endDate.year>2023) and metric_name =='Revenues':
+                                        if metric['form']=='10-K' and (endDate>2023) and metric_name =='Revenues':
                                             yield{
                                                 'ticker':ticker,
                                                 'entity':item['entityName'],
@@ -354,23 +354,24 @@ if __name__=="__main__":
     #go to this link to download the company facts https://www.sec.gov/Archives/edgar/daily-index/xbrl/companyfacts.zip
    
     # # Flow to update stock info from json files  (GAAP)
-    if os.getenv('ENV')=='dev':
+    if os.getenv('ENV')=='devs':
         from bson import json_util
         with open ('/Users/jjmr86/Downloads/test.QtrStockData.json','r') as f:
             stock_object = json_util.loads(f.read())
     else:
-        prepare_collection_backup(db,collection='QtrStockData')
         stock_object = fetch_Stock_Info()
-        push_StockData(db,stock_object,collection='QtrStockData',batch_size=batch_size)    
+
+
+    prepare_collection_backup(db,collection_name='QtrStockData')
+    push_StockData(db,stock_object,collection='QtrStockData',batch_size=batch_size)    
 
 
     # # function to update main revenue trends per quarter in the db   
     
     response =PullProcessMergeRevenueGrowthQtrStockData(db['QtrStockData'],skip,batch_size)
-        
-    pushMergedRevenueGrowthQtrStockData(response,db['temp_QtrStockRevTrend'])
-    swap_temp_prod(db,collection='QtrStockRevTrend')
     
+    prepare_collection_backup(db,collection_name='QtrStockRevTrend')
+    pushMergedRevenueGrowthQtrStockData(response,db['QtrStockRevTrend'])    
     # join the qtr stock rev trend with the stock value score
     aggregateScoreToQtrRevTrend(db['QtrStockRevTrend'])
 
