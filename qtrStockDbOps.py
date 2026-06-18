@@ -262,7 +262,7 @@ def PullProcessMergeRevenueGrowthQtrStockData(collection,skip,limit_size):
     DfResponseRevenueGrowthQtrStockData['trend']=(
         DfResponseRevenueGrowthQtrStockData
         .groupby(["ticker"],sort=False)
-        .apply(lambda group: RevenueGrowthQtrStockData(group),include_groups=False)
+        .apply(lambda group: RevenueGrowthQtrStockData(group))
         .reset_index(level=0, drop=True)
         .round(1)
     )
