@@ -99,7 +99,7 @@ def fetch_Stock_Info():
                                         if not end:
                                             continue
                                         endDate=int(end[:4])
-                                        if metric['form'] == '10-Q' and (endDate>2023)  :
+                                        if metric['form'] == '10-Q' and (endDate>2020)  :
                                             yield{                                           
                                                 'ticker':ticker,
                                                 'entity':item['entityName'],
@@ -114,7 +114,7 @@ def fetch_Stock_Info():
                                                 'fy':metric['fy'],
                                                 'filed':metric['filed']
                                                     }
-                                        if metric['form']=='10-K' and (endDate>2023) and metric_name =='Revenues':
+                                        if metric['form']=='10-K' and (endDate>2020) and metric_name in('Revenues','RevenuesNetOfInterestExpense'):
                                             yield{
                                                 'ticker':ticker,
                                                 'entity':item['entityName'],

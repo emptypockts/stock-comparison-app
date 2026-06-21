@@ -29,6 +29,7 @@ def fetch_tickers(collection:Collection)->list:
     return stock_list
 def get_metric_keys():
  return {
+        "RevenuesNetOfInterestExpense":"revenue",
         "RevenueFromContractWithCustomerExcludingAssessedTax":"revenue",
         "RevenueFromContractWithCustomerIncludingAssessedTax":"revenue",
         "Revenues":"revenue",
