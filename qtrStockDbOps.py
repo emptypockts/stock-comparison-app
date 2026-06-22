@@ -58,8 +58,7 @@ def aggregateScoreToQtrRevTrend(collection:Collection,batch_size=1000):
             print(f"pushing batch: {idx//batch_size} of: {jsonObject_len//batch_size}.")
             collection.bulk_write(jsonObject[idx:idx+batch_size])
         print('push completed successfully')
-def fetch_Stock_Info():
-    current_date = datetime.today()
+def fetch_Stock_Info(db=None):
     collection=db['tickerCIK']
     env = os.getenv('ENV')
     if os.getenv('ENV')=='dev':
@@ -84,7 +83,20 @@ def fetch_Stock_Info():
                     item = json.load(f)
             # Iterate through items in the dataset
                     if item and 'entityName' in item and 'facts' in item and 'us-gaap' in item['facts'] and 'cik' in item:
-                        for metric_name, key_value in metric_keys.items():
+                        # ================== preparing for q4 revenue calc ============
+                        
+                        years_checked =[]
+                        qtr_checked=[]
+                        symbol =""
+                        entity=""
+                        metric=""
+                        qtr_acc=0
+                        fy=0
+                        current_year = int(datetime.today().year)
+
+                        # =============================================
+
+                        for metric_name, _ in metric_keys.items():
                             # Check if the metric exists in the current item
                             if metric_name in item['facts']['us-gaap']:
                                 if 'USD' in item['facts']['us-gaap'][metric_name]['units'] or 'USD/shares' in item['facts']['us-gaap'][metric_name]['units']:
@@ -129,6 +141,45 @@ def fetch_Stock_Info():
                                                 'fy':metric['fy'],
                                                 'filed':metric['filed']
                                             }
+                                        if endDate<current_year and metric_name  in('Revenues','RevenuesNetOfInterestExpense'):
+                                            if symbol == "":
+                                                symbol = ticker,
+                                                entity=item['entityName'],
+                                                metric=metric_name
+                                            if endDate not in years_checked:
+                                                years_checked.append(endDate)
+                                                qtr_checked=[]
+                                            if metric['frame'] and metric['form']=='10-Q' and metric['fp']not in qtr_checked:
+                                                qtr_checked.append(metric['fp'])
+                                                qtr_acc+=metric['val']
+                                            if metric['frame'] and metric['form']=='10-K':
+                                                fy =metric['val']
+                                            if len(qtr_checked)==3 and 'Q4' not in qtr_checked:
+                                                
+                                                qtr_checked=[]
+                                                yield{
+                                                    "ticker":symbol,
+                                                    "entity":entity,
+                                                    "metric":metric,
+                                                    "value":fy-qtr_acc,
+                                                    "date":f"{str(endDate)}-12-31",
+                                                    "form":"calculated",
+                                                    "fp":"Q4",
+                                                    "frame":f"CY{str(endDate)}Q4"
+                                                }
+                                                years_checked =[]
+                                                qtr_checked=[]
+                                                symbol =""
+                                                entity=""
+                                                metric=""
+                                                qtr_acc=0
+                                                fy=0
+
+
+
+
+                                        
+                                        
 def fetch_dei_info():
     path = f"/home/jjmr86/quarterly_stock_ops/companyfacts/"
     files = os.listdir(path)

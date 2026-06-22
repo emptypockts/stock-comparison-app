@@ -561,10 +561,102 @@ def fetch_ai_queries(user_id,db_name,collection_name,max_queries,sort:Literal['a
 
     return docs_list
 
-if __name__=="__main__":
-    user_id='jjmr86@live.com.mx'
-    task_id = ['f8659915-34c2-492d-be2c-d1d1a56becd4']
-    max_queries = len(task_id)
+def qtr_4_calc()->list:
+    """
+    Calculate missing Q4 revenue records from quarterly and full-year revenue data.
+    Q4 revenue is calculated as:
+        full-year 10-K revenue - sum(Q1, Q2, Q3 10-Q revenues)
+    The current year is skipped because full-year data may be incomplete.
+    Params
+    None
+    Returns
+    -------
+    list
+        List of calculated Q4 revenue dictionaries with `form` set to
+        `"calculated"` and `fp` set to `"Q4"`.
+    Notes
+    -----
+    list contains records for one ticker and one revenue metric.    
+    """
+    """
+    description:
+        receives a list from a cursor with the revenues and calculates the q4 revenue if missing.
+    params:
+        revenues: list
+        description: list of revenues including the full year revenues
+    returns: None
+    """
+    import os
+    from dotenv import load_dotenv
+    load_dotenv()
+    from pymongo import MongoClient
+    from pymongo.server_api import ServerApi
+    uri = os.getenv('MONGODB_URI')
+    client = MongoClient(uri)
+    db=client['test']
+
+    years_checked =[]
+    qtr_checked=[]
+    symbol =""
+    entity=""
+    metric=""
+    qtr_acc=0
+    fy=0
+    q4_calculated =[]
+    collection_name='QtrStockData'
+    current_year = int(datetime.today().year)
+    collection=db[collection_name]
+    env = os.getenv('ENV')
+    if os.getenv('ENV')=='dev':
+        nasdaq =pd.read_csv(r"/Users/jjmr86/Downloads/nasdaq.csv")
+    else:
+        nasdaq =pd.read_csv(r"/home/jjmr86/quarterly_stock_ops/nasdaq.csv")
     
-    docs= fetch_ai_queries(user_id,'test','aiTaskQueries',max_queries=100,sort='desc',status=Status.completed,credit_check=True)
-    print(len(docs))
+    nasdaq_tickers = set(nasdaq["ticker"].astype(str))
+
+    for n in nasdaq_tickers:
+        
+        revenue_cursor = fetch_metric(collection,n,['Revenues','RevenuesNetOfInterestExpense'],mode='all')
+        for r in revenue_cursor :
+            year = datetime.fromisoformat(r['date']).year
+            if year == current_year:
+                continue
+            if symbol == "":
+                symbol = r.get('ticker','')
+                entity=r.get('entity','')
+                metric = r.get('metric','')
+            if year not in years_checked:
+                years_checked.append(year)
+                qtr_checked=[]
+            if r['frame'] and r['form']=='10-Q' and r['fp']not in qtr_checked:
+                qtr_checked.append(r['fp'])
+                qtr_acc+=r['value']
+            if r['frame'] and r['form']=='10-K':
+                fy =r['value']
+            if len(qtr_checked)==3 and 'Q4' not in qtr_checked:
+                
+                qtr_checked=[]
+                q4_calculated.append({
+                    "ticker":symbol,
+                    "entity":entity,
+                    "metric":metric,
+                    "value":fy-qtr_acc,
+                    "date":f"{str(year)}-12-31",
+                    "form":"calculated",
+                    "fp":"Q4",
+                    "frame":f"CY{str(year)}Q4"
+                })
+                years_checked =[]
+                qtr_checked=[]
+                symbol =""
+                entity=""
+                metric=""
+                qtr_acc=0
+                fy=0
+            if len(q4_calculated)>=1000:
+                push_StockData(db,q4_calculated,'QtrStockData')
+                q4_calculated=[]
+        
+
+if __name__=="__main__":
+    qtr_4_calc()

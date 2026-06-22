@@ -42,9 +42,9 @@ def db_4qtr_data_fetch(db,ticker,collection='QtrStockData'):
             'ticker': ticker.upper(), 
             'frame': {
                 '$ne': None, 
-                # '$not': {
-                #     '$regex': 'I$'
-                # }
+            },
+            'fp':{
+                '$regex':'^Q'
             }
         }
     }, {
@@ -115,7 +115,7 @@ def fetch_4qtr_data(ticker)->dict:
     return_on_assets={'return_on_assets':{}}
 
     return_on_assets['return_on_assets'].update({
-        key:f"{round((item/Assets.get(key,0))*100,1)}%" for key,item in net_income.items()
+        key:f"{round((item/Assets.get(key,0))*100,1)}%" for key,item in net_income.items() if (assets:=Assets.get(key))
     })
 
     total_revenue = {
