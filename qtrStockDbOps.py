@@ -87,13 +87,9 @@ def fetch_Stock_Info(db=None):
                         
                         years_checked =[]
                         qtr_checked=[]
-                        symbol =""
-                        entity=""
-                        metric=""
                         qtr_acc=0
                         fy=0
                         current_year = int(datetime.today().year)
-
                         # =============================================
 
                         for metric_name, _ in metric_keys.items():
@@ -141,26 +137,24 @@ def fetch_Stock_Info(db=None):
                                                 'fy':metric['fy'],
                                                 'filed':metric['filed']
                                             }
-                                        if endDate<current_year and metric_name  in('Revenues','RevenuesNetOfInterestExpense'):
-                                            if symbol == "":
-                                                symbol = ticker,
-                                                entity=item['entityName'],
-                                                metric=metric_name
+                                        if current_year>endDate>2020 and metric_name  in('Revenues','RevenuesNetOfInterestExpense'):
                                             if endDate not in years_checked:
+                    
                                                 years_checked.append(endDate)
                                                 qtr_checked=[]
-                                            if metric['frame'] and metric['form']=='10-Q' and metric['fp']not in qtr_checked:
+                                            frame_val = metric.get('frame',None)
+                                            if frame_val and metric['form']=='10-Q' and metric['fp']not in qtr_checked:
                                                 qtr_checked.append(metric['fp'])
                                                 qtr_acc+=metric['val']
-                                            if metric['frame'] and metric['form']=='10-K':
+                                            if frame_val and metric['form']=='10-K':
                                                 fy =metric['val']
                                             if len(qtr_checked)==3 and 'Q4' not in qtr_checked:
                                                 
                                                 qtr_checked=[]
                                                 yield{
-                                                    "ticker":symbol,
-                                                    "entity":entity,
-                                                    "metric":metric,
+                                                    "ticker":ticker,
+                                                    "entity":item['entityName'],
+                                                    "metric":metric_name,
                                                     "value":fy-qtr_acc,
                                                     "date":f"{str(endDate)}-12-31",
                                                     "form":"calculated",
@@ -169,9 +163,6 @@ def fetch_Stock_Info(db=None):
                                                 }
                                                 years_checked =[]
                                                 qtr_checked=[]
-                                                symbol =""
-                                                entity=""
-                                                metric=""
                                                 qtr_acc=0
                                                 fy=0
 
@@ -405,16 +396,17 @@ if __name__=="__main__":
     #go to this link to download the company facts https://www.sec.gov/Archives/edgar/daily-index/xbrl/companyfacts.zip
    
     # # Flow to update stock info from json files  (GAAP)
-    if os.getenv('ENV')=='dev':
+    if os.getenv('ENV')=='devs':
         from bson import json_util
         with open ('/Users/jjmr86/Downloads/test.QtrStockData.json','r') as f:
             stock_object = json_util.loads(f.read())
     else:
-        stock_object = fetch_Stock_Info()
-
-
+        stock_object = fetch_Stock_Info(db)
+    
     prepare_collection_backup(db,collection_name='QtrStockData')
     push_StockData(db,stock_object,collection='QtrStockData',batch_size=batch_size)    
+    
+    
 
 
     # # function to update main revenue trends per quarter in the db   
@@ -425,6 +417,7 @@ if __name__=="__main__":
     pushMergedRevenueGrowthQtrStockData(response,db['QtrStockRevTrend'])    
     # join the qtr stock rev trend with the stock value score
     aggregateScoreToQtrRevTrend(db['QtrStockRevTrend'])
+
 
     # create index for each collection
     # create_index(db)
