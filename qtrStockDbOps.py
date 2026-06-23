@@ -71,9 +71,9 @@ def fetch_Stock_Info(db=None):
     files = os.listdir(path)
     metric_keys =get_metric_keys()
     nasdaq_tickers = set(nasdaq["ticker"].astype(str))
+    
+
     for file in files:
-        # use to debug
-    # for file in files[-5::]:
         cik_integer = [int(file[:-5].lstrip("CIK").lstrip("0"))]
         tickers=fetch_ticker(cik_integer,collection)
         valid_tickers = [t for t in tickers if t in nasdaq_tickers]
@@ -81,14 +81,13 @@ def fetch_Stock_Info(db=None):
             for ticker in valid_tickers:
                 with open(path + file) as f:
                     item = json.load(f)
-            # Iterate through items in the dataset
                     if item and 'entityName' in item and 'facts' in item and 'us-gaap' in item['facts'] and 'cik' in item:
                         # ================== preparing for q4 revenue calc ============
                         
-                        years_checked =[]
-                        qtr_checked=[]
-                        qtr_acc=0
-                        fy=0
+                        qtr_checked_by_year = {}
+                        qtr_acc_by_year = {}
+                        ytd_reported_by_year = {}
+                        q4_yielded = set()
                         current_year = int(datetime.today().year)
                         # =============================================
 
@@ -137,39 +136,43 @@ def fetch_Stock_Info(db=None):
                                                 'fy':metric['fy'],
                                                 'filed':metric['filed']
                                             }
-                                        if current_year>endDate>2020 and metric_name  in('Revenues','RevenuesNetOfInterestExpense'):
-                                            if endDate not in years_checked:
-                    
-                                                years_checked.append(endDate)
-                                                qtr_checked=[]
-                                            frame_val = metric.get('frame',None)
-                                            if frame_val and metric['form']=='10-Q' and metric['fp']not in qtr_checked:
-                                                qtr_checked.append(metric['fp'])
-                                                qtr_acc+=metric['val']
-                                            if frame_val and metric['form']=='10-K':
-                                                fy =metric['val']
-                                            if len(qtr_checked)==3 and 'Q4' not in qtr_checked:
-                                                
-                                                qtr_checked=[]
+                                        if current_year>endDate>2020 and metric_name in ('Revenues','RevenuesNetOfInterestExpense'):
+                                            qtr_checked_by_year.setdefault(endDate,set())
+                                            qtr_acc_by_year.setdefault(endDate,0)
+                                            frame_val = metric.get('frame')
+                                            if frame_val and metric.get('form')=='10-Q' and metric.get('fp') in {'Q1','Q2','Q3'}:
+                                                fp=metric.get('fp')
+                                                if fp not in qtr_checked_by_year[endDate]:
+                                                    qtr_checked_by_year[endDate].add(fp)
+                                                    qtr_acc_by_year[endDate]+=metric['val']
+                                            
+                                            start = metric.get('start')
+                                            if(
+                                                start 
+                                                and end
+                                                and metric.get('form')=='10-K'
+                                                and datetime.fromisoformat(start).month==1
+                                                and datetime.fromisoformat(end).month==12 
+
+                                            ):
+                                                ytd_reported_by_year[endDate]=metric['val']
+                                            if(
+                                                endDate not in q4_yielded
+                                                and {'Q1','Q2','Q3'}.issubset(qtr_checked_by_year[endDate])
+                                                and endDate in ytd_reported_by_year
+                                            ):
                                                 yield{
                                                     "ticker":ticker,
                                                     "entity":item['entityName'],
                                                     "metric":metric_name,
-                                                    "value":fy-qtr_acc,
-                                                    "date":f"{str(endDate)}-12-31",
+                                                    "value":ytd_reported_by_year[endDate]- qtr_acc_by_year[endDate],
+                                                    "date":f"{endDate}-12-31",
                                                     "form":"calculated",
                                                     "fp":"Q4",
-                                                    "frame":f"CY{str(endDate)}Q4"
+                                                    "frame":f"CY{endDate}Q4"
                                                 }
-                                                years_checked =[]
-                                                qtr_checked=[]
-                                                qtr_acc=0
-                                                fy=0
-
-
-
-
-                                        
+                                                q4_yielded.add(endDate)
+                                                                         
                                         
 def fetch_dei_info():
     path = f"/home/jjmr86/quarterly_stock_ops/companyfacts/"
@@ -396,7 +399,7 @@ if __name__=="__main__":
     #go to this link to download the company facts https://www.sec.gov/Archives/edgar/daily-index/xbrl/companyfacts.zip
    
     # # Flow to update stock info from json files  (GAAP)
-    if os.getenv('ENV')=='devs':
+    if os.getenv('ENV')=='dev':
         from bson import json_util
         with open ('/Users/jjmr86/Downloads/test.QtrStockData.json','r') as f:
             stock_object = json_util.loads(f.read())
