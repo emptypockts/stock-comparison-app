@@ -18,3 +18,4 @@ level_*.txt
 *.txt
 token.json
 credentials.json
+*.log

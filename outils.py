@@ -23,6 +23,16 @@ from prompts import (
     )
 load_dotenv()
 
+
+#===========================================#
+#           constants                       #
+#===========================================#
+
+FORM_TYPES = ['10-K', '10-Q', '8-K', 'DEF 14A','20-F','6-K'] 
+DISPOSABLE_FILES=('.rtn','.quant','.all','.txt','.seven','.DS_STORE')
+ALL_BUT_SEC_FILES=('.rtn','.quant','.all','.seven','.DS_STORE')
+AI_REPORTS=('.rtn','.quant','.all','.json','.seven')
+
 url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 GEMINI_API=os.getenv('GEMINI_API')
 DIRECTORY=os.getenv('DIRECTORY')
@@ -141,7 +151,6 @@ def restore_tables(chunk,tables):
             f"\n\n----[TABLE START]----\n{v}\n\n----[TABLE END]----",chunk
         )
     return chunk
-
 def extract_items(text):
     ITEM_PATTERN =re.compile(
         r'(?ims)'
@@ -161,7 +170,6 @@ def extract_items(text):
         return item_object
     else: 
         return []
-
 def extract_def_14a_sections(text):
     DEF_14A_PATTERNS = re.compile(
         r'(?im)^\s*('
@@ -551,25 +559,26 @@ def save_file_test(file_name:str,dict_obj,file_mode:str):
 #   quant logic helpers           #
 #=================================#
 
-form_types = ['10-K', '10-Q', '8-K', 'DEF 14A','20-F','6-K'] 
 
-def is_new_analysis_needed(ticker_dir,extension:Literal[".json",".quant",".rtn"]):
-    three_months_ago = datetime.now() - timedelta(days=90)
-    most_recent_report = None
-    for file_name in os.listdir(ticker_dir):
-        if file_name.endswith(extension):
-            file_date_str = re.findall(r'\d{4}-\d{2}-\d{2}', file_name)
-            if file_date_str:
-                file_date = datetime.strptime(file_date_str[0], '%Y-%m-%d')
-                if file_date > three_months_ago:
-                    # Load the most recent analysis report
-                    with open(os.path.join(ticker_dir, file_name), 'r', encoding='utf-8') as f:
-                        most_recent_report = json.load(f)
-                        if isinstance(most_recent_report,str):
-                            most_recent_report = json.loads(most_recent_report)
-                        print(f"returning report as a: {type(most_recent_report)}")
-                    return False, most_recent_report
-    return True, None
+def is_new_analysis_needed(ticker_dir,extension:str):
+    if extension not in AI_REPORTS:
+        raise ValueError(f"Unsuported extension: {extension}. Expecting: {AI_REPORTS}")
+    else:
+        three_months_ago = datetime.now() - timedelta(days=90)
+        most_recent_report = None
+        for file_name in os.listdir(ticker_dir):
+            if file_name.endswith(extension):
+                file_date_str = re.findall(r'\d{4}-\d{2}-\d{2}', file_name)
+                if file_date_str:
+                    file_date = datetime.strptime(file_date_str[0], '%Y-%m-%d')
+                    if file_date > three_months_ago:
+                        # Load the most recent analysis report
+                        with open(os.path.join(ticker_dir, file_name), 'r', encoding='utf-8') as f:
+                            most_recent_report = json.load(f)
+                            if isinstance(most_recent_report,str):
+                                most_recent_report = json.loads(most_recent_report)
+                        return False, most_recent_report
+        return True, None
 
 def analyze_ticker(directory, ticker,extension:Literal[".json",".quant",".rtn",".all"]):
     reports = []
@@ -578,14 +587,14 @@ def analyze_ticker(directory, ticker,extension:Literal[".json",".quant",".rtn","
     if not os.path.exists(ticker_dir):
         print(f"Directory for ticker '{ticker}' not found. Creating folder...")
         os.makedirs(ticker_dir)
-        get_sec_filings(directory=directory,ticker=ticker, form_types=form_types)
+        get_sec_filings(directory=directory,ticker=ticker, form_types=FORM_TYPES)
     
     # Check if any .txt files are older than 3 months and delete them
     three_months_ago = datetime.now() - timedelta(days=90)
     txt_files_exist = False
     
     for file_name in os.listdir(ticker_dir):
-        if file_name.endswith('.txt'):
+        if file_name.endswith(DISPOSABLE_FILES):
             file_path = os.path.join(ticker_dir, file_name)
             file_mod_time = datetime.fromtimestamp(os.path.getmtime(file_path))
             if file_mod_time < three_months_ago:
@@ -597,7 +606,7 @@ def analyze_ticker(directory, ticker,extension:Literal[".json",".quant",".rtn","
     # Fetch new data if no recent .txt files are left
     if not txt_files_exist or not os.listdir(ticker_dir):
         print(f"No recent files for '{ticker}' found. Fetching data...")
-        get_sec_filings(directory=directory,ticker=ticker, form_types=form_types)
+        get_sec_filings(directory=directory,ticker=ticker, form_types=FORM_TYPES)
     
     needs_analysis, existing_report = is_new_analysis_needed(ticker_dir,extension)
 
