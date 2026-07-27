@@ -26,7 +26,8 @@ def get_cf_certs()->dict:
     _cert_cache_expiry = now + CERT_TTL
     return _cert_cache
  
-EMAIL = os.getenv('USER_AGENT')
+EMAIL_DEV = os.getenv('EMAIL_DEV')
+USER_DEV = os.getenv('USER_DEV')
 CF_CERT_URL = f"https://{os.getenv('CF_URL_CDN_CGI_CERTS')}/cdn-cgi/access/certs"
 CF_AUDIENCE_ID = os.getenv('CF_AUD_ID')
 ENV = os.getenv('ENV','prod')
@@ -38,8 +39,8 @@ def require_cf_token(fn:Callable)-> Callable:
         if ENV == 'dev':
             logger.info("running in DEV mode")
             request.cf_identity = {
-                'email': EMAIL,
-                'user': EMAIL
+                'email': EMAIL_DEV,
+                'user': USER_DEV
             } 
             return fn(*args,**kwargs)
         else:
