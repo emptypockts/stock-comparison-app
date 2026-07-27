@@ -1,26 +1,49 @@
 import functools
-import jwt
 from dotenv import load_dotenv
+load_dotenv()
+import jwt
 import os
+from typing import Callable, Any
 from flask import request, jsonify
 import requests
-from datetime import datetime
-load_dotenv()
+from eacsa_logger import setup_logging,get_logger
+setup_logging()
+logger = get_logger(__name__)
+from datetime import datetime, timedelta
+
+_cert_cache : dict = {}
+_cert_cache_expiry : datetime | None = None
+CERT_TTL = timedelta(hours=24)
+
+def get_cf_certs()->dict:
+    global _cert_cache, _cert_cache_expiry
+    now = datetime.now()
+    if _cert_cache and _cert_cache_expiry and now < _cert_cache_expiry:
+        return _cert_cache
+    response = requests.get(CF_CERT_URL, timeout=5)
+    response.raise_for_status()
+    _cert_cache = response.json()
+    _cert_cache_expiry = now + CERT_TTL
+    return _cert_cache
+ 
+EMAIL = os.getenv('USER_AGENT')
 CF_CERT_URL = f"https://{os.getenv('CF_URL_CDN_CGI_CERTS')}/cdn-cgi/access/certs"
-CERT_KYS = requests.get(CF_CERT_URL).json()
 CF_AUDIENCE_ID = os.getenv('CF_AUD_ID')
 ENV = os.getenv('ENV','prod')
-def require_cf_token(fn):
+
+
+def require_cf_token(fn:Callable)-> Callable:
     @functools.wraps(fn)
-    def wrapper(*args,**kwargs):
-        if ENV=='dev':
-            request.cf_identity={
-                'email':'jjmr86@live.com.mx',
-                'user':'jjmr86@live.com.mx'
+    def wrapper(*args,**kwargs)-> Any:
+        if ENV == 'dev':
+            logger.info("running in DEV mode")
+            request.cf_identity = {
+                'email': EMAIL,
+                'user': EMAIL
             } 
             return fn(*args,**kwargs)
         else:
-            print("running prod mode")
+            logger.info("running prod mode")
             token = request.headers.get("Cf-Access-Jwt-Assertion") or request.cookies.get("CF_Authorization")
             if not token:
                 return jsonify({
@@ -28,7 +51,8 @@ def require_cf_token(fn):
                 }),401
             headers = jwt.get_unverified_header(token)
             try:
-                key = next(k for k in CERT_KYS["keys"] if k["kid"]==headers["kid"])
+                keys = get_cf_certs()
+                key = next(k for k in keys["keys"] if k["kid"]==headers["kid"])
             except StopIteration:
                 return jsonify(
                     {
