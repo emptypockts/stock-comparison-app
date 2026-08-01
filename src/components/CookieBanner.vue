@@ -3,7 +3,7 @@
     <div v-if="!cookieAccepted" class="cookie-banner">
       
       <p>
-        We use cookies to improve your experience on our site. By using our site, you consent to our use of cookies.
+        We use cookies to improve your experience on our site. By using our site, you consent to accept our cookies.
       </p>
       <button @click="acceptCookies">OK, got it</button>
       <button @click="declineCookies">Decline</button>

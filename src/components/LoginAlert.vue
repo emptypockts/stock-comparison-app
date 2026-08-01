@@ -5,14 +5,13 @@
       <h2>Important Notice</h2>
       <div>
         <p>
-          {{ showAlert }}
-          Honcho is a demonstration application and is intended for educational and informational purposes only. The
+          
+          EACSA Financials  is a demonstration application and is intended for educational and informational purposes only. The
           content and data provided within the application do not constitute financial advice, investment
           recommendations,
-          or professional guidance. Users should not rely on Honcho for making financial decisions.
+          or professional guidance. Users should not rely on EACSA Financials for making financial decisions.
           I, as the creator of Honcho, am not responsible or liable for any losses, damages, or negative consequences
-          that
-          may arise from the use of this application. Always seek professional financial advice before making any
+          that may arise from the use of this application. Always seek professional financial advice before making any
           investment or financial decisions.
           <br><br>
           p/b ratio is calculated using the Stockholders Equity instead of the tangible book value.
