@@ -1,4 +1,3 @@
-from dotenv import load_dotenv
 import os
 from companyData import compile_stockData
 from fetch5yData import fetch_5y_data
@@ -10,8 +9,8 @@ from langchain_core.messages import HumanMessage, SystemMessage
 import json
 from outils import save_analysis_report,analyze_ticker,llm
 from datetime import datetime
-load_dotenv()
-DIRECTORY=os.getenv('DIRECTORY')
+from app_constants import SEC_DIRECTORY
+
 
 def get_company_data_agent(tickers)->str:
     return f"""
@@ -240,11 +239,15 @@ def validate_json(agent,r6)->str:
         raise Exception(f"response has no content. see details: {response}")
         return {}
     
-def compile(tickers)->str:
+def compile(tickers)-> str | None:
+    needs_analysis : bool | None = None
     year = datetime.today().year
-    directory= os.path.join(DIRECTORY,str(year))
+    directory= os.path.join(SEC_DIRECTORY,str(year))
     tickers=[t.capitalize()for t in tickers]
     companies = fetch_name(tickers)
+    if not companies or not tickers:
+        raise ValueError(f"There is an issue with the companies or the tickers provided. Please validate them Tickers: {tickers} Companies: {companies} ")
+
     for ticker,company in zip(tickers,companies):
         ticker_dir=os.path.join(directory,ticker)
         extension=".all"
@@ -303,14 +306,16 @@ def compile(tickers)->str:
                 save_analysis_report(ticker_dir, ticker,final_report,extension=extension)
                 return r6.strip()
             else:
-                return None     
+                raise ValueError(f"The last step of the report compilation is empty. Please check the overall ai report.")   
         except Exception as e:
             print("error is: ",str(e))
             return None
-    else:
+    elif needs_analysis is False:
         print(f"Analysis for ticker '{ticker}' is up to date.")
         return existing_report
+    else:
+        raise ValueError("Needs analysis is None. Check the AiReport Module.")
 if __name__ == "__main__":
-    tickers = ["googl"]
+    tickers = ["spcx"]
 
     print(compile(tickers))

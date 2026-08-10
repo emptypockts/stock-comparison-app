@@ -5,13 +5,13 @@ from dotenv import load_dotenv
 import os
 import requests
 import jwt
+from app_constants import MONGODB_URI, CF_CERT_URL
 import certifi
 
 def loginStep(username):
     load_dotenv()
-    uri = os.getenv('MONGODB_URI')
-    # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
-    client = MongoClient(uri)
+    
+    client = MongoClient(MONGODB_URI)
 
 
     # Access the 'users' collection in the database
@@ -28,13 +28,10 @@ if __name__ == "__main__":
     # load_dotenv()
     from flask import Flask,request
     app = Flask(__name__)
-    CF_CERT_URL = f"https://{os.getenv('CF_URL_CDN_CGI_CERTS')}/cdn-cgi/access/certs"
+    
     CERT_KYS = requests.get(CF_CERT_URL).json()
-    CF_AUDIENCE_ID = os.getenv('CF_AUD_ID')
 
-    uri = os.getenv('MONGODB_URI')
-    # # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
-    client = MongoClient(uri)
+    client = MongoClient(MONGODB_URI)
 
     
     # try:

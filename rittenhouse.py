@@ -2,13 +2,10 @@ import json
 import os
 from datetime import datetime, timedelta
 from outils import clean_edgar_text,analyze_ticker,save_analysis_report,process_sec_chunks_ritten,synthetize_summaries,llm,generic_trim_document
-from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage,SystemMessage
 from prompts import rittenhouse_synthesis_instructions,summarize_chunk_instructions_ritten
 from financialUtils import fetch_name
-
-load_dotenv()
-DIRECTORY=os.getenv('DIRECTORY')
+from app_constants import SEC_DIRECTORY
 
 
 
@@ -55,7 +52,7 @@ def synthetize_rittenhouse_reports(reports)->str:
     
 def quant_rittenhouse(year,tickers:list)->str:
     responses={}
-    directory= os.path.join(DIRECTORY,year)
+    directory= os.path.join(SEC_DIRECTORY,year)
     tickers=[t.capitalize()for t in tickers]
     companies = fetch_name(tickers)
     for ticker,company in zip(tickers,companies):
@@ -97,7 +94,7 @@ if __name__ == "__main__":
       # Root directory where ticker folders are stored
     ticker = ['mu']  # Example ticker
     current_year=datetime.now().year
-    directory = f"{DIRECTORY}/{current_year}"
+    directory = f"{SEC_DIRECTORY}/{current_year}"
     last_year=current_year-1
     current_qtr=datetime.now().month
     last_qtr=(datetime.now()-timedelta(days=90)).month

@@ -1,11 +1,9 @@
 import os
 import resend
-from dotenv import load_dotenv
-
-load_dotenv()
+from app_constants import RESEND_API_KEY
 def email_send(e_to:str,e_subject:str,e_body:str,e_content_type=None):
     try:
-        resend.api_key = os.getenv("RESEND_API")
+        resend.api_key = RESEND_API_KEY
         params: resend.Emails.SendParams = {
         "from": "eacsa <noreply@eacsa.us>",
         "to": e_to,

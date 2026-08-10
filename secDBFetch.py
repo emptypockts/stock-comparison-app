@@ -2,20 +2,15 @@ import os
 import requests
 from bs4 import BeautifulSoup
 from financialUtils import fetch_cik
-from pymongo.server_api import ServerApi
 from pymongo import MongoClient
-import certifi
-from pymongo.collection import Collection,Cursor
-from dotenv import load_dotenv
 from datetime import datetime
-load_dotenv()
-uri = os.getenv('MONGODB_URI')
-# client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
-client = MongoClient(uri)
+
+from app_constants import MONGODB_URI, SEC_DIRECTORY
+
+client = MongoClient(MONGODB_URI)
 
 db=client['test']
 cik_collection=db['tickerCIK']
-DIRECTORY = os.getenv('DIRECTORY')
 
 # Ensure the base directory exists
 
@@ -100,9 +95,9 @@ def get_sec_filings(directory:str,ticker, form_types)->dict:
 
 # Example Usage:
 if __name__ == "__main__":
-    ticker = 'sols'  # Example ticker
+    ticker = 'mu'  # Example ticker
     form_types = ['10-K', '10-Q', '8-K', 'DEF 14A','20-F','6-K']  # Forms to fetch
     # form_types = ['10-K', '10-Q']  # Forms to fetch
     year =datetime.now().year
-    response= get_sec_filings(f"{DIRECTORY}/{year}",ticker, form_types)
+    response= get_sec_filings(f"{SEC_DIRECTORY}/{year}",ticker, form_types)
     print(response)

@@ -4,12 +4,10 @@ from pymongo import errors,DESCENDING
 from datetime import datetime,timedelta
 import pandas as pd
 import requests
-from dotenv import load_dotenv
 import os
+from app_constants import TWELVE_API_KEY, TWELVE_URI, MONGODB_URI, CURRENT_ENVIRONMENT
 from enum import Enum
-load_dotenv()
-KY = os.getenv('TWELVE_API_KY')
-URL_BASE = os.getenv('TWELVE_URI')
+from pymongo import MongoClient
 
 class Status (str,Enum):
     ongoing="ongoing"
@@ -248,7 +246,7 @@ def fetch_price_fmp(
     import time
     import json
     if mode=='last':
-        URL = f"{URL_BASE}/price?symbol={ticker.upper()}&apikey={KY}&source=docs"
+        URL = f"{TWELVE_URI}/price?symbol={ticker.upper()}&apikey={TWELVE_API_KEY}&source=docs"
         response = requests.get(URL)
         try:
             price = float(response.json()['price'])
@@ -257,7 +255,7 @@ def fetch_price_fmp(
             price = 0
         return price
     elif mode=='5y':
-        URL = f"{URL_BASE}/price?symbol={ticker.upper()}&apikey={KY}&source=docs"
+        URL = f"{TWELVE_URI}/price?symbol={ticker.upper()}&apikey={TWELVE_API_KEY}&source=docs"
         response = requests.get(URL)
         try:
             last_price = float(response.json()['price'])
@@ -292,8 +290,8 @@ def fetch_price_fmp(
                 for year in missing_years:
                     missing_start_date=str(year)+'-12-30'
                     missing_end_date=str(year)+'-12-31'
-                    URL = f"{URL_BASE}/time_series?start_date={missing_start_date}&end_date={missing_end_date}\
-                        &symbol={ticker.upper()}&interval=1day&apikey={KY}"
+                    URL = f"{TWELVE_URI}/time_series?start_date={missing_start_date}&end_date={missing_end_date}\
+                        &symbol={ticker.upper()}&interval=1day&apikey={TWELVE_API_KEY}"
                     response = requests.get(URL)
                     time.sleep(7.5)
                     try:
@@ -331,7 +329,7 @@ def fetch_price_fmp(
 
     elif mode=='calendar_yr':
         if calendar_yr==datetime.now().year:
-            URL = f"{URL_BASE}/price?symbol={ticker.upper()}&apikey={KY}&source=docs"
+            URL = f"{TWELVE_URI}/price?symbol={ticker.upper()}&apikey={TWELVE_API_KEY}&source=docs"
             response = requests.get(URL)
             try:
                 price = float(response.json()['price'])
@@ -350,7 +348,7 @@ def fetch_price_fmp(
         else:
             start_date = datetime(year=calendar_yr,month=12,day=30).date()
             end_date=datetime(year=calendar_yr,month=12,day=31).date()
-            URL = f"{URL_BASE}/time_series?start_date={start_date}&end_date={end_date}&symbol={ticker.upper()}&interval=1day&apikey={KY}"
+            URL = f"{TWELVE_URI}/time_series?start_date={start_date}&end_date={end_date}&symbol={ticker.upper()}&interval=1day&apikey={TWELVE_API_KEY}"
             response = requests.get(URL)
             try:
                 historic_stock_prices = response.json()
@@ -441,8 +439,8 @@ def fetch_price_realtime(ticker:str,period:int=5):
     prices=[]
     end_date=datetime.now().date()
     start_date=str(end_date.year-period)+'-01-01'
-    URL = f"{URL_BASE}/time_series?start_date={start_date}&end_date={str(end_date)}\
-        &symbol={ticker.upper()}&interval=1day&apikey={KY}"
+    URL = f"{TWELVE_URI}/time_series?start_date={start_date}&end_date={str(end_date)}\
+        &symbol={ticker.upper()}&interval=1day&apikey={TWELVE_API_KEY}"
     response = requests.get(URL)
     try:
         historic_stock_prices = response.json()
@@ -462,12 +460,7 @@ def fetch_name(tickers:list)->str:
     return:
         list of company names
     """
-    from pymongo import MongoClient
-    import certifi
-    from pymongo.server_api import ServerApi
-    uri = os.getenv('MONGODB_URI')
-    # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
-    client = MongoClient(uri)
+    client = MongoClient(MONGODB_URI)
 
     db=client['test']
     ticker_collection=db['tickerCIK']
@@ -523,9 +516,9 @@ def fetch_ai_queries(user_id,db_name,collection_name,max_queries,sort:Literal['a
     import json
     import certifi
     from pymongo.server_api import ServerApi
-    uri = os.getenv('MONGODB_URI')
-    # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
-    client = MongoClient(uri)
+    
+    # client = MongoClient(MONGODB_URI, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
+    client = MongoClient(MONGODB_URI)
 
     db=client[db_name]
     collection=db[collection_name]
@@ -587,12 +580,8 @@ def qtr_4_calc()->list:
     returns: None
     """
     import os
-    from dotenv import load_dotenv
-    load_dotenv()
-    from pymongo import MongoClient
-    from pymongo.server_api import ServerApi
-    uri = os.getenv('MONGODB_URI')
-    client = MongoClient(uri)
+    
+    client = MongoClient(MONGODB_URI)
     db=client['test']
 
     years_checked =[]
@@ -606,8 +595,7 @@ def qtr_4_calc()->list:
     collection_name='QtrStockData'
     current_year = int(datetime.today().year)
     collection=db[collection_name]
-    env = os.getenv('ENV')
-    if os.getenv('ENV')=='dev':
+    if CURRENT_ENVIRONMENT=='dev':
         nasdaq =pd.read_csv(r"/Users/jjmr86/Downloads/nasdaq.csv")
     else:
         nasdaq =pd.read_csv(r"/home/jjmr86/quarterly_stock_ops/nasdaq.csv")

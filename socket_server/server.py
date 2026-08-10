@@ -2,12 +2,10 @@ import eventlet
 eventlet.monkey_patch()
 from flask import Flask,request 
 from flask_socketio import SocketIO,join_room
-from dotenv import load_dotenv
 from datetime import datetime
-load_dotenv()
-import os
+from app_constants import REDIS_SERVER_URI
 app = Flask(__name__)
-ws_server = SocketIO(app,cors_allowed_origins="*",message_queue=os.getenv('REDIS_SERVER'),
+ws_server = SocketIO(app,cors_allowed_origins="*",message_queue=REDIS_SERVER_URI,
                      async_mode='eventlet'
                      )
 name_space="/ai"

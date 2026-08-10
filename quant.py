@@ -1,6 +1,5 @@
-from dotenv import load_dotenv
-load_dotenv()
 import json
+import os
 from datetime import datetime
 from financialUtils import fetch_name
 from outils import ( 
@@ -14,10 +13,9 @@ from outils import (
 from eacsa_logger import setup_logging,get_logger
 setup_logging()
 logger = get_logger(__name__)
+from app_constants import SEC_DIRECTORY
 
 
-import os
-DIRECTORY_PATH = os.getenv('DIRECTORY')
 # analyses the sec reports from edgar db and provides a summary with red flags and suspicious patterns
 def quant(year,tickers:list[str])->list:
     """
@@ -29,7 +27,7 @@ def quant(year,tickers:list[str])->list:
     logger.info("Start Quant log")
     REPORTS_WITH_ITEMS = ['10-K','8-K','10-Q']
     REPORTS_WITH_SECTIONS = ['DEF 14A']
-    directory = os.path.join(DIRECTORY_PATH,year)
+    directory = os.path.join(SEC_DIRECTORY,year)
     tickers = [t.capitalize()for t in tickers]
     companies = fetch_name(tickers)
     final_reports = []

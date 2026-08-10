@@ -1,30 +1,30 @@
 
 from pymongo import MongoClient
-import certifi
-from pymongo.server_api import ServerApi
-from dotenv import load_dotenv
+from pymongo.collection import Collection
 from financialUtils import fetch_ticker,fetch_cik
-import os
+from app_constants import MONGODB_URI
 import json
-load_dotenv()
-uri = os.getenv('MONGODB_URI')
 
+def createCikTickerCollection(file: str, collection: Collection) -> None:
+    """
+    Extracts the CIK Ticker data and stores it in a MongoDB Collection.
+    Args:
+        file: str
+        collection : Collection
+    Returns:
+        None 
+    """
 
-
-def createCikTickerCollection(file,collection):
-    import json
-
-    json_obj = json.loads(file)
-    data = json_obj['data']
+    # {'cik_str': 1045810, 'ticker': 'NVDA', 'title': 'NVIDIA CORP'}
+    with open(file) as f:
+        json_obj = json.load(f)
     ciks =[]
-    for d in data:
+    for _, v in json_obj.items():
         ciks.append(
             {
-                'cik_str':d[0],
-                'title':d[1],
-                'ticker':d[2],
-                'exchange':d[3]
-
+                'cik_str': v['cik_str'],
+                'title': v['title'],
+                'ticker': v['ticker'],
             }
         )
 
@@ -41,7 +41,7 @@ def createCikTickerCollection(file,collection):
     
 if __name__ == "__main__":
     # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
-    client = MongoClient(uri)
+    client = MongoClient(MONGODB_URI)
 
     db = client["test"]
     collection=db['tickerCIK']

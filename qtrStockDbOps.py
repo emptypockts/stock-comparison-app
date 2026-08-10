@@ -1,4 +1,4 @@
-from dotenv import load_dotenv
+
 import os
 from pymongo import MongoClient, errors,UpdateOne
 from pymongo.collection import Collection
@@ -7,7 +7,7 @@ import pandas as pd
 from financialUtils import get_metric_keys,fetch_ticker,push_StockData,swap_temp_prod,prepare_collection_backup
 import numpy as np
 from datetime import datetime
-load_dotenv
+from app_constants import CURRENT_ENVIRONMENT, MONGODB_URI
 # join qtr rev trend table with stock score 
 def aggregateScoreToQtrRevTrend(collection:Collection,batch_size=1000):
     
@@ -60,8 +60,8 @@ def aggregateScoreToQtrRevTrend(collection:Collection,batch_size=1000):
         print('push completed successfully')
 def fetch_Stock_Info(db=None):
     collection=db['tickerCIK']
-    env = os.getenv('ENV')
-    if os.getenv('ENV')=='dev':
+    
+    if CURRENT_ENVIRONMENT =='dev':
         path=r'/Users/jjmr86/Downloads/companyfacts/'
         nasdaq =pd.read_csv(r"/Users/jjmr86/Downloads/nasdaq.csv")
     else:
@@ -387,9 +387,7 @@ def CountAggRecordPipeline(collection:Collection):
 
 if __name__=="__main__":
     
-    uri = os.getenv('MONGODB_URI')
-    # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
-    client = MongoClient(uri)
+    client = MongoClient(MONGODB_URI)
 
     db = client["test"]
     # tickers = ['CVS','ROST']
@@ -399,7 +397,7 @@ if __name__=="__main__":
     #go to this link to download the company facts https://www.sec.gov/Archives/edgar/daily-index/xbrl/companyfacts.zip
    
     # # Flow to update stock info from json files  (GAAP)
-    if os.getenv('ENV')=='dev':
+    if CURRENT_ENVIRONMENT =='dev':
         from bson import json_util
         with open ('/Users/jjmr86/Downloads/test.QtrStockData.json','r') as f:
             stock_object = json_util.loads(f.read())

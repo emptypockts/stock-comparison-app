@@ -5,14 +5,12 @@ from datetime import datetime
 import re
 import os
 import ast
-from pymongo.server_api import ServerApi
 from pymongo import MongoClient
-import certifi
 from dotenv import load_dotenv
 load_dotenv()
-uri = os.getenv('MONGODB_URI')
-# client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
-client = MongoClient(uri)
+from app_constants import MONGODB_URI
+
+client = MongoClient(MONGODB_URI)
 
 db = client["test"]
 ai_report_collections = db["aiTasks"]
@@ -111,7 +109,7 @@ class PDFReport(FPDF):
       
 
 if __name__=='__main__':
-  task_id = "dcfb82b9-9819-4a8a-aeea-1076b68e54e6"
+  task_id = "c7e2eef1-924c-40c6-bbc0-35936768fc7b"
   
  
   pdf = PDFReport(task_id)

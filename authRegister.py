@@ -1,18 +1,12 @@
 from pymongo import MongoClient, errors
-import certifi
-from dotenv import load_dotenv
-import os
-from pymongo.server_api import ServerApi
 from datetime import datetime, timezone
 import bcrypt
 import re  # For email validation
+from app_constants import MONGODB_URI
 
 def registerStep(username, password, name, email):
     current_time = datetime.now(timezone.utc).isoformat(timespec='milliseconds')
-    load_dotenv()
-    uri = os.getenv('MONGODB_URI')
-    # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
-    client = MongoClient(uri)
+    client = MongoClient(MONGODB_URI)
 
 
     db = client["test"]
@@ -53,18 +47,16 @@ def registerStep(username, password, name, email):
         return {"success": False, "message": f"An error occurred: {str(e)}"}
 
 if __name__ == "__main__":
-    load_dotenv()
-    uri = os.getenv('MONGODB_URI')
     # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
-    client = MongoClient(uri)
+    client = MongoClient(MONGODB_URI)
 
     
     try:
         client.admin.command('ping')
         print("Pinged your deployment. You successfully connected to MongoDB!")
         # Testing user registration
-        result = registerStep(username='ChandraP', password='ChandraP', name='Chandra', email='ChandraP@eric.com')
-        print(result)
+        # result = registerStep(username='ChandraP', password='ChandraP', name='Chandra', email='ChandraP@eric.com')
+        # print(result)
 
     except Exception as e:
         print(e)

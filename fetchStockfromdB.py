@@ -1,8 +1,7 @@
 from pymongo import MongoClient
-import certifi
-from pymongo.server_api import ServerApi
-from dotenv import load_dotenv
-import os
+from app_constants import MONGODB_URI
+
+
 # Formatting functions
 def format_currency(value):
     return "${:,.2f}".format(value) if value is not None else "N/A"
@@ -83,8 +82,7 @@ def stockInsert(db,jsonData):
     print("jsonData inserted successfully")
 
 if __name__ == "__main__":
-    load_dotenv()
-    uri = os.getenv('MONGODB_URI')
+    uri = MONGODB_URI
     # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
     client = MongoClient(uri)
 

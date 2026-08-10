@@ -1,18 +1,11 @@
 import yfinance as yf
 import pandas as pd
-from dotenv import load_dotenv
-import os
 import requests
 from io import StringIO
-import logging
-import locale
-logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
-
-load_dotenv()
-KEY = os.getenv('CURRENCY_API')
+from app_constants import CURRENCY_API_KEY
 url='https://api.exchangeratesapi.io/v1/latest'
 query_string = {
-    "access_key":KEY
+    "access_key":CURRENCY_API_KEY
 }
 def calculate_historical_growth_rate(ticker):
     """Calculate the Compound Annual Growth Rate (CAGR) of Free Cash Flow."""
@@ -31,7 +24,7 @@ def calculate_historical_growth_rate(ticker):
     num_years = len(fcf) - 1
 
     if start_value <= 0 or end_value <= 0:
-        logging.info("Invalid FCF values for growth rate calculation. returning default 5%")
+        
         return 5.0
     if 'growth' in stock.earnings_estimate:
         cagr=stock.earnings_estimate['growth'].iloc[-1]
@@ -202,7 +195,6 @@ def get_company_name(ticker):
 def getAllIntrinsicValues(ticker, growth_rate=5.0, discount_rate=10.0, terminal_growth_rate=2.0, projection_years=5)->list:
     intrinsic_values = []
     if not ticker:
-        logging.warning(f"Ticker '{ticker}' is invalid or empty")
         return 0
 
     

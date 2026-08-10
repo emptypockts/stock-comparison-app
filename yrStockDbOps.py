@@ -1,31 +1,31 @@
 from datetime import datetime
 import os
 import pandas as pd
-from dotenv import load_dotenv
-from pymongo.server_api import ServerApi
 from pymongo import MongoClient
-import certifi
-from companyData import fetch_metric,fetch_price_fmp
 from financialUtils import (
     get_metric_keys,fetch_ticker,
-    serialize_cursor,
     write_object,
+    fetch_price_fmp,
     push_StockData,
-    swap_temp_prod)
-from pymongo.collection import Collection,Cursor
-from typing import Literal
-import json
-load_dotenv()
-uri = os.getenv('MONGODB_URI')
-# client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
-client = MongoClient(uri)
+    fetch_metric
 
-KY = os.getenv('TWELVE_API_KY')
-URL_BASE = os.getenv('TWELVE_URI')
+    )
+from pymongo.collection import Collection
+import json
+from app_constants import MONGODB_URI, CURRENT_ENVIRONMENT
+client = MongoClient(MONGODB_URI)
+from pathlib import Path
+
+if CURRENT_ENVIRONMENT=='dev':
+    path = Path('/Users/jjmr86')
+else:
+    path = Path('/home/jjmr86')
+
+
 def fetch_tickers(collection:Collection)->list:
-    path = r"/home/jjmr86/quarterly_stock_ops/companyfacts/"
+    path = path / "quarterly_stock_ops" / "companyfacts"
     files = os.listdir(path)
-    nasdaq =pd.read_csv(r"/home/jjmr86/quarterly_stock_ops/nasdaq.csv")
+    nasdaq =pd.read_csv(path / "quarterly_stock_ops" /" nasdaq.csv")
     ciks=[int(e[:-5].lstrip("CIK").lstrip("0"))for e in files]
     tickers=fetch_ticker(ciks,collection)
     stock_list=[]
@@ -38,11 +38,11 @@ def fetch_yearly_data():
     db = client['test']
     collection=db['tickerCIK']
     is_stored=set()
-    path = r"C:/home/jjmr86/quarterly_stock_ops/companyfacts/"
-    files = os.listdir(path)
+
+    files = os.listdir(path / "quarterly_stock_ops" / "companyfacts")
     yrly_obj = []
     tickers=[]
-    nasdaq =pd.read_csv(r"/home/jjmr86/quarterly_stock_ops/nasdaq.csv")
+    nasdaq =pd.read_csv(path / "quarterly_stock_ops" / "nasdaq.csv")
     metric_keys=get_metric_keys()
     for file in files:
         # use to debug
@@ -712,7 +712,6 @@ def debt_fcf_ratio_calc(ticker:str,collection:Collection):
 def earnings_yield_calc(ticker:str,collection:Collection):
     actual_year=datetime.now().year
     earnings_yield_metrics=['EarningsPerShareDiluted','earnings_yield','price_close']
-    missing_years=[]
     earnings_yield_obj=[]
     for b in range(actual_year-5,actual_year+1):
         price_close=0
@@ -823,9 +822,9 @@ if __name__=='__main__':
     #     index_list=index_params
     #     )
     tickers=['NTNX']
-    # for ticker in tickers:
-        # price_obj=fetch_price_fmp(collection=edgar_collection,ticker=ticker,mode='5y',maintenance=True)
-        # print(price_obj)
+#     for ticker in tickers:
+#         price_obj=fetch_price_fmp(collection=edgar_collection,ticker=ticker,mode='5y',maintenance=True)
+#         print(price_obj)
 
 # # calculate short term debt
 #         short_term_debt_obj=total_short_term_debt_calc(ticker,edgar_collection)
@@ -860,10 +859,10 @@ if __name__=='__main__':
 #             write_object(edgar_collection,cagr_obj)
 
 # # # get price and shares for last 5y and calculate market cap
-        # market_cap_obj=market_cap_calc(ticker,edgar_collection)
-        # if market_cap_obj:
-        #     print('writing markeT_cap',ticker)
-        #     write_object(edgar_collection,market_cap_obj,mode='many')
+#         market_cap_obj=market_cap_calc(ticker,edgar_collection)
+#         if market_cap_obj:
+#             print('writing markeT_cap',ticker)
+#             write_object(edgar_collection,market_cap_obj,mode='many')
 
 # # calculate total assets
 #         total_assets_obj=total_assets_calc(ticker,edgar_collection)

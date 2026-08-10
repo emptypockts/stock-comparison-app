@@ -1,24 +1,19 @@
 from celery import Celery
-from pymongo.server_api import ServerApi
 from pymongo import MongoClient
-import certifi
-from dotenv import load_dotenv
-import os
 from datetime import datetime,timezone
 from celery.exceptions import Ignore
 from PDFReport import PDFReport
 from s3_bucket_ops import s3_upload
 from flask_socketio import SocketIO
 from financialUtils import Status
+from app_constants import MONGODB_URI, REDIS_SERVER_URI
 
-load_dotenv()
-uri = os.getenv('MONGODB_URI')
-WS_SOCKET_URI=os.getenv('VITE_WS_SERVER')
-sio = SocketIO(message_queue=os.getenv('REDIS_SERVER'))
+
+sio = SocketIO(message_queue=REDIS_SERVER_URI)
 celery = Celery(
     'ai_reports',
-    broker=os.getenv('REDIS_SERVER'),
-    backend=os.getenv('REDIS_SERVER')
+    broker=REDIS_SERVER_URI,
+    backend=REDIS_SERVER_URI
 )
 SUBJECT = "EACSA Financial Report for ticker {tickers} ready"
 E_BODY = """
@@ -26,7 +21,7 @@ Hello:
 Your ai analysis {report_type} for ticker {tickers} is ready for review. 
 Click on the link below to access it or login to the EACSA app https://eacsa.us and download it from your report list at the very bottom of the layout.
 link to pdf:
-‼️This link is valid only for the next 5 minutes. To access the report after 5 minutes, please login to the EACSA app and download it from your report list section.
+This link is valid only for the next 5 minutes. To access the report after 5 minutes, please login to the EACSA app and download it from your report list section.
 {signed_url}
 Thank you for using EACSA US! 
 """
@@ -61,8 +56,7 @@ def ai_task_queries_collections_update(
     status:Status,
     error=None
     ):
-    # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
-    client = MongoClient(uri)
+    client = MongoClient(MONGODB_URI)
 
     db = client[db_name]
     ai_task_queries_collections=db[collection]
@@ -98,8 +92,8 @@ def ai_report_collections_update(
     db_name:str,
     result:list,
 ):
-    # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
-    client = MongoClient(uri)
+    
+    client = MongoClient(MONGODB_URI)
 
     db = client[db_name]
     ai_report_collections = db[collection]

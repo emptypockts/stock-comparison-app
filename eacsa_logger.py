@@ -4,7 +4,7 @@ import sys
 import threading
 from pathlib import Path
 from typing import Optional
-
+from app_constants import LOG_LEVEL
 _CONFIGURED = False
 
 def setup_logging(
@@ -30,13 +30,11 @@ def setup_logging(
     
     log_dir = Path(log_dir)
     log_dir.mkdir(parents=True,exist_ok=True)
-    log_level = level or os.getenv("LOG_LEVEL", "INFO")
-    log_level = log_level.upper()
 
     handlers : dict = {
         "file":{
             "class": "logging.handlers.RotatingFileHandler",
-            "level": log_level,
+            "level": LOG_LEVEL,
             "formatter": "detailed",
             "filename": str(log_dir / f"{app_name}.log"),
             "maxBytes": 10 * 1024 * 1024 ,
@@ -59,7 +57,7 @@ def setup_logging(
     if console:
         handlers['console'] = {
             "class": "logging.StreamHandler",
-            "level": log_level,
+            "level": LOG_LEVEL,
             "formatter": "console",
             "stream": "ext://sys.stdout" 
         }
@@ -83,7 +81,7 @@ def setup_logging(
         },
         "handlers": handlers,
         "root": {
-            "level": log_level,
+            "level": LOG_LEVEL,
             "handlers": root_handlers,
         },
         "loggers": {
@@ -146,7 +144,7 @@ if __name__ == "__main__":
     eacsa_logger.info("testing start")
 
     try:
-        1/0
+        1/1
     except ZeroDivisionError:
         eacsa_logger.exception("error dividing")
 

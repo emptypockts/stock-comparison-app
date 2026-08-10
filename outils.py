@@ -4,11 +4,8 @@ import os
 import json
 import re 
 from langchain_core.messages import HumanMessage,SystemMessage
-from typing import Literal
 from secDBFetch import get_sec_filings
-from dotenv import load_dotenv
 import requests
-import uuid
 from langchain_ollama import ChatOllama
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
@@ -21,7 +18,7 @@ from prompts import (
     recursive_summarize_instructions,
     mdna_analysis_instructions
     )
-load_dotenv()
+from app_constants import GEMINI_API_KEY, SEC_DIRECTORY, DEEP_SEEK_API_KEY
 
 
 #===========================================#
@@ -34,10 +31,10 @@ ALL_BUT_SEC_FILES=('.rtn','.quant','.all','.seven','.DS_STORE')
 AI_REPORTS=('.rtn','.quant','.all','.json','.seven')
 
 url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
-GEMINI_API=os.getenv('GEMINI_API')
-DIRECTORY=os.getenv('DIRECTORY')
-DEEP_SEEK_API_KEY = os.getenv('DEEP_SEEK_API_KEY')
-querystring = {"key": GEMINI_API}
+
+
+
+querystring = {"key": GEMINI_API_KEY}
 
 #===========================================#
 #           llm model seclection            #
@@ -580,8 +577,10 @@ def is_new_analysis_needed(ticker_dir,extension:str):
                         return False, most_recent_report
         return True, None
 
-def analyze_ticker(directory, ticker,extension:Literal[".json",".quant",".rtn",".all"]):
-    reports = []
+def analyze_ticker(directory, ticker,extension:str):
+    reports :dict = {}
+    needs_analysis : bool | None = None
+    existing_report : str | None = None
     ticker_dir = os.path.join(directory, ticker.capitalize())
     
     if not os.path.exists(ticker_dir):
@@ -607,12 +606,12 @@ def analyze_ticker(directory, ticker,extension:Literal[".json",".quant",".rtn","
     if not txt_files_exist or not os.listdir(ticker_dir):
         print(f"No recent files for '{ticker}' found. Fetching data...")
         get_sec_filings(directory=directory,ticker=ticker, form_types=FORM_TYPES)
-    
+
     needs_analysis, existing_report = is_new_analysis_needed(ticker_dir,extension)
 
     return needs_analysis,existing_report
 
-def save_analysis_report(ticker_dir:str, ticker:str, report:str,extension: Literal[".quant",".json",".rtn"]):
+def save_analysis_report(ticker_dir:str, ticker:str, report:str,extension: str ):
     """
     this function save the report in the server
     args:
@@ -762,4 +761,5 @@ def process_sec_chunks_ritten(report:str,instructions:str)->list:
     return responses
 
 if __name__ =='__main__':
-    print("hello from main")
+    ticker = 'spcx'
+    analyze_ticker('sec_filings/2026',ticker,'.all')

@@ -10,7 +10,7 @@ from eacsa_logger import setup_logging,get_logger
 setup_logging()
 logger = get_logger(__name__)
 from datetime import datetime, timedelta
-
+from app_constants import EMAIL_DEV, USER_DEV, CF_AUDIENCE_ID, CF_CERT_URL, CURRENT_ENVIRONMENT
 _cert_cache : dict = {}
 _cert_cache_expiry : datetime | None = None
 CERT_TTL = timedelta(hours=24)
@@ -26,17 +26,11 @@ def get_cf_certs()->dict:
     _cert_cache_expiry = now + CERT_TTL
     return _cert_cache
  
-EMAIL_DEV = os.getenv('EMAIL_DEV')
-USER_DEV = os.getenv('USER_DEV')
-CF_CERT_URL = f"https://{os.getenv('CF_URL_CDN_CGI_CERTS')}/cdn-cgi/access/certs"
-CF_AUDIENCE_ID = os.getenv('CF_AUD_ID')
-ENV = os.getenv('ENV','prod')
 
-
-def require_cf_token(fn:Callable)-> Callable:
+def require_cf_token(fn:Callable) -> Callable:
     @functools.wraps(fn)
-    def wrapper(*args,**kwargs)-> Any:
-        if ENV == 'dev':
+    def wrapper(*args,**kwargs) -> Any:
+        if CURRENT_ENVIRONMENT == 'dev':
             logger.info("running in DEV mode")
             request.cf_identity = {
                 'email': EMAIL_DEV,
@@ -48,17 +42,17 @@ def require_cf_token(fn:Callable)-> Callable:
             token = request.headers.get("Cf-Access-Jwt-Assertion") or request.cookies.get("CF_Authorization")
             if not token:
                 return jsonify({
-                    "error":"missing token"
+                    "error": "missing token"
                 }),401
             headers = jwt.get_unverified_header(token)
             try:
                 keys = get_cf_certs()
-                key = next(k for k in keys["keys"] if k["kid"]==headers["kid"])
+                key = next(k for k in keys["keys"] if k["kid"] == headers["kid"])
             except StopIteration:
                 return jsonify(
                     {
-                        "success":False,
-                        "message":"invalid key id"
+                        "success": False,
+                        "message": "invalid key id"
                     }
                 ),401
             public_key = jwt.algorithms.RSAAlgorithm.from_jwk(key)
@@ -66,17 +60,17 @@ def require_cf_token(fn:Callable)-> Callable:
                 decoded = jwt.decode(
                 token,
                 public_key,
-                algorithms=["RS256"],
-                audience=CF_AUDIENCE_ID)
+                algorithms = ["RS256"],
+                audience = CF_AUDIENCE_ID)
             except jwt.ExpiredSignatureError:
                 return jsonify({"success": False, "message": "Token has expired"}), 401
             except jwt.InvalidTokenError:
                 return jsonify({"success": False, "message": "Invalid token"}), 401
             custom = decoded.get("custom",{}) or {}
-            request.cf_identity={
+            request.cf_identity = {
                 "email":decoded.get("email"),
                 "user":custom.get("preferred_username") or custom.get("upn") or decoded.get("email"),
                 "raw":decoded
             }
-            return fn(*args,**kwargs)
+            return fn(*args, **kwargs)
     return wrapper

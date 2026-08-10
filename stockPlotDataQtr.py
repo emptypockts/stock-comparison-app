@@ -1,17 +1,11 @@
-from pymongo import MongoClient,DESCENDING
-import certifi
-from pymongo.server_api import ServerApi
-from dotenv import load_dotenv
+from pymongo import MongoClient
 import os
-import pandas as pd
 from datetime import datetime,timedelta
 import requests
-load_dotenv()
-uri = os.getenv('MONGODB_URI')
-# client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
-client = MongoClient(uri)
+from app_constants import MONGODB_URI, ALPHA_VANTAGE_API_KEY
+client = MongoClient(MONGODB_URI)
 
-API = os.getenv('ALPHA_VANTAGE_API_KEY')
+
 db = client["test"]
 
 def fetch_historic_stock_price(ticker):
@@ -19,10 +13,10 @@ def fetch_historic_stock_price(ticker):
     endDate = datetime.today().date()
     qtr_Obj={}
     try:
-        if not API:
+        if not ALPHA_VANTAGE_API_KEY:
             raise EnvironmentError("ALPHA key not found in environment variables.")
         
-        url=f"https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY_ADJUSTED&symbol={ticker}&apikey={API}"
+        url=f"https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY_ADJUSTED&symbol={ticker}&apikey={ALPHA_VANTAGE_API_KEY}"
         response = requests.get(url)
         response.raise_for_status()  # Raise an HTTPError for bad responses (4xx or 5xx)  
         jsonObj = response.json()

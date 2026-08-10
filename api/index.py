@@ -13,8 +13,7 @@ import stockPlotData
 import companyData
 import getStockPrice
 import stockIntrinsicVal
-from dotenv import load_dotenv
-import os
+
 import bcrypt
 import jwt
 import datetime
@@ -25,37 +24,32 @@ import EconomyStats
 from fetchStockfromdB import stockFetch
 from financialUtils import pull_QStockData,PullQtrStockRevenueTrends,fetch_ai_queries,Status
 from pymongo import MongoClient
-import certifi
-from pymongo.server_api import ServerApi
+
 from stockPlotDataQtr import fetch_4qtr_data
 from PDFReport import PDFReport
 import requests
-from worker import generate_ai_report,celery, generate_ai_7powers,generate_ai_quant,generate_ai_quant_rittenhouse,test_task
+from worker import generate_ai_report, generate_ai_7powers,generate_ai_quant,generate_ai_quant_rittenhouse,test_task
 from s3_bucket_ops import s3_upload,s3_presigned_url
 from quant import quant
-load_dotenv()
-
-CF_CERT_URL = f"https://{os.getenv('CF_URL_CDN_CGI_CERTS')}/cdn-cgi/access/certs"
+from app_constants import CF_CERT_URL, CF_AUDIENCE_ID, MONGODB_URI, CURRENT_ENVIRONMENT, JWT_SECRET, FLASK_DEBUG
 CERT_KYS = requests.get(CF_CERT_URL).json()
-CF_AUDIENCE_ID = os.getenv('CF_AUD_ID')
-uri = os.getenv('MONGODB_URI')
-# client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
-client = MongoClient(uri)
+
+client = MongoClient(MONGODB_URI)
 
 db=client['test']
 ai_tasks_collection=db['aiTasks']
 app = Flask(__name__)
 app.config.from_object(app_constants)
-ENV=os.getenv('ENV')
-if ENV=="prod":
+
+if CURRENT_ENVIRONMENT=="prod":
     CORS(app, resources={
         r"/api/*":{
             "origins":[
                 "https://www.eacsa.us",
                 "wss://www.eacsa.us"
             ],
-            "supports_credentials":False,
-            "allow_headers":["Content-Type","Authorization","token"]
+            "supports_credentials": False,
+            "allow_headers": ["Content-Type","Authorization","token"]
         }
     })
     limiter = Limiter(
@@ -63,7 +57,7 @@ if ENV=="prod":
     key_func=get_remote_address,
     storage_uri="redis://localhost:6379/3"
     )
-if ENV=="dev":
+if CURRENT_ENVIRONMENT=="dev":
     CORS(app)
     limiter = Limiter(
     app=app,
@@ -71,10 +65,10 @@ if ENV=="dev":
     storage_uri="memory://",
     enabled=False
     )
-if ENV=='':
+if CURRENT_ENVIRONMENT=='':
     raise Exception("environment not defined. potential attack!")
 Session(app)
-DOWNLOAD_DIR = os.getenv('DIRECTORY')
+
 
 #fetch company names, price and earnings day
 @app.route('/api/economy_index', methods=['GET'])
@@ -234,7 +228,7 @@ def login():
         token = jwt.encode({
             'user_id': str(user['_id']),
             'exp': expiration_time
-        }, os.getenv('JWT_SECRET'), algorithm='HS256')
+        }, JWT_SECRET, algorithm='HS256')
         return jsonify({'success': True, 'token': token,'expiresAt': int(expiration_time.timestamp())}), 200
     else:
         return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
@@ -257,13 +251,15 @@ def register():
 
 # Middleware to verify JWT token
 @app.route('/api/verify', methods=['POST'])
+
 def verify_token():
+    
     
     token = request.headers.get('token')
     if not token:
         return jsonify({'success': False, 'message': 'Token is missing'}), 401
     try:
-        decoded = jwt.decode(token, os.getenv('JWT_SECRET'), algorithms=['HS256'])
+        decoded = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
         return jsonify({'success': True, 'user_id': decoded['user_id'],"expire":datetime.datetime.fromtimestamp(decoded['exp'],tz=datetime.timezone.utc).strftime('%a, %d %b %Y %H:%M:%S UTC')}), 200
     except jwt.ExpiredSignatureError:
         return jsonify({'success': False, 'message': 'Token has expired'}), 401
@@ -639,6 +635,6 @@ def test_my_task():
         "message":"test"
     }),200
 if __name__ == '__main__':
-    debug_mode= os.getenv("FLASK_DEBUG","0")=="1"
+    debug_mode= FLASK_DEBUG =="1"
     app.run(host="0.0.0.0",port=5000,debug=debug_mode)
     

@@ -1,10 +1,9 @@
 from langchain_ollama import ChatOllama
 from langchain_google_genai import ChatGoogleGenerativeAI
-from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage,SystemMessage
 import json
-from datetime import datetime,timedelta
-from prompts import seven_powers_instructions,json_validator_instructions
+from datetime import datetime
+from prompts import seven_powers_instructions
 from outils import (
     analyze_ticker,
     save_analysis_report,
@@ -15,17 +14,17 @@ from outils import (
 )
 from financialUtils import fetch_name
 import os
-load_dotenv()
+from app_constants import SEC_DIRECTORY
 REPORTS_WITH_ITEMS = ['10-K','8-K','10-Q']
 REPORTS_WITH_SECTIONS = ['DEF 14A']
-DIRECTORY=os.getenv('DIRECTORY')
+
 def seven_powers(tickers)->str:
     extension='.seven'
     current_year=datetime.now().year
     current_year=str(current_year)
-    directory = f"{DIRECTORY}/{current_year}"
+    directory = f"{SEC_DIRECTORY}/{current_year}"
 
-    directory= os.path.join(DIRECTORY,current_year)
+    directory= os.path.join(SEC_DIRECTORY,current_year)
     tickers=[t.capitalize()for t in tickers]
     companies = fetch_name(tickers)
     for ticker,company in zip(tickers,companies):
