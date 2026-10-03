@@ -1,105 +1,128 @@
 import json
 import os
 from datetime import datetime, timedelta
-from outils import clean_edgar_text,analyze_ticker,save_analysis_report,process_sec_chunks_ritten,synthetize_summaries,llm,generic_trim_document
-from langchain_core.messages import HumanMessage,SystemMessage
-from prompts import rittenhouse_synthesis_instructions,summarize_chunk_instructions_ritten
+from outils import (
+    clean_edgar_text,
+    analyze_ticker,
+    save_analysis_report,
+    process_sec_chunks_ritten,
+    synthetize_summaries,
+    llm,
+    generic_trim_document,
+)
+from langchain_core.messages import HumanMessage, SystemMessage
+from prompts import (
+    rittenhouse_synthesis_instructions,
+    summarize_chunk_instructions_ritten,
+)
 from financialUtils import fetch_name
 from app_constants import SEC_DIRECTORY
 
+# define the form types to fetch the files if needed
+form_types = ["10-K", "10-Q", "8-K", "DEF 14A", "20-F", "6-K"]
 
-
-
-#define the form types to fetch the files if needed
-form_types = ['10-K', '10-Q', '8-K', 'DEF 14A','20-F','6-K'] 
 
 # Function to load and preprocess text files
 def load_and_preprocess(file_path):
-    with open(file_path, 'r', encoding='utf-8') as file:
+    with open(file_path, "r", encoding="utf-8") as file:
         text = file.read()
-        text=clean_edgar_text(text)
+        text = clean_edgar_text(text)
     return text
 
 
-
-def rittenhouse_analysis(report)->str:
+def rittenhouse_analysis(report) -> str:
     try:
-        summaries = process_sec_chunks_ritten(report=report,instructions=summarize_chunk_instructions_ritten)
-        final_report = synthetize_summaries(summaries=summaries,instructions=rittenhouse_synthesis_instructions)
+        summaries = process_sec_chunks_ritten(
+            report=report, instructions=summarize_chunk_instructions_ritten
+        )
+        final_report = synthetize_summaries(
+            summaries=summaries,
+            instructions=rittenhouse_synthesis_instructions,
+        )
         if final_report:
             return final_report
         else:
-            raise Exception(f"response has no content. see details: {response}")
+            raise Exception(
+                f"response has no content. see details: {response}"
+            )
             return {}
     except Exception as e:
         print("error executing final summary", str(e))
         return None
 
-    
-def synthetize_rittenhouse_reports(reports)->str:
-    response=llm.invoke(
+
+def synthetize_rittenhouse_reports(reports) -> str:
+    response = llm.invoke(
         [
             SystemMessage(content=rittenhouse_synthesis_instructions),
-            HumanMessage(content=f"reports: {reports}")
+            HumanMessage(content=f"reports: {reports}"),
         ]
     )
     if response.content:
-        validated_json=json.loads(response.content.replace("```json","").replace("```","").strip())
+        validated_json = json.loads(
+            response.content.replace("```json", "").replace("```", "").strip()
+        )
         return validated_json
     else:
         raise Exception(f"response has no content. see details: {response}")
         return {}
-    
-def quant_rittenhouse(year,tickers:list)->str:
-    responses={}
-    directory= os.path.join(SEC_DIRECTORY,year)
-    tickers=[t.capitalize()for t in tickers]
-    companies = fetch_name(tickers)
-    for ticker,company in zip(tickers,companies):
-        ticker_dir=os.path.join(directory,ticker)
-        extension=".rtn"
 
-        needs_analysis, existing_report = analyze_ticker(directory,ticker,extension=extension)
-        
+
+def quant_rittenhouse(year, tickers: list) -> str:
+    responses = {}
+    directory = os.path.join(SEC_DIRECTORY, year)
+    tickers = [t.capitalize() for t in tickers]
+    companies = fetch_name(tickers)
+    for ticker, company in zip(tickers, companies):
+        ticker_dir = os.path.join(directory, ticker)
+        extension = ".rtn"
+
+        needs_analysis, existing_report = analyze_ticker(
+            directory, ticker, extension=extension
+        )
+
         if not needs_analysis:
             print(f"Analysis for ticker '{ticker}' is up to date.")
             return existing_report  # Return the most recent analysis if no new analysis is needed
-        
+
         for file_name in os.listdir(ticker_dir):
-            if file_name.endswith((".json",".quant",".rtn",".DS_Store",".seven",".all")):
+            if file_name.endswith(
+                (".json", ".quant", ".rtn", ".DS_Store", ".seven", ".all")
+            ):
                 pass
             else:
-                with open(os.path.join(ticker_dir,file_name)) as f:
-                    report=f.read()
-                    file_name_split = file_name.split('_')
+                with open(os.path.join(ticker_dir, file_name)) as f:
+                    report = f.read()
+                    file_name_split = file_name.split("_")
                     report_type = file_name_split[2].strip()
                     report_date = file_name_split[3].strip()
-                    clean_report=generic_trim_document(report,ticker,report_type,report_date,company)
+                    clean_report = generic_trim_document(
+                        report, ticker, report_type, report_date, company
+                    )
                     response = rittenhouse_analysis(clean_report)
                     if response:
-                        responses[file_name.split('.')[0]]=response
+                        responses[file_name.split(".")[0]] = response
 
-        final_report=synthetize_rittenhouse_reports(responses)
-        
+        final_report = synthetize_rittenhouse_reports(responses)
+
         if final_report:
-            save_analysis_report(ticker_dir, ticker, final_report,extension=extension)
+            save_analysis_report(
+                ticker_dir, ticker, final_report, extension=extension
+            )
             print(f"Saved analysis report for ticker {ticker}\n")
-        
-        return final_report
 
+        return final_report
 
 
 # Example function call
 if __name__ == "__main__":
-      # Root directory where ticker folders are stored
-    ticker = ['mu']  # Example ticker
-    current_year=datetime.now().year
+    # Root directory where ticker folders are stored
+    ticker = ["mu"]  # Example ticker
+    current_year = datetime.now().year
     directory = f"{SEC_DIRECTORY}/{current_year}"
-    last_year=current_year-1
-    current_qtr=datetime.now().month
-    last_qtr=(datetime.now()-timedelta(days=90)).month
-    extension=".rtn"
-    response = quant_rittenhouse(str(current_year),ticker)
+    last_year = current_year - 1
+    current_qtr = datetime.now().month
+    last_qtr = (datetime.now() - timedelta(days=90)).month
+    extension = ".rtn"
+    response = quant_rittenhouse(str(current_year), ticker)
     print(response)
-    
-        

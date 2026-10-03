@@ -1,27 +1,26 @@
 import os
 import resend
 from app_constants import RESEND_API_KEY
-def email_send(e_to:str,e_subject:str,e_body:str,e_content_type=None):
+
+
+def email_send(e_to: str, e_subject: str, e_body: str, e_content_type=None):
     try:
         resend.api_key = RESEND_API_KEY
         params: resend.Emails.SendParams = {
-        "from": "eacsa <noreply@eacsa.us>",
-        "to": e_to,
-        "subject":e_subject,
-        "html": e_body
-    }
+            "from": "eacsa <noreply@eacsa.us>",
+            "to": e_to,
+            "subject": e_subject,
+            "html": e_body,
+        }
 
         email = resend.Emails.send(params)
         return "success"
     except Exception as e:
         return f"error {e}"
-    
-    
 
-    
 
-if __name__=="__main__":
-    e_to="jjmr86@live.com.mx"
-    e_subject="his there"
-    e_body="<strong>hi there</strong>"
-    email_send(e_to,e_subject,e_body)
+if __name__ == "__main__":
+    e_to = "jjmr86@live.com.mx"
+    e_subject = "his there"
+    e_body = "<strong>hi there</strong>"
+    email_send(e_to, e_subject, e_body)

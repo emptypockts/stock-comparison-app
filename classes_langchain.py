@@ -1,20 +1,24 @@
-
+from pydantic import BaseModel, Field
+from typing import List, Literal, Union
 from langchain.tools import BaseTool
 from langgraph.graph import MessagesState
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
-from pydantic import Field,BaseModel,RootModel
+from pydantic import Field, BaseModel, RootModel
 from typing_extensions import Optional, Annotated, List, Sequence, TypedDict
 import operator
 
+
 class AgentInputState(MessagesState):
     """Input state for the full agent - only contains messages from user input."""
+
     pass
+
 
 class AgentState(MessagesState):
     """
     Main state for the full multi-agent research system.
-    
+
     Extends MessagesState with additional fields for research coordination.
     Note: Some fields are duplicated across different state classes for proper
     state management between subgraphs and the main workflow.
@@ -31,11 +35,13 @@ class AgentState(MessagesState):
     # Final formatted research report
     final_report: str
 
+
 # ===== STRUCTURED OUTPUT SCHEMAS =====
+
 
 class ClarifyWithUser(BaseModel):
     """Schema for user clarification decision and questions."""
-    
+
     need_clarification: bool = Field(
         description="Whether the user needs to be asked a clarifying question.",
     )
@@ -46,53 +52,52 @@ class ClarifyWithUser(BaseModel):
         description="Verify message that we will start research after the user has provided the necessary information.",
     )
 
+
 class ResearchQuestion(BaseModel):
     """Schema for structured research brief generation."""
-    
+
     research_brief: str = Field(
         description="A research question that will be used to guide the research.",
     )
 
 
-#====quant======
+# ====quant======
 class Section(BaseModel):
-    name:str=Field(
+    name: str = Field(
         description="this section contains a financial summary of highlights and red flags identified in the text."
     )
-    key_metrics:List[str]=Field(
+    key_metrics: List[str] = Field(
         description="contains the metrics or indicators to focus on while analyzing this report"
     )
-    reasoning_focus:str=Field(
-        description= "specify the type of focus, anomaly detection, highlights or pattern detection"
+    reasoning_focus: str = Field(
+        description="specify the type of focus, anomaly detection, highlights or pattern detection"
     )
+
 
 class Sections(BaseModel):
-    sections: List[Section]=Field(
-        description="sections of the report."
-    )
+    sections: List[Section] = Field(description="sections of the report.")
+
 
 class State(TypedDict):
-    report:str
-    sections:list[Section]
-    completed_sections:Annotated[
-        list,operator.add
-    ]
-    final_report:str
+    report: str
+    sections: list[Section]
+    completed_sections: Annotated[list, operator.add]
+    final_report: str
+
 
 class QuantState(TypedDict):
-    section:Section
-    completed_sections:Annotated[list,operator.add]
+    section: Section
+    completed_sections: Annotated[list, operator.add]
+
 
 class Chunk(BaseModel):
     """
     Docstring for Chunk
     """
-    chunk:str=Field(
-        None,description="contains the chunk of SEC report summarized"
-    )
 
-from typing import List, Literal, Union
-from pydantic import BaseModel, Field
+    chunk: str = Field(
+        None, description="contains the chunk of SEC report summarized"
+    )
 
 
 class TitleBlock(BaseModel):
@@ -107,13 +112,12 @@ class ParagraphBlock(BaseModel):
 
 class BulletsBlock(BaseModel):
     type: Literal["bullets"]
-    content: List[str] = Field(
-        ..., description="List of bullet strings"
-    )
+    content: List[str] = Field(..., description="List of bullet strings")
 
 
 # UNION for LangChain strict output
 ReportBlock = Union[TitleBlock, ParagraphBlock, BulletsBlock]
+
 
 class ReportBlocks(RootModel[List[ReportBlock]]):
     pass

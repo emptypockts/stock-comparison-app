@@ -1,162 +1,176 @@
 from typing import Literal
-from pymongo.collection import Collection,Cursor
-from pymongo import errors,DESCENDING
-from datetime import datetime,timedelta
+from pymongo.collection import Collection, Cursor
+from pymongo import errors, DESCENDING
+from datetime import datetime, timedelta
 import pandas as pd
 import requests
 import os
-from app_constants import TWELVE_API_KEY, TWELVE_URI, MONGODB_URI, CURRENT_ENVIRONMENT
+from app_constants import (
+    TWELVE_API_KEY,
+    TWELVE_URI,
+    MONGODB_URI,
+    CURRENT_ENVIRONMENT,
+)
 from enum import Enum
 from pymongo import MongoClient
 
-class Status (str,Enum):
-    ongoing="ongoing"
-    failed="failed"
-    completed="completed"
 
-def fetch_tickers(collection:Collection)->list:
+class Status(str, Enum):
+    ongoing = "ongoing"
+    failed = "failed"
+    completed = "completed"
+
+
+def fetch_tickers(collection: Collection) -> list:
     path = r"/home/jjmr86/quarterly_stock_ops/companyfacts/"
     files = os.listdir(path)
-    nasdaq =pd.read_csv(r"/home/jjmr86/quarterly_stock_ops/nasdaq.csv")
-    ciks=[int(e[:-5].lstrip("CIK").lstrip("0"))for e in files]
-    tickers=fetch_ticker(ciks,collection)
-    stock_list=[]
+    nasdaq = pd.read_csv(r"/home/jjmr86/quarterly_stock_ops/nasdaq.csv")
+    ciks = [int(e[:-5].lstrip("CIK").lstrip("0")) for e in files]
+    tickers = fetch_ticker(ciks, collection)
+    stock_list = []
     for e in tickers:
-        if e in nasdaq['ticker'].values:
+        if e in nasdaq["ticker"].values:
             stock_list.append(e)
     return stock_list
+
+
 def get_metric_keys():
- return {
-        "RevenuesNetOfInterestExpense":"revenue",
-        "RevenueFromContractWithCustomerExcludingAssessedTax":"revenue",
-        "RevenueFromContractWithCustomerIncludingAssessedTax":"revenue",
-        "Revenues":"revenue",
-        "Assets":"assets",
-        "AssetsCurrent":"assets",
-        "AssetsNoncurrent":"assetsNonCurrent",
-        "OtherAssetsCurrent":"assets",
-        "OtherAssetsNoncurrent":"assetsNonCurrent",
-        "CashAndCashEquivalentsAtCarryingValue":"endCashPosition",
-        "Liabilities":"liabilities",
-        "NetIncomeLoss":"netIncome",
-        "ResearchAndDevelopmentExpense":"rAndD",
-        "NetCashProvidedByUsedInOperatingActivities":"operatingCashFlow",
-        "PaymentsOfDividends":"dividends",
-        "PaymentsOfDividendsCommonStock":"dividends",
-        "EntityCommonStockSharesOutstanding":"outstandingShares",
-        "StockholdersEquity":"stockholdersEquity",
-        "WeightedAverageNumberOfSharesOutstandingBasic":"outstandingShares",
-        "BasicSharesOutstanding":"outstandingShares",
-        "CommonStockSharesOutstanding":"outstandingShares",
-        "EarningsPerShareBasic":"EPS",
-        "EarningsPerShareDiluted":"EPSDiluted",
-        "CommercialPaper":"CommercialPaper",
-        "OtherLiabilitiesCurrent":"LiabilitiesCurrent",
-        "OtherLiabilitiesNoncurrent":"LiabilitiesLongTerm",
-        "OtherAccruedLiabilitiesCurrent":"LiabilitiesCurrent",
-        "LiabilitiesCurrent":"LiabilitiesCurrent",
-        "LiabilitiesNoncurrent":"LiabilitiesLongTerm",
-        "PaymentsToAcquirePropertyPlantAndEquipment":"capex",
-        "NetCashProvidedByUsedInInvestingActivities":"capex2",
-        "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest":"StockholdersEquity",
-        "CurrentPortionOfLongTermDebt":"ShortTermDebt",
-        "ShortTermBorrowings":"ShortTermDebt",
-        "ShortTermDebt":"ShortTermDebt",
-        "DebtCurrent":"ShortTermDebt",
-        "LongTermDebtAndCapitalLeaseObligationsCurrent":"ShortTermDebt",
-        "CurrentDebtAndCapitalLeaseObligation":"ShortTermDebt",
-        "OtherShortTermBorrowings":"ShortTermDebt",
-        "BondsPayableNoncurrent":"LongTermDebt",
-        "LongTermBorrowings":"LongTermDebt",
-        "MortgageLoansOnRealEstate":"LongTermDebt",
-        "LongTermDebtNoncurrent":"LongTermDebt",
-        "DebtNoncurrent":"LongTermDebt",
-        "LongTermDebtAndCapitalLeaseObligation":"LongTermDebt",
-        "LongTermDebt":"LongTermDebt",
-        "AccountsPayableTradeCurrent":"LiabilitiesCurrent",
-        "InventoryNet":"LiabilitiesCurrent",
-        "AccountsPayableCurrent":"LiabilitiesCurrent",
-        "CostOfGoodsSold":"LiabilitiesCurrent",
-        "LongTermDebtCurrent":"LiabilitiesCurrent",
-        "EmployeeRelatedLiabilitiesCurrent":"LiabilitiesCurrent",
-        "DividendsPayableCurrent":"LiabilitiesCurrent",
-        "AccruedIncomeTaxesCurrent":"LiabilitiesCurrent",
-        "PensionAndOtherPostretirementDefinedBenefitPlansLiabilitiesNoncurrent":"LiabilitiesLongTerm",
-        "OperatingLeaseLiabilityNoncurrent":"LiabilitiesLongTerm",
-        "UnrecognizedTaxBenefits":"LiabilitiesLongTerm",
-        "DeferredIncomeTaxLiabilitiesNoncurrent":"LiabilitiesLongTerm",
-        "OtherNoncurrentLiabilities":"LiabilitiesLongTerm",
-        "FinanceLeaseLiabilityNoncurrent":"LiabilitiesLongTerm",
-        "DeferredCompensationLiabilities":"LiabilitiesLongTerm",
-        "ContingentConsiderationLiabilityNoncurrent":"LiabilitiesLongTerm",
-        "DeferredRevenueNoncurrent":"LiabilitiesLongTerm",
-        "LiabilitiesNoncurrentExcludingLongTermDebt":"LiabilitiesLongTerm",
-        "OtherEmployeeRelatedLiabilitiesNoncurrent":"LiabilitiesLongTerm"
+    return {
+        "RevenuesNetOfInterestExpense": "revenue",
+        "RevenueFromContractWithCustomerExcludingAssessedTax": "revenue",
+        "RevenueFromContractWithCustomerIncludingAssessedTax": "revenue",
+        "Revenues": "revenue",
+        "Assets": "assets",
+        "AssetsCurrent": "assets",
+        "AssetsNoncurrent": "assetsNonCurrent",
+        "OtherAssetsCurrent": "assets",
+        "OtherAssetsNoncurrent": "assetsNonCurrent",
+        "CashAndCashEquivalentsAtCarryingValue": "endCashPosition",
+        "Liabilities": "liabilities",
+        "NetIncomeLoss": "netIncome",
+        "ResearchAndDevelopmentExpense": "rAndD",
+        "NetCashProvidedByUsedInOperatingActivities": "operatingCashFlow",
+        "PaymentsOfDividends": "dividends",
+        "PaymentsOfDividendsCommonStock": "dividends",
+        "EntityCommonStockSharesOutstanding": "outstandingShares",
+        "StockholdersEquity": "stockholdersEquity",
+        "WeightedAverageNumberOfSharesOutstandingBasic": "outstandingShares",
+        "BasicSharesOutstanding": "outstandingShares",
+        "CommonStockSharesOutstanding": "outstandingShares",
+        "EarningsPerShareBasic": "EPS",
+        "EarningsPerShareDiluted": "EPSDiluted",
+        "CommercialPaper": "CommercialPaper",
+        "OtherLiabilitiesCurrent": "LiabilitiesCurrent",
+        "OtherLiabilitiesNoncurrent": "LiabilitiesLongTerm",
+        "OtherAccruedLiabilitiesCurrent": "LiabilitiesCurrent",
+        "LiabilitiesCurrent": "LiabilitiesCurrent",
+        "LiabilitiesNoncurrent": "LiabilitiesLongTerm",
+        "PaymentsToAcquirePropertyPlantAndEquipment": "capex",
+        "NetCashProvidedByUsedInInvestingActivities": "capex2",
+        "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest": "StockholdersEquity",
+        "CurrentPortionOfLongTermDebt": "ShortTermDebt",
+        "ShortTermBorrowings": "ShortTermDebt",
+        "ShortTermDebt": "ShortTermDebt",
+        "DebtCurrent": "ShortTermDebt",
+        "LongTermDebtAndCapitalLeaseObligationsCurrent": "ShortTermDebt",
+        "CurrentDebtAndCapitalLeaseObligation": "ShortTermDebt",
+        "OtherShortTermBorrowings": "ShortTermDebt",
+        "BondsPayableNoncurrent": "LongTermDebt",
+        "LongTermBorrowings": "LongTermDebt",
+        "MortgageLoansOnRealEstate": "LongTermDebt",
+        "LongTermDebtNoncurrent": "LongTermDebt",
+        "DebtNoncurrent": "LongTermDebt",
+        "LongTermDebtAndCapitalLeaseObligation": "LongTermDebt",
+        "LongTermDebt": "LongTermDebt",
+        "AccountsPayableTradeCurrent": "LiabilitiesCurrent",
+        "InventoryNet": "LiabilitiesCurrent",
+        "AccountsPayableCurrent": "LiabilitiesCurrent",
+        "CostOfGoodsSold": "LiabilitiesCurrent",
+        "LongTermDebtCurrent": "LiabilitiesCurrent",
+        "EmployeeRelatedLiabilitiesCurrent": "LiabilitiesCurrent",
+        "DividendsPayableCurrent": "LiabilitiesCurrent",
+        "AccruedIncomeTaxesCurrent": "LiabilitiesCurrent",
+        "PensionAndOtherPostretirementDefinedBenefitPlansLiabilitiesNoncurrent": "LiabilitiesLongTerm",
+        "OperatingLeaseLiabilityNoncurrent": "LiabilitiesLongTerm",
+        "UnrecognizedTaxBenefits": "LiabilitiesLongTerm",
+        "DeferredIncomeTaxLiabilitiesNoncurrent": "LiabilitiesLongTerm",
+        "OtherNoncurrentLiabilities": "LiabilitiesLongTerm",
+        "FinanceLeaseLiabilityNoncurrent": "LiabilitiesLongTerm",
+        "DeferredCompensationLiabilities": "LiabilitiesLongTerm",
+        "ContingentConsiderationLiabilityNoncurrent": "LiabilitiesLongTerm",
+        "DeferredRevenueNoncurrent": "LiabilitiesLongTerm",
+        "LiabilitiesNoncurrentExcludingLongTermDebt": "LiabilitiesLongTerm",
+        "OtherEmployeeRelatedLiabilitiesNoncurrent": "LiabilitiesLongTerm",
     }
-def fetch_ticker(cik:list,collection:Collection):
-    query={
-        'cik_str':{
-            "$in":cik
-        }
-    }
-    
-    
-    new_doc=collection.find(
-        query
-    )
-    if collection.count_documents(query)>0:
-        tickers=[]
+
+
+def fetch_ticker(cik: list, collection: Collection):
+    query = {"cik_str": {"$in": cik}}
+
+    new_doc = collection.find(query)
+    if collection.count_documents(query) > 0:
+        tickers = []
         for a in new_doc:
-            tickers.append(a['ticker'])
+            tickers.append(a["ticker"])
         return tickers
     else:
         return []
-def fetch_cik(ticker,collection):
-    filter={
-        'ticker':ticker.upper()
-    }
-    project={
-    'cik_str': 1, 
-    '_id': 0
-    }
-    
-    cik=collection.find_one(
-        filter=filter,
-        projection=project
-    )
+
+
+def fetch_cik(ticker, collection):
+    filter = {"ticker": ticker.upper()}
+    project = {"cik_str": 1, "_id": 0}
+
+    cik = collection.find_one(filter=filter, projection=project)
     if cik:
-        return cik['cik_str'] 
+        return cik["cik_str"]
     else:
         return None
+
+
 def Transform_Obj_and_Date(Object):
     import pandas as pd
+
     index = pd.to_datetime(Object.index)
-    Object_df = pd.DataFrame(Object, index=index,columns=[Object.name])
+    Object_df = pd.DataFrame(Object, index=index, columns=[Object.name])
     Object_df.index = Object_df.index.year
-    Object_df.index.name = 'Date'
+    Object_df.index.name = "Date"
     Object_df[Object.name] = Object_df[Object.name].astype(float)
     try:
         Object_df = Object_df.drop(2019)
     except:
         return Object_df
     return Object_df
-def serialize_cursor(cursor:Cursor,key:str,value:str,series_name:str,index_name:str=None):
-    index=[]
-    values=[]
+
+
+def serialize_cursor(
+    cursor: Cursor,
+    key: str,
+    value: str,
+    series_name: str,
+    index_name: str = None,
+):
+    index = []
+    values = []
     for e in cursor:
-        index.append(e.get(key,''))
-        values.append(e.get(value,''))
-    return pd.Series(data=values,index=index,name=series_name)
-def write_object(collection:Collection,object,mode:Literal['one','many']='one'):
+        index.append(e.get(key, ""))
+        values.append(e.get(value, ""))
+    return pd.Series(data=values, index=index, name=series_name)
+
+
+def write_object(
+    collection: Collection, object, mode: Literal["one", "many"] = "one"
+):
     try:
-        if mode=='one':
+        if mode == "one":
             collection.insert_one(object)
-        elif mode=='many':
+        elif mode == "many":
             collection.insert_many(object)
     except Exception as e:
-        print('error updating collection: ',str(e))
+        print("error updating collection: ", str(e))
 
-def prepare_collection_backup(db,collection_name:str):
+
+def prepare_collection_backup(db, collection_name: str):
     """
     Rename existing collection to a timestamped backup.
     If the collection does not exist, do nothing.
@@ -166,36 +180,52 @@ def prepare_collection_backup(db,collection_name:str):
     if collection_name not in existing_collections:
         print(f"collection {collection_name} does not exist")
         return None
-    backup_collection= f"{collection_name}_{today}"
+    backup_collection = f"{collection_name}_{today}"
     db[collection_name].rename(backup_collection)
-    print(f"{collection_name} backup with name {backup_collection} has been completed.")
+    print(
+        f"{collection_name} backup with name {backup_collection} has been completed."
+    )
 
-def push_StockData(db, objects, collection:str,ordered_mode:bool=True,index_list:list=[],batch_size = 500):
+
+def push_StockData(
+    db,
+    objects,
+    collection: str,
+    ordered_mode: bool = True,
+    index_list: list = [],
+    batch_size=500,
+):
     batch = []
-    batch_acc=0
+    batch_acc = 0
     try:
         stock_collection = db[collection]
         # Inject the objects into the database
         if index_list:
             for i in index_list:
-                stock_collection.create_index(i["fields"],unique=i.get('unique',True))
+                stock_collection.create_index(
+                    i["fields"], unique=i.get("unique", True)
+                )
         for o in objects:
             batch.append(o)
-            if len(batch)>=batch_size:
-                    print(f"pushing batch. total records acc: {batch_acc}")
-                    result = stock_collection.insert_many(batch,ordered=ordered_mode)
-                    batch_acc+=len(result.inserted_ids)
-                    batch.clear()
+            if len(batch) >= batch_size:
+                print(f"pushing batch. total records acc: {batch_acc}")
+                result = stock_collection.insert_many(
+                    batch, ordered=ordered_mode
+                )
+                batch_acc += len(result.inserted_ids)
+                batch.clear()
         if batch:
             print(f"pushing final batch. total records acc: {batch_acc}")
-            result = stock_collection.insert_many(batch,ordered=ordered_mode)
+            result = stock_collection.insert_many(batch, ordered=ordered_mode)
             batch_acc += len(result.inserted_ids)
             batch.clear()
 
-        if batch_acc==0:
-                raise ValueError ("no records inserted")
+        if batch_acc == 0:
+            raise ValueError("no records inserted")
 
-        print(f"push to {collection} completed with {batch_acc} records inserted.")    
+        print(
+            f"push to {collection} completed with {batch_acc} records inserted."
+        )
         assert stock_collection.count_documents({}) > 0
 
     except errors.BulkWriteError as bwe:
@@ -206,22 +236,26 @@ def push_StockData(db, objects, collection:str,ordered_mode:bool=True,index_list
         print(f"Operation failure: {ofe}")
     except Exception as e:
         print(f"An error occurred: {e}")
-def swap_temp_prod(db,collection):
+
+
+def swap_temp_prod(db, collection):
     today = datetime.now().strftime("%m_%d_%y_%H_%M_%S")
     prod_collection = collection
     temp_collection = f"temp_{collection}"
-    backup_collection= f"{prod_collection}_{today}"
+    backup_collection = f"{prod_collection}_{today}"
     try:
         db[prod_collection].rename(backup_collection)
         db[temp_collection].rename(prod_collection)
         db.drop_collection(temp_collection)
-        print('temp to prod swap done successfully')
+        print("temp to prod swap done successfully")
     except errors.BulkWriteError as bwe:
         print(f"Bulk write error: {bwe.details}")
     except errors.ConnectionFailure as cf:
         print(f"Connection failure: {cf}")
     except errors.OperationFailure as ofe:
         print(f"Operation failure: {ofe}")
+
+
 def create_index(db):
     try:
         # db['aiTasks']
@@ -231,228 +265,233 @@ def create_index(db):
         # db['StockScore']
         # db['tickerCIK']
         # db['User']
-        db['QtrDeiStockData'].create_index([("ticker", 1), ("metric", 1), ("date", -1)])
+        db["QtrDeiStockData"].create_index(
+            [("ticker", 1), ("metric", 1), ("date", -1)]
+        )
 
     except Exception as e:
-        print('error creating collection',str(e))
+        print("error creating collection", str(e))
+
+
 def fetch_price_fmp(
-        collection:Collection=None,
-        ticker:str='',
-        mode:Literal["last","5y","calendar_yr"]="last",
-        calendar_yr:int=None,
-        maintenance:bool=False
-        ):
+    collection: Collection = None,
+    ticker: str = "",
+    mode: Literal["last", "5y", "calendar_yr"] = "last",
+    calendar_yr: int = None,
+    maintenance: bool = False,
+):
     import calendar
     import time
     import json
-    if mode=='last':
+
+    if mode == "last":
         URL = f"{TWELVE_URI}/price?symbol={ticker.upper()}&apikey={TWELVE_API_KEY}&source=docs"
         response = requests.get(URL)
         try:
-            price = float(response.json()['price'])
+            price = float(response.json()["price"])
         except Exception as e:
-            print('error: ',str(e))
+            print("error: ", str(e))
             price = 0
         return price
-    elif mode=='5y':
+    elif mode == "5y":
         URL = f"{TWELVE_URI}/price?symbol={ticker.upper()}&apikey={TWELVE_API_KEY}&source=docs"
         response = requests.get(URL)
         try:
-            last_price = float(response.json()['price'])
+            last_price = float(response.json()["price"])
         except Exception as e:
-            print('error: ',str(e))
+            print("error: ", str(e))
             last_price = 0
-        years_list=[]
+        years_list = []
         end_date = datetime.now().date()
-        start_date = end_date-timedelta(days=365*5)
-        for i in range(start_date.year,(end_date.year)):
+        start_date = end_date - timedelta(days=365 * 5)
+        for i in range(start_date.year, (end_date.year)):
             years_list.append(i)
-        query={
-            "ticker":ticker.upper(),
-            "metric":"price_close",
-            "date":{
-                "$in":years_list
-            }
+        query = {
+            "ticker": ticker.upper(),
+            "metric": "price_close",
+            "date": {"$in": years_list},
         }
         try:
-            cursor= collection.find(query).sort("date",DESCENDING)
-            collection_count=collection.count_documents(query)
-            price_series=[]
-            if collection_count!=len(years_list) and maintenance==True:
-                print(f"doc count {collection_count} not matching list of years {years_list}")
-                years_cursor=[]
+            cursor = collection.find(query).sort("date", DESCENDING)
+            collection_count = collection.count_documents(query)
+            price_series = []
+            if collection_count != len(years_list) and maintenance == True:
+                print(
+                    f"doc count {collection_count} not matching list of years {years_list}"
+                )
+                years_cursor = []
                 for a in cursor:
-                    years_cursor.append(a.get('date'))
+                    years_cursor.append(a.get("date"))
                     a.pop("_id")
                     price_series.append(a)
-                missing_years=list(set(years_list)-set(years_cursor))
-                print('missing years are ',missing_years)
+                missing_years = list(set(years_list) - set(years_cursor))
+                print("missing years are ", missing_years)
                 for year in missing_years:
-                    missing_start_date=str(year)+'-12-30'
-                    missing_end_date=str(year)+'-12-31'
+                    missing_start_date = str(year) + "-12-30"
+                    missing_end_date = str(year) + "-12-31"
                     URL = f"{TWELVE_URI}/time_series?start_date={missing_start_date}&end_date={missing_end_date}\
                         &symbol={ticker.upper()}&interval=1day&apikey={TWELVE_API_KEY}"
                     response = requests.get(URL)
                     time.sleep(7.5)
                     try:
                         historic_stock_prices = response.json()
-                        if 'code' in historic_stock_prices:
-                            print("code error",historic_stock_prices)
+                        if "code" in historic_stock_prices:
+                            print("code error", historic_stock_prices)
                             return pd.Series(0)
-                        if 'values' in historic_stock_prices:      
-                            values= historic_stock_prices['values']
-                            price_object={}
+                        if "values" in historic_stock_prices:
+                            values = historic_stock_prices["values"]
+                            price_object = {}
                             for e in values:
-                                price_object['ticker']=historic_stock_prices['meta'].get('symbol')
-                                price_object['date']=datetime.fromisoformat(e.get('datetime')).year
-                                price_object['metric']='price_close'
-                                price_object['value']=float(e.get('close'))
+                                price_object["ticker"] = historic_stock_prices[
+                                    "meta"
+                                ].get("symbol")
+                                price_object["date"] = datetime.fromisoformat(
+                                    e.get("datetime")
+                                ).year
+                                price_object["metric"] = "price_close"
+                                price_object["value"] = float(e.get("close"))
                             if price_object:
-                                write_object(collection,price_object)
+                                write_object(collection, price_object)
                                 price_series.append(price_object)
                     except Exception as e:
                         print(f"error calling api: {str(e)}")
             else:
-                price_series=list(cursor)
-                price_series.append({
-                    'date':end_date.year,
-                    'value':last_price
-                    })
-                
-                
-                
-            return price_series       
-        except Exception as e:
-            print('error ',str(e))
-            return pd.Series(0)
-                            
+                price_series = list(cursor)
+                price_series.append(
+                    {"date": end_date.year, "value": last_price}
+                )
 
-    elif mode=='calendar_yr':
-        if calendar_yr==datetime.now().year:
+            return price_series
+        except Exception as e:
+            print("error ", str(e))
+            return pd.Series(0)
+
+    elif mode == "calendar_yr":
+        if calendar_yr == datetime.now().year:
             URL = f"{TWELVE_URI}/price?symbol={ticker.upper()}&apikey={TWELVE_API_KEY}&source=docs"
             response = requests.get(URL)
             try:
-                price = float(response.json()['price'])
-                stock_price=pd.Series(data=[price],index=[datetime.now()],name='close')
-                stock_price.index.name='date'
-                df=Transform_Obj_and_Date(stock_price)
+                price = float(response.json()["price"])
+                stock_price = pd.Series(
+                    data=[price], index=[datetime.now()], name="close"
+                )
+                stock_price.index.name = "date"
+                df = Transform_Obj_and_Date(stock_price)
                 if df is None:
                     return pd.Series(0)
                 else:
                     return df
             except Exception as e:
-                print('error: ',str(e))
+                print("error: ", str(e))
                 return pd.Series(0)
 
-            
         else:
-            start_date = datetime(year=calendar_yr,month=12,day=30).date()
-            end_date=datetime(year=calendar_yr,month=12,day=31).date()
+            start_date = datetime(year=calendar_yr, month=12, day=30).date()
+            end_date = datetime(year=calendar_yr, month=12, day=31).date()
             URL = f"{TWELVE_URI}/time_series?start_date={start_date}&end_date={end_date}&symbol={ticker.upper()}&interval=1day&apikey={TWELVE_API_KEY}"
             response = requests.get(URL)
             try:
                 historic_stock_prices = response.json()
-                if 'code' in historic_stock_prices:
+                if "code" in historic_stock_prices:
                     return pd.Series(0)
-                if 'values' in historic_stock_prices:      
-                    values= historic_stock_prices['values']
-                    date=[]
-                    close=[]
+                if "values" in historic_stock_prices:
+                    values = historic_stock_prices["values"]
+                    date = []
+                    close = []
                     for e in values:
-                        date.append(datetime.fromisoformat(e.get('datetime','')))
-                        close.append(float(e.get('close','')))
-                    stock_price=pd.Series(data=close,index=date,name='close')
-                    stock_price.index.name='date'
-                    df= Transform_Obj_and_Date(stock_price)
+                        date.append(
+                            datetime.fromisoformat(e.get("datetime", ""))
+                        )
+                        close.append(float(e.get("close", "")))
+                    stock_price = pd.Series(
+                        data=close, index=date, name="close"
+                    )
+                    stock_price.index.name = "date"
+                    df = Transform_Obj_and_Date(stock_price)
                     if df is None:
                         return pd.Series(0)
                     else:
                         return df
 
-
             except Exception as e:
                 print(f"error calling api: {str(e)}")
+
+
 def fetch_metric(
-        collection:Collection,
-        ticker:str,
-        metric:list,
-        mode:Literal["last","all","year","first"]="all",
-        calendar_yr:str=None,
-        unique_metric:bool=True
-        )->object:
-    query = {
-            "ticker":{"$in":[ticker.upper()]},
-            "metric":{"$in":metric}
-        }
-    if ticker=='ALL_STOCK':
-        query={
-            "metric":{"$in":metric}
-        }
-    if mode =='last' and unique_metric:
-        last_doc = collection.find_one(query,sort=[("date",-1)])
+    collection: Collection,
+    ticker: str,
+    metric: list,
+    mode: Literal["last", "all", "year", "first"] = "all",
+    calendar_yr: str = None,
+    unique_metric: bool = True,
+) -> object:
+    query = {"ticker": {"$in": [ticker.upper()]}, "metric": {"$in": metric}}
+    if ticker == "ALL_STOCK":
+        query = {"metric": {"$in": metric}}
+    if mode == "last" and unique_metric:
+        last_doc = collection.find_one(query, sort=[("date", -1)])
         return last_doc if last_doc else {}
-    elif mode=='last' and not unique_metric:
-        last_doc = collection.find(query).sort("date",DESCENDING)
-        return last_doc if collection.count_documents(query)>0 else {}
-    if mode =='first' and unique_metric:
-        first_doc = collection.find_one(query,sort=[("date",1)])
+    elif mode == "last" and not unique_metric:
+        last_doc = collection.find(query).sort("date", DESCENDING)
+        return last_doc if collection.count_documents(query) > 0 else {}
+    if mode == "first" and unique_metric:
+        first_doc = collection.find_one(query, sort=[("date", 1)])
         return first_doc if first_doc else {}
-    elif mode=='first'and not unique_metric:
-        first_doc = collection.find(query).sort("date",DESCENDING)
-        return first_doc if collection.count_documents(query)>0 else {}
-    elif mode=='all':
-        return collection.find(query).sort("date",DESCENDING) if collection.count_documents(query)>0 else {}
-    elif mode=='year'and unique_metric:
-        if not calendar_yr or len(calendar_yr)!=4:
-            raise ValueError('year most be provided in format yyyy for example 2024')
-        query['$or']=[
-            {
-                "date":int(calendar_yr)
-            },
-            {
-                "date":{
-                    "$regex":f"^{calendar_yr}"
-                }
-            }
+    elif mode == "first" and not unique_metric:
+        first_doc = collection.find(query).sort("date", DESCENDING)
+        return first_doc if collection.count_documents(query) > 0 else {}
+    elif mode == "all":
+        return (
+            collection.find(query).sort("date", DESCENDING)
+            if collection.count_documents(query) > 0
+            else {}
+        )
+    elif mode == "year" and unique_metric:
+        if not calendar_yr or len(calendar_yr) != 4:
+            raise ValueError(
+                "year most be provided in format yyyy for example 2024"
+            )
+        query["$or"] = [
+            {"date": int(calendar_yr)},
+            {"date": {"$regex": f"^{calendar_yr}"}},
         ]
-        year_doc=collection.find_one(query,sort=[("date",-1)])
+        year_doc = collection.find_one(query, sort=[("date", -1)])
         return year_doc if year_doc else {}
-    elif mode=='year' and not unique_metric:
-        if not calendar_yr or len(calendar_yr)!=4:
-            raise ValueError('year most be provided in format yyyy for example 2024')
-        query['$or']=[
-            {
-                "date":int(calendar_yr)
-            },
-            {
-                "date":{
-                    "$regex":f"^{calendar_yr}"
-                }
-            }
+    elif mode == "year" and not unique_metric:
+        if not calendar_yr or len(calendar_yr) != 4:
+            raise ValueError(
+                "year most be provided in format yyyy for example 2024"
+            )
+        query["$or"] = [
+            {"date": int(calendar_yr)},
+            {"date": {"$regex": f"^{calendar_yr}"}},
         ]
-        year_doc=collection.find(query).sort("date",DESCENDING)
-        return year_doc if collection.count_documents(query)>0 else {}
-        
+        year_doc = collection.find(query).sort("date", DESCENDING)
+        return year_doc if collection.count_documents(query) > 0 else {}
 
     return []
-def fetch_price_realtime(ticker:str,period:int=5):
-    prices=[]
-    end_date=datetime.now().date()
-    start_date=str(end_date.year-period)+'-01-01'
+
+
+def fetch_price_realtime(ticker: str, period: int = 5):
+    prices = []
+    end_date = datetime.now().date()
+    start_date = str(end_date.year - period) + "-01-01"
     URL = f"{TWELVE_URI}/time_series?start_date={start_date}&end_date={str(end_date)}\
         &symbol={ticker.upper()}&interval=1day&apikey={TWELVE_API_KEY}"
     response = requests.get(URL)
     try:
         historic_stock_prices = response.json()
-        if 'code' in historic_stock_prices:
-            print("code error",historic_stock_prices)
+        if "code" in historic_stock_prices:
+            print("code error", historic_stock_prices)
             return pd.Series(0)
-        if 'values' in historic_stock_prices:      
-            return historic_stock_prices['values']
+        if "values" in historic_stock_prices:
+            return historic_stock_prices["values"]
     except Exception as e:
         print(str(e))
         return pd.Series(0)
-def fetch_name(tickers:list)->str:
+
+
+def fetch_name(tickers: list) -> str:
     """
     this function fetch the name of a list of tickers
     args:
@@ -462,99 +501,103 @@ def fetch_name(tickers:list)->str:
     """
     client = MongoClient(MONGODB_URI)
 
-    db=client['test']
-    ticker_collection=db['tickerCIK']
-    tickers=[e.upper() for e in tickers]
-    filter={
-        'ticker':{
-            '$in':tickers
-        }
-    }
-    project ={
-        'title':1,
-        '_id':0
-    }
-    cursor=ticker_collection.find(filter=filter,projection=project)
-    return [e['title'] for e in cursor]
+    db = client["test"]
+    ticker_collection = db["tickerCIK"]
+    tickers = [e.upper() for e in tickers]
+    filter = {"ticker": {"$in": tickers}}
+    project = {"title": 1, "_id": 0}
+    cursor = ticker_collection.find(filter=filter, projection=project)
+    return [e["title"] for e in cursor]
+
+
 def pull_QStockData(ticker, collection):
     QStockData = collection.find({"ticker": ticker.upper()})
     return QStockData
-def PullQtrStockRevenueTrends(collection:Collection,page=1,items_per_page=100):
-    print("Page",page)
-    print("Page size ",items_per_page)
-    
-    # Fetch records with pagination
-    stocks = collection.aggregate([
 
-        {
-        '$sort' :{'trend':-1}
-        },{
-        
-        '$skip': (page-1)*items_per_page
-        },{
-        '$limit': items_per_page
-        }
-    ])
+
+def PullQtrStockRevenueTrends(
+    collection: Collection, page=1, items_per_page=100
+):
+    print("Page", page)
+    print("Page size ", items_per_page)
+
+    # Fetch records with pagination
+    stocks = collection.aggregate(
+        [
+            {"$sort": {"trend": -1}},
+            {"$skip": (page - 1) * items_per_page},
+            {"$limit": items_per_page},
+        ]
+    )
     # Group the fetched records by symbol
     grouped_stocks = {}
     for stock in stocks:
-        stock['_id'] = str(stock['_id'])  # Convert ObjectId to string
-                # Apply formatting to each relevant field
-        ticker = stock['ticker']
-        value = stock['value']
-        trend = stock['trend']
+        stock["_id"] = str(stock["_id"])  # Convert ObjectId to string
+        # Apply formatting to each relevant field
+        ticker = stock["ticker"]
+        value = stock["value"]
+        trend = stock["trend"]
         if ticker not in grouped_stocks:
             grouped_stocks[ticker] = []
         grouped_stocks[ticker].append(stock)
-    
+
     total_tickers = collection.distinct("ticker")
     total_tickers_count = len(total_tickers)
 
-    return grouped_stocks,total_tickers_count
-def fetch_ai_queries(user_id,db_name,collection_name,max_queries,sort:Literal['asc','desc'],status=None,report_type=None,task_id=None,credit_check=False):
+    return grouped_stocks, total_tickers_count
+
+
+def fetch_ai_queries(
+    user_id,
+    db_name,
+    collection_name,
+    max_queries,
+    sort: Literal["asc", "desc"],
+    status=None,
+    report_type=None,
+    task_id=None,
+    credit_check=False,
+):
     from pymongo import MongoClient
     import json
     import certifi
     from pymongo.server_api import ServerApi
-    
+
     # client = MongoClient(MONGODB_URI, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
     client = MongoClient(MONGODB_URI)
 
-    db=client[db_name]
-    collection=db[collection_name]
-    filter= {
-        "user_id":user_id,
+    db = client[db_name]
+    collection = db[collection_name]
+    filter = {
+        "user_id": user_id,
     }
     if status is not None:
-        filter["status"]=status.value
+        filter["status"] = status.value
     if report_type is not None:
-        filter["report_type"]=report_type
+        filter["report_type"] = report_type
     if task_id is not None:
-        if isinstance(task_id,str):
+        if isinstance(task_id, str):
             print(f"converting task_id to a list")
             task_id = [task_id]
-        filter["task_id"]={"$in":task_id}
+        filter["task_id"] = {"$in": task_id}
     if credit_check:
-        filter["timestamp"]={"$gte":datetime.now()-timedelta(hours=24)}
-    if sort=='desc':
-        sort=list({"timestamp":-1}.items())
+        filter["timestamp"] = {"$gte": datetime.now() - timedelta(hours=24)}
+    if sort == "desc":
+        sort = list({"timestamp": -1}.items())
     else:
-        sort = list({"timestamp":1}.items())
-    docs = collection.find(
-        filter=filter,
-        sort=sort,
-        limit=max_queries
-    )
-    docs_list=[]
+        sort = list({"timestamp": 1}.items())
+    docs = collection.find(filter=filter, sort=sort, limit=max_queries)
+    docs_list = []
     if docs:
         for d in docs:
-            d['_id']=str(d['_id'])
-            d['timestamp']=str(d['timestamp'])
+            d["_id"] = str(d["_id"])
+            d["timestamp"] = str(d["timestamp"])
             docs_list.append(d)
 
     return docs_list
 
-def qtr_4_calc()->list:
+
+def qtr_4_calc() -> list:
     """
     Calculate missing Q4 revenue records from quarterly and full-year revenue data.
     Q4 revenue is calculated as:
@@ -569,7 +612,7 @@ def qtr_4_calc()->list:
         `"calculated"` and `fp` set to `"Q4"`.
     Notes
     -----
-    list contains records for one ticker and one revenue metric.    
+    list contains records for one ticker and one revenue metric.
     """
     """
     description:
@@ -580,71 +623,82 @@ def qtr_4_calc()->list:
     returns: None
     """
     import os
-    
-    client = MongoClient(MONGODB_URI)
-    db=client['test']
 
-    years_checked =[]
-    qtr_checked=[]
-    symbol =""
-    entity=""
-    metric=""
-    qtr_acc=0
-    fy=0
-    q4_calculated =[]
-    collection_name='QtrStockData'
+    client = MongoClient(MONGODB_URI)
+    db = client["test"]
+
+    years_checked = []
+    qtr_checked = []
+    symbol = ""
+    entity = ""
+    metric = ""
+    qtr_acc = 0
+    fy = 0
+    q4_calculated = []
+    collection_name = "QtrStockData"
     current_year = int(datetime.today().year)
-    collection=db[collection_name]
-    if CURRENT_ENVIRONMENT=='dev':
-        nasdaq =pd.read_csv(r"/Users/jjmr86/Downloads/nasdaq.csv")
+    collection = db[collection_name]
+    if CURRENT_ENVIRONMENT == "dev":
+        nasdaq = pd.read_csv(r"/Users/jjmr86/Downloads/nasdaq.csv")
     else:
-        nasdaq =pd.read_csv(r"/home/jjmr86/quarterly_stock_ops/nasdaq.csv")
-    
+        nasdaq = pd.read_csv(r"/home/jjmr86/quarterly_stock_ops/nasdaq.csv")
+
     nasdaq_tickers = set(nasdaq["ticker"].astype(str))
 
     for n in nasdaq_tickers:
-        
-        revenue_cursor = fetch_metric(collection,n,['Revenues','RevenuesNetOfInterestExpense'],mode='all')
-        for r in revenue_cursor :
-            year = datetime.fromisoformat(r['date']).year
+
+        revenue_cursor = fetch_metric(
+            collection,
+            n,
+            ["Revenues", "RevenuesNetOfInterestExpense"],
+            mode="all",
+        )
+        for r in revenue_cursor:
+            year = datetime.fromisoformat(r["date"]).year
             if year == current_year:
                 continue
             if symbol == "":
-                symbol = r.get('ticker','')
-                entity=r.get('entity','')
-                metric = r.get('metric','')
+                symbol = r.get("ticker", "")
+                entity = r.get("entity", "")
+                metric = r.get("metric", "")
             if year not in years_checked:
                 years_checked.append(year)
-                qtr_checked=[]
-            if r['frame'] and r['form']=='10-Q' and r['fp']not in qtr_checked:
-                qtr_checked.append(r['fp'])
-                qtr_acc+=r['value']
-            if r['frame'] and r['form']=='10-K':
-                fy =r['value']
-            if len(qtr_checked)==3 and 'Q4' not in qtr_checked:
-                
-                qtr_checked=[]
-                q4_calculated.append({
-                    "ticker":symbol,
-                    "entity":entity,
-                    "metric":metric,
-                    "value":fy-qtr_acc,
-                    "date":f"{str(year)}-12-31",
-                    "form":"calculated",
-                    "fp":"Q4",
-                    "frame":f"CY{str(year)}Q4"
-                })
-                years_checked =[]
-                qtr_checked=[]
-                symbol =""
-                entity=""
-                metric=""
-                qtr_acc=0
-                fy=0
-            if len(q4_calculated)>=1000:
-                push_StockData(db,q4_calculated,'QtrStockData')
-                q4_calculated=[]
-        
+                qtr_checked = []
+            if (
+                r["frame"]
+                and r["form"] == "10-Q"
+                and r["fp"] not in qtr_checked
+            ):
+                qtr_checked.append(r["fp"])
+                qtr_acc += r["value"]
+            if r["frame"] and r["form"] == "10-K":
+                fy = r["value"]
+            if len(qtr_checked) == 3 and "Q4" not in qtr_checked:
 
-if __name__=="__main__":
+                qtr_checked = []
+                q4_calculated.append(
+                    {
+                        "ticker": symbol,
+                        "entity": entity,
+                        "metric": metric,
+                        "value": fy - qtr_acc,
+                        "date": f"{str(year)}-12-31",
+                        "form": "calculated",
+                        "fp": "Q4",
+                        "frame": f"CY{str(year)}Q4",
+                    }
+                )
+                years_checked = []
+                qtr_checked = []
+                symbol = ""
+                entity = ""
+                metric = ""
+                qtr_acc = 0
+                fy = 0
+            if len(q4_calculated) >= 1000:
+                push_StockData(db, q4_calculated, "QtrStockData")
+                q4_calculated = []
+
+
+if __name__ == "__main__":
     qtr_4_calc()

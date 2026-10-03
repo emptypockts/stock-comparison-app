@@ -7,12 +7,12 @@ from stockIntrinsicVal import getAllIntrinsicValues
 from financialUtils import fetch_name
 from langchain_core.messages import HumanMessage, SystemMessage
 import json
-from outils import save_analysis_report,analyze_ticker,llm
+from outils import save_analysis_report, analyze_ticker, llm
 from datetime import datetime
 from app_constants import SEC_DIRECTORY
 
 
-def get_company_data_agent(tickers)->str:
+def get_company_data_agent(tickers) -> str:
     return f"""
     You are a financial analysis AI assistant designed to generate concise, insightful feedback for investors.
 
@@ -29,7 +29,9 @@ def get_company_data_agent(tickers)->str:
     5. For each ticker, provide a brief insight summary (2–4 bullet points) that could help an investor decide whether to look deeper, hold, or avoid.
 
     Avoid financial advice (e.g., "Buy now"), but you can suggest whether a stock appears "worth further analysis" or "shows signs of risk."""
-def get_company_score_agent(tickers)->str:
+
+
+def get_company_score_agent(tickers) -> str:
     return f"""
     You are an AI assistant specialized in value investing, inspired by the principles of Benjamin Graham. Your job is to review a company's historical financials and determine how well it aligns with value investing standards.
 
@@ -63,7 +65,9 @@ def get_company_score_agent(tickers)->str:
 
     Here is the historical data:
     """
-def get_company_financials_agent(tickers)->str:
+
+
+def get_company_financials_agent(tickers) -> str:
     return f"""
     You are a financial analysis assistant helping investors make informed decisions. You receive financial data for up to 3 stock tickers given here {tickers} and company names {fetch_name(tickers)}, 
     each consisting of multiple years of key financial metrics (such as revenue, net income, free cash flow, assets, liabilities, EPS, and dividends).
@@ -77,7 +81,9 @@ def get_company_financials_agent(tickers)->str:
     Be concise but insightful, use plain language, and avoid overly technical jargon. Include bullet points for clarity where appropriate.
     Do not speculate on stock prices. Focus only on the financial data provided.
     """
-def get_company_financials_qtr_agent(tickers)->str:
+
+
+def get_company_financials_qtr_agent(tickers) -> str:
     return f"""
     You are a financial analysis AI assistant that evaluates and compares companies based on their quarterly financial statements.
     You receive structured financial data for up to 3 stock tickers given here {tickers} and company names {fetch_name(tickers)}, each with quarterly values for key metrics such as:
@@ -105,7 +111,9 @@ def get_company_financials_qtr_agent(tickers)->str:
     Be concise but insightful
     Do not speculate on stock prices. Focus only on the financial data provided.
     """
-def get_company_intrinsic_value_agent(tickers)->str:
+
+
+def get_company_intrinsic_value_agent(tickers) -> str:
     return f"""
     You are a financial valuation assistant specializing in intrinsic value analysis using Discounted Cash Flow (DCF) and Graham valuation models.
     You are given structured data for up to 3 tickers given here {tickers} and company names {fetch_name(tickers)}. For each, you receive:
@@ -133,7 +141,9 @@ def get_company_intrinsic_value_agent(tickers)->str:
     Speak in plain language suitable for a retail investor audience
     Do not recommend buying or selling. Simply highlight valuation insights and risk indicators based on the data provided.
     """
-def get_full_report_agent(tickers)->str:
+
+
+def get_full_report_agent(tickers) -> str:
     return f"""
     you are an expert financial agent and you will analyse the reports provided here and provide a final report ready to be processed.
     analysis expected: 
@@ -163,6 +173,8 @@ def get_full_report_agent(tickers)->str:
 
     Ensure the JSON is valid and ready for parsing.
     """
+
+
 def get_json_validator():
     return """
 You are a JSON Output Validator.
@@ -196,13 +208,14 @@ Additional rules:
 - Optionally, you may correct common formatting issues only if it's clear and safe.
 - Be concise, structured, and strictly follow the output format.
 """
-def ai_query(agent, data)->str:
 
 
-    response=llm.invoke(
+def ai_query(agent, data) -> str:
+
+    response = llm.invoke(
         [
             SystemMessage(content=agent),
-            HumanMessage(content=f"here is the data {json.dumps(data)}")
+            HumanMessage(content=f"here is the data {json.dumps(data)}"),
         ]
     )
     if response.content:
@@ -210,13 +223,16 @@ def ai_query(agent, data)->str:
     else:
         raise Exception(f"response has no content. see details: {response}")
         return {}
-    
-def get_full_report(agent,r1,r2,r3,r4,r5)->str:
-    response=llm.invoke(
+
+
+def get_full_report(agent, r1, r2, r3, r4, r5) -> str:
+    response = llm.invoke(
         [
             SystemMessage(content=agent),
-            HumanMessage(content=f"""current status report\n{r1}\nvalue score report\n{r2}
-                            yearly report\n{r3}\nquarterly report{r4}\nintrinsic value report{r5}""")
+            HumanMessage(
+                content=f"""current status report\n{r1}\nvalue score report\n{r2}
+                            yearly report\n{r3}\nquarterly report{r4}\nintrinsic value report{r5}"""
+            ),
         ]
     )
     if response.content:
@@ -225,96 +241,112 @@ def get_full_report(agent,r1,r2,r3,r4,r5)->str:
         raise Exception(f"response has no content. see details: {response}")
         return {}
 
-def validate_json(agent,r6)->str:
-    response=llm.invoke(
-        [
-            SystemMessage(content=agent),
-            HumanMessage(content=f"text:{r6}")
-        ]
+
+def validate_json(agent, r6) -> str:
+    response = llm.invoke(
+        [SystemMessage(content=agent), HumanMessage(content=f"text:{r6}")]
     )
     if response.content:
-        validated_json=json.loads(response.content.replace("```json","").replace("```","").strip())
+        validated_json = json.loads(
+            response.content.replace("```json", "").replace("```", "").strip()
+        )
         return validated_json
     else:
         raise Exception(f"response has no content. see details: {response}")
         return {}
-    
-def compile(tickers)-> str | None:
-    needs_analysis : bool | None = None
+
+
+def compile(tickers) -> str | None:
+    needs_analysis: bool | None = None
     year = datetime.today().year
-    directory= os.path.join(SEC_DIRECTORY,str(year))
-    tickers=[t.capitalize()for t in tickers]
+    directory = os.path.join(SEC_DIRECTORY, str(year))
+    tickers = [t.capitalize() for t in tickers]
     companies = fetch_name(tickers)
     if not companies or not tickers:
-        raise ValueError(f"There is an issue with the companies or the tickers provided. Please validate them Tickers: {tickers} Companies: {companies} ")
+        raise ValueError(
+            f"There is an issue with the companies or the tickers provided. Please validate them Tickers: {tickers} Companies: {companies} "
+        )
 
-    for ticker,company in zip(tickers,companies):
-        ticker_dir=os.path.join(directory,ticker)
-        extension=".all"
-        needs_analysis, existing_report = analyze_ticker(directory,ticker,extension=extension)
+    for ticker, company in zip(tickers, companies):
+        ticker_dir = os.path.join(directory, ticker)
+        extension = ".all"
+        needs_analysis, existing_report = analyze_ticker(
+            directory, ticker, extension=extension
+        )
 
     if needs_analysis:
         try:
-            #ai agent that analyses company basic data such as revenue and stock price
+            # ai agent that analyses company basic data such as revenue and stock price
             company_data_agent = get_company_data_agent(tickers)
             ai1 = compile_stockData(tickers)
-            
-            #ai agent that score companies based on the Benjamin G. valued investor analysis
-            ai2={
-                "ticker":[ticker for ticker in tickers],
-                "data":[fetch_5y_data(e).to_json() for e in tickers]
+
+            # ai agent that score companies based on the Benjamin G. valued investor analysis
+            ai2 = {
+                "ticker": [ticker for ticker in tickers],
+                "data": [fetch_5y_data(e).to_json() for e in tickers],
             }
-            
+
             company_score_agent = get_company_score_agent(tickers)
-            
-            #ai agent that analyses financials
-            company_financials_agent=get_company_financials_agent(tickers)
-            ai3 ={
-                "ticker":[ticker for ticker in tickers],
-                "data":[json.dumps(fetch_financials(e)) for e in tickers]
+
+            # ai agent that analyses financials
+            company_financials_agent = get_company_financials_agent(tickers)
+            ai3 = {
+                "ticker": [ticker for ticker in tickers],
+                "data": [json.dumps(fetch_financials(e)) for e in tickers],
             }
 
-            #ai agent that analyses financials per quarter
-            company_financials_qtr_agent = get_company_financials_qtr_agent(tickers)
+            # ai agent that analyses financials per quarter
+            company_financials_qtr_agent = get_company_financials_qtr_agent(
+                tickers
+            )
             ai4 = {
-                "ticker":[ticker for ticker in tickers],
-                "data":[json.dumps(fetch_4qtr_data(e)) for e in tickers]
+                "ticker": [ticker for ticker in tickers],
+                "data": [json.dumps(fetch_4qtr_data(e)) for e in tickers],
             }
 
-            #ai agent that analyses intrinsic value
-            company_intrinsic_value_agent = get_company_intrinsic_value_agent(tickers)
+            # ai agent that analyses intrinsic value
+            company_intrinsic_value_agent = get_company_intrinsic_value_agent(
+                tickers
+            )
             ai5 = {
-                "ticker":[ticker for ticker in tickers],
-                "data":[json.dumps(getAllIntrinsicValues(e))for e in tickers]
+                "ticker": [ticker for ticker in tickers],
+                "data": [
+                    json.dumps(getAllIntrinsicValues(e)) for e in tickers
+                ],
             }
-
 
             # trigger ai agents
             r1 = ai_query(company_data_agent, ai1)
-            r2 = ai_query(company_score_agent,ai2)
-            r3 = ai_query(company_financials_agent,ai3)
-            r4 = ai_query(company_financials_qtr_agent,ai4)
-            r5 = ai_query(company_intrinsic_value_agent,ai5)
+            r2 = ai_query(company_score_agent, ai2)
+            r3 = ai_query(company_financials_agent, ai3)
+            r4 = ai_query(company_financials_qtr_agent, ai4)
+            r5 = ai_query(company_intrinsic_value_agent, ai5)
 
-            #final report
-        
-            full_report_agent =get_full_report_agent(tickers) 
-            r6 =get_full_report(full_report_agent,r1,r2,r3,r4,r5)
+            # final report
+
+            full_report_agent = get_full_report_agent(tickers)
+            r6 = get_full_report(full_report_agent, r1, r2, r3, r4, r5)
             if r6:
-                
-                final_report = validate_json(get_json_validator(),r6)
-                save_analysis_report(ticker_dir, ticker,final_report,extension=extension)
+
+                final_report = validate_json(get_json_validator(), r6)
+                save_analysis_report(
+                    ticker_dir, ticker, final_report, extension=extension
+                )
                 return r6.strip()
             else:
-                raise ValueError(f"The last step of the report compilation is empty. Please check the overall ai report.")   
+                raise ValueError(
+                    f"The last step of the report compilation is empty. Please check the overall ai report."
+                )
         except Exception as e:
-            print("error is: ",str(e))
+            print("error is: ", str(e))
             return None
     elif needs_analysis is False:
         print(f"Analysis for ticker '{ticker}' is up to date.")
         return existing_report
     else:
         raise ValueError("Needs analysis is None. Check the AiReport Module.")
+
+
 if __name__ == "__main__":
     tickers = ["spcx"]
 

@@ -4,17 +4,19 @@ import bcrypt
 import re  # For email validation
 from app_constants import MONGODB_URI
 
-def registerStep(username, password, name, email):
-    current_time = datetime.now(timezone.utc).isoformat(timespec='milliseconds')
-    client = MongoClient(MONGODB_URI)
 
+def registerStep(username, password, name, email):
+    current_time = datetime.now(timezone.utc).isoformat(
+        timespec="milliseconds"
+    )
+    client = MongoClient(MONGODB_URI)
 
     db = client["test"]
     users_collection = db["User"]
 
     try:
         # Validate email format using regex
-        email_regex = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+        email_regex = r"^[\w\.-]+@[\w\.-]+\.\w+$"
         if not re.match(email_regex, email):
             return {"success": False, "message": "Invalid email format."}
 
@@ -26,33 +28,39 @@ def registerStep(username, password, name, email):
             return {"success": False, "message": "Email already exists."}
 
         # Hash the password
-        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        hashed_password = bcrypt.hashpw(
+            password.encode("utf-8"), bcrypt.gensalt()
+        )
 
         # Insert the new user
-        users_collection.insert_one({
-            "email": email,
-            "password": hashed_password.decode('utf-8'),  # Store as a string
-            "name": name,
-            "username": username,
-            "createdAt": current_time,
-            "updatedAt": current_time
-        })
+        users_collection.insert_one(
+            {
+                "email": email,
+                "password": hashed_password.decode(
+                    "utf-8"
+                ),  # Store as a string
+                "name": name,
+                "username": username,
+                "createdAt": current_time,
+                "updatedAt": current_time,
+            }
+        )
 
         return {"success": True, "message": "User created successfully."}
 
     except errors.DuplicateKeyError:
         return {"success": False, "message": "User already exists."}
-    
+
     except Exception as e:
         return {"success": False, "message": f"An error occurred: {str(e)}"}
+
 
 if __name__ == "__main__":
     # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
     client = MongoClient(MONGODB_URI)
 
-    
     try:
-        client.admin.command('ping')
+        client.admin.command("ping")
         print("Pinged your deployment. You successfully connected to MongoDB!")
         # Testing user registration
         # result = registerStep(username='ChandraP', password='ChandraP', name='Chandra', email='ChandraP@eric.com')
