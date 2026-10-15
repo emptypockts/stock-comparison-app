@@ -1,43 +1,64 @@
 from pymongo import MongoClient
 import os
 from datetime import datetime, timedelta
-import requests
-from app_constants import MONGODB_URI, ALPHA_VANTAGE_API_KEY
+from typing import Any
+import yfinance as yf
+from app_constants import MONGODB_URI
+from eacsa_logger import setup_logging, get_logger
+
+setup_logging()
+logger = get_logger(__name__)
 
 client = MongoClient(MONGODB_URI)
-
 
 db = client["test"]
 
 
-def fetch_historic_stock_price(ticker):
-    startDate = datetime.today().date() - timedelta(weeks=260)
-    endDate = datetime.today().date()
-    qtr_Obj = {}
+def fetch_historic_stock_price(ticker: str) -> dict[str, Any]:
+    """
+    Receives a ticker, fetches the monthly adjusted closing prices
+    for the last 5 years and returns a date-keyed dict of closing prices.
+    Uses yfinance as a free, no-key-required data source.
+    """
+    start_date = datetime.today().date() - timedelta(weeks=260)
+    end_date = datetime.today().date()
     try:
-        if not ALPHA_VANTAGE_API_KEY:
-            raise EnvironmentError(
-                "ALPHA key not found in environment variables."
-            )
+        data = yf.download(
+            ticker,
+            start=start_date,
+            end=end_date,
+            interval="1mo",
+            auto_adjust=True,
+            progress=False,
+        )
+        if data.empty:
+            logger.warning(f"No historical price data returned for {ticker}.")
+            return {}
+        qtr_obj = {
+            str(date.date()): str(round(float(close), 4))
+            for date, close in zip(data.index, data["Close"].squeeze())
+        }
+        return qtr_obj
+    except Exception as e:
+        logger.error(f"Error fetching historic stock price for {ticker}: {e}")
+        return {}
 
-        url = f"https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY_ADJUSTED&symbol={ticker}&apikey={ALPHA_VANTAGE_API_KEY}"
-        response = requests.get(url)
-        response.raise_for_status()  # Raise an HTTPError for bad responses (4xx or 5xx)
-        jsonObj = response.json()
-    except:
-        print("Error trying to fetch data")
-    qtr_Obj = {
-        key_date: key_value["4. close"]
-        for key_date, key_value in jsonObj[
-            "Monthly Adjusted Time Series"
-        ].items()
-    }
 
-    return qtr_Obj
+def db_4qtr_data_fetch(db, ticker: str, collection: str = "QtrStockData"):
+    """
+    Fetches quarterly GAAP financial metrics for a ticker from MongoDB.
 
+    Queries the specified collection for quarterly period records (fp starting
+    with 'Q') that have a non-null frame, sorted by date ascending.
 
-def db_4qtr_data_fetch(db, ticker, collection="QtrStockData"):
-    collection_QtrStockData = db[collection]
+    Args:
+        db: Active pymongo database instance.
+        ticker (str): The stock ticker symbol (e.g. "KO").
+        collection (str): MongoDB collection name. Defaults to "QtrStockData".
+
+    Returns:
+        pymongo.command_cursor.CommandCursor: Aggregation cursor over matching documents.
+    """collection_QtrStockData = db[collection]
 
     Object = collection_QtrStockData.aggregate(
         [
@@ -56,8 +77,22 @@ def db_4qtr_data_fetch(db, ticker, collection="QtrStockData"):
     return Object
 
 
-def db_4qtr_dei_data_fetch(db, ticker, collection="QtrDeiStockData"):
-    collection_QtrStockData = db[collection]
+def db_4qtr_dei_data_fetch(db, ticker: str, collection: str = "QtrDeiStockData"):
+    """
+    Fetches quarterly DEI (Document and Entity Information) metrics for a ticker from MongoDB.
+
+    Queries the specified collection for all records with a non-null frame,
+    sorted by date ascending. DEI data includes entity-level facts such as
+    shares outstanding and entity type that complement GAAP financials.
+
+    Args:
+        db: Active pymongo database instance.
+        ticker (str): The stock ticker symbol (e.g. "KO").
+        collection (str): MongoDB collection name. Defaults to "QtrDeiStockData".
+
+    Returns:
+        pymongo.command_cursor.CommandCursor: Aggregation cursor over matching documents.
+    """collection_QtrStockData = db[collection]
 
     Object = collection_QtrStockData.aggregate(
         [
@@ -75,7 +110,26 @@ def db_4qtr_dei_data_fetch(db, ticker, collection="QtrDeiStockData"):
     return Object
 
 
-def fetch_4qtr_data(ticker) -> dict:
+def fetch_4qtr_data(ticker: str) -> dict:
+    """
+    Compiles and derives key financial metrics for a ticker from MongoDB.
+
+    Fetches both GAAP and DEI quarterly data, merges them into a unified
+    metric object keyed by metric name and date, then computes the following
+    derived metrics:
+        - return_on_assets: Net income / Assets as a percentage per quarter.
+        - total_revenue: Revenues or RevenueFromContractWithCustomer values.
+        - fcf: Free cash flow (operating cash flow minus capex) per quarter.
+        - total_debt: Sum of current and non-current liabilities per quarter.
+
+    Args:
+        ticker (str): The stock ticker symbol (e.g. "KO").
+
+    Returns:
+        dict: A metric object where each key is a metric name and its value
+        is a dict of {date: value} pairs. Derived metrics are merged in
+        alongside raw GAAP/DEI metrics.
+    """
     gaapObj = db_4qtr_data_fetch(db, ticker)
     deiObj = db_4qtr_dei_data_fetch(db, ticker)
     net_income = []

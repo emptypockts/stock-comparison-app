@@ -20,10 +20,28 @@ logger = get_logger(__name__)
 # analyses the sec reports from edgar db and provides a summary with red flags and suspicious patterns
 def quant(year, tickers: list[str]) -> list:
     """
-    quant analyzes a ticker 10K, 10Q, 8K, DEF 14A reports and identify red flags and opportunities
-    args:
-        ticker of the company
-    returns: a list object ready for parsing into a pdf report
+    Analyzes SEC filings (10-K, 10-Q, 8-K, DEF 14A) for one or more tickers
+    and identifies red flags, risk patterns, and opportunities.
+
+    For each ticker, checks whether a recent analysis already exists (within
+    90 days). If not, reads the local SEC filing text files, prunes and
+    extracts structured sections, summarizes them via LLM, and saves the
+    result as a .quant report file.
+
+    Args:
+        year (str): The filing year to analyze (e.g. "2025"). Used to resolve
+            the SEC filings directory path.
+        tickers (list[str]): List of stock ticker symbols to analyze
+            (e.g. ["AAPL", "MSFT"]). Case-insensitive — normalized internally.
+
+    Returns:
+        list | None: The analysis report for the last ticker in the list as a
+            parsed JSON object (list of dicts), ready for PDF generation.
+            Returns None if no reports were successfully produced.
+
+    Raises:
+        ValueError: If a filing's report type is not one of the recognized
+            types (10-K, 10-Q, 8-K, DEF 14A).
     """
     logger.info("Start Quant log")
     REPORTS_WITH_ITEMS = ["10-K", "8-K", "10-Q"]

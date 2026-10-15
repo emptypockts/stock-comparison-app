@@ -4,7 +4,7 @@ export const showTempMessage = (
     type="info",
     duration=1000,
     callback=null
-)=>{
+)=> {
     targetRef.value={
         text:message,
         type:type
