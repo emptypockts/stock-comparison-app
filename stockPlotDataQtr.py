@@ -58,7 +58,8 @@ def db_4qtr_data_fetch(db, ticker: str, collection: str = "QtrStockData"):
 
     Returns:
         pymongo.command_cursor.CommandCursor: Aggregation cursor over matching documents.
-    """collection_QtrStockData = db[collection]
+    """
+    collection_QtrStockData = db[collection]
 
     Object = collection_QtrStockData.aggregate(
         [
@@ -92,7 +93,8 @@ def db_4qtr_dei_data_fetch(db, ticker: str, collection: str = "QtrDeiStockData")
 
     Returns:
         pymongo.command_cursor.CommandCursor: Aggregation cursor over matching documents.
-    """collection_QtrStockData = db[collection]
+    """
+    collection_QtrStockData = db[collection]
 
     Object = collection_QtrStockData.aggregate(
         [
