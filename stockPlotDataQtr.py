@@ -1,11 +1,14 @@
 from pymongo import MongoClient,DESCENDING
 import certifi
-from pymongo.server_api import ServerApi
 from dotenv import load_dotenv
 import os
 import pandas as pd
 from datetime import datetime,timedelta
-import requests
+from eacsa_logger import setup_logging, get_logger
+import yfinance as yf
+from typing import Any
+setup_logging()
+logger = get_logger(__name__)
 load_dotenv()
 uri = os.getenv('MONGODB_URI')
 # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
@@ -14,23 +17,35 @@ client = MongoClient(uri)
 API = os.getenv('ALPHA_VANTAGE_API_KEY')
 db = client["test"]
 
-def fetch_historic_stock_price(ticker):
-    startDate = datetime.today().date() - timedelta(weeks=260)
-    endDate = datetime.today().date()
-    qtr_Obj={}
-    try:
-        if not API:
-            raise EnvironmentError("ALPHA key not found in environment variables.")
-        
-        url=f"https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY_ADJUSTED&symbol={ticker}&apikey={API}"
-        response = requests.get(url)
-        response.raise_for_status()  # Raise an HTTPError for bad responses (4xx or 5xx)  
-        jsonObj = response.json()
-    except:
-        print("Error trying to fetch data")
-    qtr_Obj={key_date:key_value['4. close'] for key_date,key_value in jsonObj['Monthly Adjusted Time Series'].items()}
 
-    return qtr_Obj
+def fetch_historic_stock_price(ticker: str) -> dict[str, Any]:
+    """
+    Receives a ticker, fetches the monthly adjusted closing prices
+    for the last 5 years and returns a date-keyed dict of closing prices.
+    Uses yfinance as a free, no-key-required data source.
+    """
+    start_date = datetime.today().date() - timedelta(weeks=260)
+    end_date = datetime.today().date()
+    try:
+        data = yf.download(
+            ticker,
+            start=start_date,
+            end=end_date,
+            interval="1mo",
+            auto_adjust=True,
+            progress=False,
+        )
+        if data.empty:
+            logger.warning(f"No historical price data returned for {ticker}.")
+            return {}
+        qtr_obj = {
+            str(date.date()): str(round(float(close), 4))
+            for date, close in zip(data.index, data["Close"].squeeze())
+        }
+        return qtr_obj
+    except Exception as e:
+        logger.error(f"Error fetching historic stock price for {ticker}: {e}")
+        return {}
 
 def db_4qtr_data_fetch(db,ticker,collection='QtrStockData'):
     collection_QtrStockData=db[collection]

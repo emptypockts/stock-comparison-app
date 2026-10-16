@@ -522,7 +522,6 @@ def fetch_ai_queries(user_id,db_name,collection_name,max_queries,sort:Literal['a
     from pymongo import MongoClient
     import json
     import certifi
-    from pymongo.server_api import ServerApi
     uri = os.getenv('MONGODB_URI')
     # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
     client = MongoClient(uri)
@@ -538,7 +537,6 @@ def fetch_ai_queries(user_id,db_name,collection_name,max_queries,sort:Literal['a
         filter["report_type"]=report_type
     if task_id is not None:
         if isinstance(task_id,str):
-            print(f"converting task_id to a list")
             task_id = [task_id]
         filter["task_id"]={"$in":task_id}
     if credit_check:

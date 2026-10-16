@@ -1,55 +1,71 @@
 import logging
-import dotenv
-import os
-import requests
+import yfinance as yf
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger()
 
-def alpha_get_market_cap(symbol):
-    api_key  = os.getenv('ALPHA_VANTAGE_API_KEY')
-    url = f"https://www.alphavantage.co/query?function=OVERVIEW&symbol={symbol}&apikey={api_key}"
-    response = requests.get(url)
-    data = response.json()
-    
-    if 'MarketCapitalization' in data:
-        return int(data['MarketCapitalization'])
-    else:
-        return int(0)
+def alpha_get_market_cap(symbol: str) -> int:
+    """
+    Fetches the current market capitalization for a given ticker symbol.
 
+    Args:
+        symbol (str): The stock ticker symbol (e.g. "AAPL").
 
-def get_StockInfo(ticker):
+    Returns:
+        int: Market cap in USD, or 0 if unavailable or on error.
+    """
     try:
-        dotenv.load_dotenv()
-        API = os.getenv('POLYGON_API')
-        if not API:
-            raise EnvironmentError("Massive API (former polygon) key not found in environment variables.")
-        
-        stockData = {}
-        url = f"https://api.massive.com/v3/reference/tickers/{ticker.upper()}?apiKey={API}"
-        response = requests.get(url)
-        response.raise_for_status()  # Raise an HTTPError for bad responses (4xx or 5xx)
-        market_cap= alpha_get_market_cap(ticker)
-        jsonObj = response.json()
-        if market_cap==0:
-            market_cap=jsonObj['results'].get('market_cap',1),
-            if isinstance(market_cap,tuple):
-                market_cap=market_cap[0]
-        if 'results' not in jsonObj or not jsonObj['results']:
-            raise ValueError(f"No results found for ticker: {ticker}")
-        stockData = {
-            'symbol': jsonObj['results'].get('ticker','ticker not available'),
-            'name': jsonObj['results'].get('name','name not available'),
-            'share_class_shares_outstanding': jsonObj['results'].get('weighted_shares_outstanding',1),
-            'market_cap': market_cap,
-            'current_price': round(market_cap / jsonObj['results'].get('weighted_shares_outstanding',1),2),
-            'sic_description':jsonObj['results'].get('sic_description','')
-        }
-        return stockData
+        ticker = yf.Ticker(symbol)
+        market_cap = ticker.info.get("marketCap")
+        if market_cap:
+            return int(market_cap)
+        logger.warning(f"marketCap not available for {symbol} via yfinance.")
+        return 0
+    except Exception as e:
+        logger.error(f"Error fetching market cap for {symbol}: {e}")
+        return 0
 
-    except requests.exceptions.RequestException as e:
-        logger.error(f"HTTP error while fetching stock info for {ticker}: {e}")
-        return None
+
+def get_StockInfo(ticker: str) -> dict | None:
+    """
+    Fetches general stock information for a given ticker.
+
+    Retrieves symbol, company name, shares outstanding, market cap,
+    current price and industry description via yfinance.
+
+    Args:
+        ticker (str): The stock ticker symbol (e.g. "AAPL").
+
+    Returns:
+        dict | None: A dict with the following keys on success:
+            - symbol (str): Ticker symbol.
+            - name (str): Company long name.
+            - share_class_shares_outstanding (int): Shares outstanding.
+            - market_cap (int): Market capitalization in USD.
+            - current_price (float): Latest market price.
+            - sic_description (str): Industry description.
+        Returns None on failure.
+    """
+    try:
+        t = yf.Ticker(ticker)
+        info = t.info
+        if not info or "symbol" not in info:
+            raise ValueError(f"No data returned for ticker: {ticker}")
+
+        market_cap = int(info.get("marketCap") or 0)
+        shares_outstanding = int(info.get("sharesOutstanding") or 1)
+        current_price = round(
+            info.get("currentPrice") or info.get("regularMarketPrice") or 0, 2
+        )
+
+        return {
+            "symbol": info.get("symbol", ticker.upper()),
+            "name": info.get("longName", "name not available"),
+            "share_class_shares_outstanding": shares_outstanding,
+            "market_cap": market_cap,
+            "current_price": current_price,
+            "sic_description": info.get("industry", ""),
+        }
     except (KeyError, ValueError) as e:
         logger.error(f"Data parsing error for {ticker}: {e}")
         return None
@@ -58,34 +74,59 @@ def get_StockInfo(ticker):
         return None
 
 
-def get_qtr_earnings(ticker):
+def get_qtr_earnings(ticker: str) -> list | None:
+    """
+    Fetches the last 10 quarterly revenue figures for a given ticker.
+
+    Pulls quarterly income statement data via yfinance and normalises
+    each entry into a consistent dict structure.
+
+    Args:
+        ticker (str): The stock ticker symbol (e.g. "AAPL").
+
+    Returns:
+        list | None: A list of up to 10 dicts, each containing:
+            - ticker (str): Ticker symbol in uppercase.
+            - filing_date (str): Quarter end date in YYYY-MM-DD format.
+            - revenues_value_M (str): Revenue formatted as "$X.XX M".
+        Returns None if no data is found or on error.
+    """
     try:
-        dotenv.load_dotenv()
-        API = os.getenv('POLYGON_API')
-        if not API:
-            raise EnvironmentError("POLYGON_API key not found in environment variables.")
-        # this api will go away as it is no longer free. 
+        t = yf.Ticker(ticker)
+        financials = t.quarterly_income_stmt
+
+        if financials is None or financials.empty:
+            raise ValueError(
+                f"No quarterly financials found for ticker: {ticker}"
+            )
+
         stock_obj = []
-        url = f"https://api.polygon.io/vX/reference/financials?ticker={ticker.upper()}&&timeframe=quarterly&limit=10&sort=filing_date&apiKey={API}"
-        response = requests.get(url)
-        response.raise_for_status()
-        
-        jsonObj = response.json()
+        revenue_row = None
+        for label in ["Total Revenue", "Revenue"]:
+            if label in financials.index:
+                revenue_row = financials.loc[label]
+                break
 
-        if 'results' not in jsonObj or not jsonObj['results']:
-            raise ValueError(f"No quarterly earnings found for ticker: {ticker}")
-        
-        for result in jsonObj['results']:
-            stock_obj.append({
-                'ticker': result['tickers'][0],
-                'filing_date': result.get('filing_date',''),
-                'revenues_value_M': f"${round(result['financials']['income_statement']['revenues']['value'], 0) / 1_000_000} M"
-            })
-        return stock_obj
+        if revenue_row is None:
+            raise ValueError(
+                f"No revenue row found in financials for: {ticker}"
+            )
 
-    except requests.exceptions.RequestException as e:
-        logger.error(f"HTTP error while fetching quarterly earnings for {ticker}: {e}")
-        return None
+        for date, value in revenue_row.items():
+            if value is None:
+                continue
+            stock_obj.append(
+                {
+                    "ticker": ticker.upper(),
+                    "filing_date": str(date.date()),
+                    "revenues_value_M": f"${round(float(value) / 1_000_000, 2)} M",
+                }
+            )
+            if len(stock_obj) == 10:
+                break
+
+        return stock_obj if stock_obj else None
+
     except (KeyError, ValueError) as e:
         logger.error(f"Data parsing error for {ticker}: {e}")
         return None
