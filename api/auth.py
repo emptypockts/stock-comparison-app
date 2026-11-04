@@ -44,7 +44,6 @@ def require_cf_token(fn:Callable)-> Callable:
             } 
             return fn(*args,**kwargs)
         else:
-            logger.info("running prod mode")
             token = request.headers.get("Cf-Access-Jwt-Assertion") or request.cookies.get("CF_Authorization")
             if not token:
                 return jsonify({

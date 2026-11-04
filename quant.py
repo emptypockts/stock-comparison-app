@@ -97,5 +97,5 @@ def quant(year,tickers:list[str])->list:
 
 if __name__ == "__main__":
     year = str(datetime.now().year)
-    print(quant(year,["celh"]))
+    print(quant(year,["Hog"]))
 

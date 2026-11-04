@@ -7,6 +7,7 @@ from datetime import datetime,timedelta
 from eacsa_logger import setup_logging, get_logger
 import yfinance as yf
 from typing import Any
+from pymongo.server_api import ServerApi
 setup_logging()
 logger = get_logger(__name__)
 load_dotenv()

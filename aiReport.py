@@ -210,7 +210,6 @@ def ai_query(agent, data)->str:
         return response.content.strip()
     else:
         raise Exception(f"response has no content. see details: {response}")
-        return {}
     
 def get_full_report(agent,r1,r2,r3,r4,r5)->str:
     response=llm.invoke(
@@ -224,7 +223,7 @@ def get_full_report(agent,r1,r2,r3,r4,r5)->str:
         return response.content
     else:
         raise Exception(f"response has no content. see details: {response}")
-        return {}
+
 
 def validate_json(agent,r6)->str:
     response=llm.invoke(
@@ -238,7 +237,7 @@ def validate_json(agent,r6)->str:
         return validated_json
     else:
         raise Exception(f"response has no content. see details: {response}")
-        return {}
+   
     
 def compile(tickers)->str:
     year = datetime.today().year
@@ -311,6 +310,6 @@ def compile(tickers)->str:
         print(f"Analysis for ticker '{ticker}' is up to date.")
         return existing_report
 if __name__ == "__main__":
-    tickers = ["googl"]
+    tickers = ["hog"]
 
     print(compile(tickers))
