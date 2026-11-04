@@ -240,7 +240,7 @@ def pullAllStockData(collection:Collection,skip,limit_size=10000,):
     QStockData = collection.aggregate([
  {
         '$match': {
-            # 'ticker':{'$in':['IBM']},
+            # 'ticker':{'$in':['KO', 'IBM']},
             'metric': {
                 '$in': [
                     'Revenues', 
