@@ -235,7 +235,33 @@ def RevenueGrowthQtrStockData (df):
             percentIncrease = ((lastQ-refQ)/refQ)*100
 
         return pd.Series([percentIncrease] * len(df), index=df.index) 
-def pullAllStockData(collection:Collection,skip,limit_size=10000,):
+
+    
+def pullAllStockData(
+        collection:Collection,
+        skip: int=0,
+        limit_size: int=0
+) -> Collection:
+    """
+    Pull all the stock data revenue to calculate the trend.
+    Args
+        Collection: a MongoDB Collection.
+        skip: a value for paginated tasks if applicable.
+        limit_size: limit the query if needed.
+    
+    Returns
+        Collection
+    """
+    if skip < 0:
+        raise ValueError(
+            "The skip value cannot be negative.\n"
+            f"Received: {skip}"
+        )
+    if limit_size < 0 :
+        raise ValueError(
+            "The limit value cannot be negative.\n"
+            f"Received: {limit_size}"
+        )
     
     QStockData = collection.aggregate([
  {
@@ -275,16 +301,14 @@ def pullAllStockData(collection:Collection,skip,limit_size=10000,):
         }
     }, {
         '$skip':skip*limit_size
-        },{
-        
-        '$limit':limit_size
         },
     {
         '$project': {
             '_id': 0, 
             'ticker': '$_id.ticker', 
             'date': '$_id.date', 
-            'maxRev': 1
+            'maxRev': 1,
+            'fp': '$_id.fp'
         }
     }
 ])
@@ -303,8 +327,20 @@ def pushMergedRevenueGrowthQtrStockData(MergedJsonResponseRevenueGrowthQtrStockD
         print(f"Operation failure: {ofe}")
     except Exception as e:
         print(f"An error occurred: {e}")
-def PullProcessMergeRevenueGrowthQtrStockData(collection,skip,limit_size):
-
+def PullProcessMergeRevenueGrowthQtrStockData(
+        collection: Collection,
+        skip: int=0,
+        limit_size: int=0
+) -> dict:
+    """
+    Pull the revenue data from the Database and process it to trend it.
+    Args:
+        Collection: A MongoDB Collection.
+        skip: A value for paginated tasks.
+        limit_size: a value to limit the query if needed.
+    Returns:
+        dict
+    """
     ResponsePullAllStockData = pullAllStockData(collection,skip,limit_size,)
     DfResponseRevenueGrowthQtrStockData= pd.DataFrame(ResponsePullAllStockData)
     if DfResponseRevenueGrowthQtrStockData.empty:
@@ -323,6 +359,8 @@ def PullProcessMergeRevenueGrowthQtrStockData(collection,skip,limit_size):
     MergedDfResponseRevenueGrowthQtrStockData = DfResponseRevenueGrowthQtrStockData.groupby('ticker').agg({ 'value': lambda x: ','.join(map(str, x)), 'trend': 'first' }).reset_index()
     MergedJsonResponseRevenueGrowthQtrStockData=MergedDfResponseRevenueGrowthQtrStockData.to_dict(orient='records')
     return MergedJsonResponseRevenueGrowthQtrStockData
+
+
 def PullQtrStockRevenueTrends(collection:Collection,page=1,items_per_page=100):
     print("Page",page)
     print("Page size ",items_per_page)
@@ -401,37 +439,51 @@ if __name__=="__main__":
 
     db = client["test"]
     # tickers = ['CVS','ROST']
-    collectionSize=CountAggRecordPipeline(db['QtrStockData'])
-    batch_size=5000
-    skip=0
+    collectionSize = CountAggRecordPipeline(db['QtrStockData'])
+    batch_size = 5000
+    skip = 0
     #go to this link to download the company facts https://www.sec.gov/Archives/edgar/daily-index/xbrl/companyfacts.zip
    
     # # Flow to update stock info from json files  (GAAP)
-    if os.getenv('ENV')=='dev':
+    if os.getenv('ENV') == 'dev':
         from bson import json_util
-        with open ('/Users/jjmr86/Downloads/test.QtrStockData.json','r') as f:
+        with open (
+            '/Users/jjmr86/Downloads/test.QtrStockData.json',
+            'r'
+        ) as f:
             stock_object = json_util.loads(f.read())
     else:
         stock_object = fetch_Stock_Info(db)
     
     prepare_collection_backup(db,collection_name='QtrStockData')
-    push_StockData(db,stock_object,collection='QtrStockData',batch_size=batch_size)    
+    push_StockData(
+        db,
+        stock_object,
+        collection='QtrStockData',
+        batch_size=batch_size
+    )    
     
     
 
 
-    # # function to update main revenue trends per quarter in the db   
+    # function to update main revenue trends per quarter in the db   
     
-    response =PullProcessMergeRevenueGrowthQtrStockData(db['QtrStockData'],skip,batch_size)
+    response =PullProcessMergeRevenueGrowthQtrStockData(
+        db['QtrStockData']
+    )
     
-    prepare_collection_backup(db,collection_name='QtrStockRevTrend')
-    pushMergedRevenueGrowthQtrStockData(response,db['QtrStockRevTrend'])    
+    prepare_collection_backup(
+        db,
+        collection_name='QtrStockRevTrend'
+    )
+    pushMergedRevenueGrowthQtrStockData(
+        response,
+        db['QtrStockRevTrend']
+    )    
+    
     # join the qtr stock rev trend with the stock value score
-    aggregateScoreToQtrRevTrend(db['QtrStockRevTrend'])
-
-
-    # create index for each collection
-    # create_index(db)
-    
+    aggregateScoreToQtrRevTrend(
+        db['QtrStockRevTrend']
+    )
         
     
