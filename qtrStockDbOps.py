@@ -240,7 +240,7 @@ def pullAllStockData(collection:Collection,skip,limit_size=10000,):
     QStockData = collection.aggregate([
  {
         '$match': {
-            # 'ticker':{'$in':['CVS','MSFT']},
+            # 'ticker':{'$in':['IBM']},
             'metric': {
                 '$in': [
                     'Revenues', 
@@ -248,7 +248,15 @@ def pullAllStockData(collection:Collection,skip,limit_size=10000,):
                     'RevenueFromContractWithCustomerIncludingAssessedTax'
                 ]
             },
-            'frame':{'$ne':None},
+            'frame': {'$ne':None},
+            'form': {
+                '$ne': '10-K'
+            },
+            'fp': {
+                '$in': [
+                    'Q1', 'Q2', 'Q3', 'Q4'
+                ]
+            }
         }
     }, {
         '$group': {
@@ -386,7 +394,7 @@ def CountAggRecordPipeline(collection:Collection):
 
 
 if __name__=="__main__":
-    
+    # This flow is used for monthly crontab. Be careful with changes.
     uri = os.getenv('MONGODB_URI')
     # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
     client = MongoClient(uri)
