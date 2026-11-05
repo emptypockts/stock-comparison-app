@@ -41,7 +41,7 @@ jobs:
       - name: Nodejs Setup
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
 
       - name: Start backend
@@ -56,6 +56,15 @@ jobs:
             --loglevel=info \
             --pool=threads > celery.log 2>&1 &
           echo $! > celery.pid
+
+      - name: Install Frontend Build Tools
+        run:
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            make \
+            g++ \
+            gcc \
+            python3
 
       - name: Start Frontend
         run: |
@@ -79,4 +88,3 @@ jobs:
           kill -0 $(cat backend.pid)
           kill -0 $(cat celery.pid)
           kill -0 $(cat frontend.pid)
-          
