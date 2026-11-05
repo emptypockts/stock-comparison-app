@@ -54,7 +54,7 @@ import { ref } from 'vue';
 import axios from 'axios';
 import debounce from 'lodash.debounce';
 import { useLoadingStore } from '@/stores/loadingStore';
-import { verifyCfToken, verifyToken } from '@/utils/auth';
+import { verifyCfToken } from '@/utils/auth';
 import { useTickerStore } from '@/stores/tickerStore';
 import { showTempMessage } from '@/utils/showMessages';
 const emit = defineEmits(['tickers-updated']);

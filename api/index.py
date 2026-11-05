@@ -36,7 +36,7 @@ from quant import quant
 load_dotenv()
 
 CF_CERT_URL = f"https://{os.getenv('CF_URL_CDN_CGI_CERTS')}/cdn-cgi/access/certs"
-CERT_KYS = requests.get(CF_CERT_URL).json()
+
 CF_AUDIENCE_ID = os.getenv('CF_AUD_ID')
 uri = os.getenv('MONGODB_URI')
 # client = MongoClient(uri, server_api=ServerApi('1'),tls=True,tlsCaFile=certifi.where())
@@ -48,6 +48,7 @@ app = Flask(__name__)
 app.config.from_object(app_constants)
 ENV=os.getenv('ENV')
 if ENV=="prod":
+    CERT_KYS = requests.get(CF_CERT_URL).json()
     CORS(app, resources={
         r"/api/*":{
             "origins":[
@@ -64,6 +65,7 @@ if ENV=="prod":
     storage_uri="redis://localhost:6379/3"
     )
 if ENV=="dev":
+    CERT_KYS = {'keys':[]}
     CORS(app)
     limiter = Limiter(
     app=app,

@@ -13,7 +13,6 @@
 
 <script setup>
 import { useRouter } from 'vue-router';
-import { verifyToken } from '@/utils/auth';
 const router = useRouter();
 async function gotoTable(){
     router.push('/qtrtrend');
