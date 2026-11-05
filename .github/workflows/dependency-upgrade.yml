@@ -44,7 +44,11 @@ jobs:
         run: |
           python -m venv .venv
           echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
-          echo "MONGO DB URI ${{secrets.MONGODB_URI}}"
+
+      - name: Verify configuration
+        run: |
+          python -c "import os; print('Mongo URI configured:', bool(os.getenv('MONGODB_URI')))"
+          python -c "import os; print('Redis configured:', bool(os.getenv('REDIS_SERVER')))"
 
       - name: Install dependencies
         run: |
@@ -69,7 +73,7 @@ jobs:
           USER_DEV: ${{secrets.USER_DEV}}
 
         run: |
-          python -m App.py > backend.log 2>&1 &
+          python App.py > backend.log 2>&1 &
           echo $! > backend.pid
 
       - name: Start Celery
