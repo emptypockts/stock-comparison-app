@@ -37,3 +37,9 @@ jobs:
       - name: Check dependencies
         run: |
           python -m pip check
+
+      - name: Run backend
+        run: |
+          python -m App,py
+          celery -A worker.celery worker --concurrency=1 --loglevel=info --pool=threads
+          npm run dev
