@@ -38,8 +38,45 @@ jobs:
         run: |
           python -m pip check
 
-      - name: Run backend
+      - name: Nodejs Setup
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Start backend
         run: |
-          python -m App,py
-          celery -A worker.celery worker --concurrency=1 --loglevel=info --pool=threads
-          npm run dev
+          python -m App.py > backend.log 2>&1 &
+          echo $! > backend.pid
+
+      - name: Start Celery
+        run: |
+          celery -A worker.celery worker \
+            --concurrency=1 \
+            --loglevel=info \
+            --pool=threads > celery.log 2>&1 &
+          echo $! > celery.pid
+
+      - name: Start Frontend
+        run: |
+          npm ci
+          npm run dev -- --host 0.0.0.0 > frontend.log 2>&1 &
+          echo $! > frontend.pid
+
+      - name: Verify Processes
+        run: |
+          sleep 15
+
+          echo "=====Backend======"
+          cat backend.log
+
+          echo "=====Celery======"
+          cat celery.log
+
+          echo "=====Frontend===="
+          cat frontend.log
+
+          kill -0 $(cat backend.pid)
+          kill -0 $(cat celery.pid)
+          kill -0 $(cat frontend.pid)
+          
