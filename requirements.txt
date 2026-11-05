@@ -99,7 +99,7 @@ pip-check-reqs==2.5.3
 pipdeptree==2.23.4
 platformdirs==4.3.6
 prompt_toolkit==3.0.51
-proto-plus==1.24.0
+proto-plus==1.25.0
 protobuf==5.28.2
 pyasn1==0.6.1
 pyasn1_modules==0.4.1
@@ -123,6 +123,7 @@ requests-toolbelt==1.0.0
 rich==14.2.0
 rsa==4.9
 s3transfer==0.14.0
+setuptools==84.2.1
 simple-websocket==1.1.0
 six==1.16.0
 sniffio==1.3.1
@@ -142,6 +143,7 @@ webencodings==0.5.1
 websocket-client==1.8.0
 websockets==15.0.1
 Werkzeug==3.0.4
+wheel==0.48.0
 wrapt==2.0.1
 wsproto==1.2.0
 xxhash==3.6.0
