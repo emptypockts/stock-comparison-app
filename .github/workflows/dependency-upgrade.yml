@@ -60,11 +60,7 @@ jobs:
       - name: Install Frontend Build Tools
         run:
           apt-get update
-          apt-get install -y --no-install-recommends \
-            make \
-            g++ \
-            gcc \
-            python3
+          apt-get install -y --no-install-recommends build-essential
 
       - name: Start Frontend
         run: |
