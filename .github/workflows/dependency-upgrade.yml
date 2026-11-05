@@ -49,6 +49,7 @@ jobs:
         run: |
           python -c "import os; print('Mongo URI configured:', bool(os.getenv('MONGODB_URI')))"
           python -c "import os; print('Redis configured:', bool(os.getenv('REDIS_SERVER')))"
+          python -c "import os; print('MONGO_DB URI:', os.getenv('MONGODB_URI'))"
 
       - name: Install dependencies
         run: |
