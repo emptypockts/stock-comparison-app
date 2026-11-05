@@ -2,10 +2,10 @@ name: Python 3.13 ARM64 compatibility
 
 on:
     push:
-      branches: [ "main" ]
+      branches: [ "dependency-upgrade" ]
   
     pull_request:
-      branches: [ "main" ]
+      branches: [ "dependency-upgrade" ]
 
 jobs:
   test:
