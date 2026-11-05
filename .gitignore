@@ -16,6 +16,7 @@ level_*.txt
 *.service
 .DS_Store
 *.txt
+!requirements*.txt
 token.json
 credentials.json
 *.log
