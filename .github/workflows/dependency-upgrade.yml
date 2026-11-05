@@ -8,11 +8,27 @@ on:
       branches: [ "dependency-upgrade" ]
 
 jobs:
+
   test:
     runs-on: ubuntu-24.04-arm
 
     container:
       image: python:3.13-slim-bookworm
+
+    env:
+      MONGODB_URI: ${{ secrets.MONGODB_URI }}
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+      
+      mongodb:
+        image: mongo:8
+        ports:
+          - 27017:27017
+
 
     steps:
       - name: Checkout repository
@@ -45,11 +61,21 @@ jobs:
           cache: npm
 
       - name: Start backend
+
+        env:
+          ENV: ${{vars.ENV}}
+          EMAIL_DEV: ${{secrets.EMAIL_DEV}}
+          USER_DEV: ${{secrets.USER_DEV}}
+
         run: |
           python -m App.py > backend.log 2>&1 &
           echo $! > backend.pid
 
       - name: Start Celery
+        
+        env:
+          REDIS_SERVER: ${{secrets.REDIS_SERVER}}    
+
         run: |
           celery -A worker.celery worker \
             --concurrency=1 \

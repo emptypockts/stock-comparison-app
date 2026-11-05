@@ -15,6 +15,14 @@ _cert_cache : dict = {}
 _cert_cache_expiry : datetime | None = None
 CERT_TTL = timedelta(hours=24)
 
+
+ 
+EMAIL_DEV = os.getenv('EMAIL_DEV')
+USER_DEV = os.getenv('USER_DEV')
+CF_CERT_URL = f"https://{os.getenv('CF_URL_CDN_CGI_CERTS')}/cdn-cgi/access/certs"
+CF_AUDIENCE_ID = os.getenv('CF_AUD_ID')
+ENV = os.getenv('ENV', None)
+
 def get_cf_certs()->dict:
     global _cert_cache, _cert_cache_expiry
     now = datetime.now()
@@ -25,17 +33,38 @@ def get_cf_certs()->dict:
     _cert_cache = response.json()
     _cert_cache_expiry = now + CERT_TTL
     return _cert_cache
- 
-EMAIL_DEV = os.getenv('EMAIL_DEV')
-USER_DEV = os.getenv('USER_DEV')
-CF_CERT_URL = f"https://{os.getenv('CF_URL_CDN_CGI_CERTS')}/cdn-cgi/access/certs"
-CF_AUDIENCE_ID = os.getenv('CF_AUD_ID')
-ENV = os.getenv('ENV','prod')
 
 
 def require_cf_token(fn:Callable)-> Callable:
+    """
+    Do token validation.
+    Args:
+        fn: Callable
+    Returns:
+        Callable
+    """
     @functools.wraps(fn)
-    def wrapper(*args,**kwargs)-> Any:
+    def wrapper(*args,**kwargs) -> Any:
+        """
+        Require_cf_token is called from flask to validate the token
+        if it passes then the function inside the api passes all the
+        arguments through *args **kwargs in the 
+        return fn(*args, **kwargs) line
+        where fn is the function called for example fetch_economy_stats("SP&500").
+
+        Args:
+
+            *args to collect extra items into a tuple.
+            **kwargs collect extra items into a dict.
+        
+        Returns:
+            Any
+        """
+        if ENV is None:
+            raise EnvironmentError(
+                "The ENV Variable must exist."
+            )
+        
         if ENV == 'dev':
             logger.info("running in DEV mode")
             request.cf_identity = {
