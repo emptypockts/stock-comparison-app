@@ -57,10 +57,14 @@ jobs:
             --pool=threads > celery.log 2>&1 &
           echo $! > celery.pid
 
-      - name: Install Frontend Build Tools
+      - name: Update APT
         run:
           apt-get update
+    
+      - name: Build Essentials Only
+        run:
           apt-get install -y --no-install-recommends build-essential
+
 
       - name: Start Frontend
         run: |
