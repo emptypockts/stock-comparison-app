@@ -13,12 +13,13 @@ jobs:
     runs-on: ubuntu-24.04-arm
 
     environment: Preview
-    
+
     container:
       image: python:3.13-slim-bookworm
 
     env:
-      MONGODB_URI: ${{secrets.MONGODB_URI}}
+      MONGODB_URI: ${{ secrets.MONGODB_URI }}
+      ENV: ${{ vars.ENV }}
 
     services:
       redis:
@@ -52,6 +53,7 @@ jobs:
           python -c "import os; print('Mongo URI configured:', bool(os.getenv('MONGODB_URI')))"
           python -c "import os; print('Redis configured:', bool(os.getenv('REDIS_SERVER')))"
           python -c "import os; print('MONGO_DB URI:', os.getenv('MONGODB_URI'))"
+          python -c "import os; print('ENV value:', os.getenv('ENV'))"
 
       - name: Install dependencies
         run: |
@@ -71,18 +73,18 @@ jobs:
       - name: Start backend
 
         env:
-          ENV: ${{vars.ENV}}
-          EMAIL_DEV: ${{secrets.EMAIL_DEV}}
-          USER_DEV: ${{secrets.USER_DEV}}
+          EMAIL_DEV: ${{ secrets.EMAIL_DEV }}
+          USER_DEV: ${{ secrets.USER_DEV }}
 
         run: |
           python App.py > backend.log 2>&1 &
           echo $! > backend.pid
+          
 
       - name: Start Celery
         
         env:
-          REDIS_SERVER: ${{secrets.REDIS_SERVER}}    
+          REDIS_SERVER: ${{ secrets.REDIS_SERVER }}    
 
         run: |
           celery -A worker.celery worker \

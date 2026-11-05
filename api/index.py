@@ -46,7 +46,7 @@ db=client['test']
 ai_tasks_collection=db['aiTasks']
 app = Flask(__name__)
 app.config.from_object(app_constants)
-ENV=os.getenv('ENV')
+ENV = os.getenv('ENV')
 if ENV=="prod":
     CERT_KYS = requests.get(CF_CERT_URL).json()
     CORS(app, resources={
@@ -471,7 +471,6 @@ def get_a_token():
         public_key,
         algorithms=["RS256"],
         audience=CF_AUDIENCE_ID)
-        print(decoded)
         return jsonify({
             "success":True,
             "email":decoded.get("email",''),
