@@ -1,7 +1,6 @@
-from celery import Celery
+from celery import Celery, Task
 from pymongo.server_api import ServerApi
 from pymongo import MongoClient
-import certifi
 from dotenv import load_dotenv
 import os
 from datetime import datetime,timezone
@@ -16,6 +15,8 @@ from financialUtils import Status
 from aiReport import compile
 from quant import quant
 from sevenPowers import seven_powers
+from emailFunctions import email_send
+from typing import Any
 load_dotenv()
 uri = os.getenv('MONGODB_URI')
 sio = SocketIO(message_queue=os.getenv('REDIS_SERVER'))
@@ -82,12 +83,10 @@ def ai_task_queries_collections_update(
         error: Any error message.
     """
     client = MongoClient(uri)
-    print("Status of the task:")
-    print(status)
-    if status == Status.failed:
-        print("There was an error generating the report.")
-        print(f"Error: {error}")
-        return None
+    print(
+        f"Status of the task: {status}."
+    )
+    
     db = client[db_name]
     ai_task_queries_collections=db[collection]
     ai_task_queries_collections.update_one(
@@ -169,8 +168,42 @@ def ai_report_collections_update(
 #  Overall Financial 
 #  AI Analysis
 # ==========================
-@celery.task(bind=True)
-def generate_ai_report(self,tickers,user_id,report_type):
+@celery.task(
+        bind=True,
+        max_retries=1,
+        default_retry_delay=5
+)
+def generate_ai_report(
+    self: Task,
+    tickers: list,
+    user_id:str,
+    report_type:str,
+) -> None:
+    """
+    Execute the asynchronous AI financial report generation pipeline.
+
+    Generates an AI-driven financial analysis using the Valued Investor
+    scoring methodology, persists the report in MongoDB, generates a PDF,
+    uploads the document to S3, and emails the user a signed download URL.
+
+    This task is executed asynchronously by a Celery worker. The caller
+    receives an AsyncResult containing the task ID when the task is
+    submitted. The generated report is persisted externally rather than
+    returned as a Celery task result.
+
+    Args:
+        self (Task): Bound Celery task instance providing access to the
+            execution context, request metadata, and retry mechanism.
+        tickers (list[str]): Stock ticker symbols included in the analysis.
+        user_id (str): Authenticated user's identifier / email recipient.
+        report_type (str): Requested report category. Supported values
+            include Overall, Rittenhouse, 7Powers, and RedFlags.
+
+    Returns:
+        None: The report is persisted in MongoDB and its PDF is uploaded
+            to S3. No report payload is returned to the caller.
+        """
+    
     print("Calling for Overall AI Financial Report")
     task_id=self.request.id
     try:
@@ -192,7 +225,7 @@ def generate_ai_report(self,tickers,user_id,report_type):
             db_name='test',
             status=Status.ongoing,
         )
-        result= compile(tickers)
+        result = compile(tickers)
         if not result:
             raise RuntimeError(
                 "the report is empty.\n"
@@ -205,7 +238,7 @@ def generate_ai_report(self,tickers,user_id,report_type):
         pdf_report.generate()
         s3_upload(bucket_name=report_type,file_name=f"{task_id}")
         signed_url = fetch_s3_url(bucket_name=report_type,file_name=task_id)
-        from emailFunctions import email_send
+        
         response =email_send(
             e_to=user_id,
             e_subject=SUBJECT.format(tickers=tickers),
@@ -216,25 +249,37 @@ def generate_ai_report(self,tickers,user_id,report_type):
     
         print('notifying server of completion')
         ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.completed)
-        return result
     
     except Exception as e:
         print("Failure of task execution")
         print(str(e))
 
         if self.request.retries < self.max_retries:
-            raise self.retry(exc=e,countdown=5,max_retries=1)
+            print(
+                f"Attempt: {self.request.retries} of: {self.max_retries}"
+            )
+            raise self.retry(exc=e)
         else:
+            print(
+                "Max num of attempts reached.\n"
+                f"Failing task: {task_id} after"
+                f" {self.max_retries + 1} attempts.\n"
+                f"Report type: {report_type}.\n"
+                f"Tickers: {' '.join(tickers)}."
+            )
             ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.failed,str(e))
+            raise
 
 # ==========================
 #  Seven Powers AI Analysis
 # ==========================
 @celery.task(bind=True)
 def generate_ai_7powers(self,tickers,user_id,report_type):
+    
     print("Calling for 7Powers Report")
     
     task_id=self.request.id
+    
     try:
         if not user_id:
             raise RuntimeError(
@@ -283,13 +328,22 @@ def generate_ai_7powers(self,tickers,user_id,report_type):
 # ==========================       
 @celery.task(bind=True)
 def generate_ai_quant(self,tickers,user_id,report_type):
+
     print("Calling for Red Flags Report")
-    if not user_id:
-        raise Ignore()
+
     task_id=self.request.id
 
-    ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.ongoing)
+   
     try:
+        if not user_id:
+            raise RuntimeError(
+                "The user ID cannot be empty.\n"
+                f"Received task: {task_id}."
+                f"Report Type: {report_type}.\n"
+                f"Tickers: {' '.join(tickers)}."
+            )
+
+        ai_task_queries_collections_update(user_id,task_id,tickers,report_type,'aiTaskQueries','test',Status.ongoing)
         current_year=(datetime.now().year)
         
         result=quant(str(current_year),tickers)

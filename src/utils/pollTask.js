@@ -35,7 +35,7 @@ export async function pollTaskStatus({
                     await onOngoing(data)
                 }
             }
-            if (status === " failed"){
+            if (status === "failed"){
                 if (onFailed){
                     await onFailed(data)
                 }

@@ -33,6 +33,7 @@ import requests
 from worker import generate_ai_report,celery, generate_ai_7powers,generate_ai_quant,generate_ai_quant_rittenhouse,test_task
 from s3_bucket_ops import s3_upload,s3_presigned_url
 from quant import quant
+
 load_dotenv()
 
 CF_CERT_URL = f"https://{os.getenv('CF_URL_CDN_CGI_CERTS')}/cdn-cgi/access/certs"
@@ -314,7 +315,7 @@ def gemini_post():
             'error':'missing values'
         }),400
     try:
-        task =generate_ai_report.delay(tickers,user_id,report_type)
+        task = generate_ai_report.delay(tickers,user_id,report_type)
         return jsonify({
             'task_id':task.id,
             'status':'processing',

@@ -239,12 +239,13 @@ def validate_json(agent,r6)->str:
         raise Exception(f"response has no content. see details: {response}")
    
     
-def compile(tickers)->str:
+def compile(tickers):
     year = datetime.today().year
     directory= os.path.join(DIRECTORY,str(year))
     tickers=[t.capitalize()for t in tickers]
     companies = fetch_name(tickers)
-    for ticker,company in zip(tickers,companies):
+    existing_report: str | None = None
+    for ticker, _ in zip(tickers,companies):
         ticker_dir=os.path.join(directory,ticker)
         extension=".all"
         needs_analysis, existing_report = analyze_ticker(directory,ticker,extension=extension)
