@@ -130,8 +130,9 @@ pytz==2024.2
 PyYAML==6.0.3
 redis==6.2.0
 regex==2024.9.11
-requests==2.32.3
+requests==2.34.2
 requests-toolbelt==1.0.0
+resend==2.53.2
 rich==14.2.0
 rsa==4.9
 s3transfer==0.14.0
